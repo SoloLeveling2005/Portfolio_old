@@ -10,10 +10,34 @@
     <link rel="stylesheet" href="plugins/bower_components/chartist-plugin-tooltips/dist/chartist-plugin-tooltip.css">
     <!-- Custom CSS -->
     <link href="css/style.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
     <style>
         * {
             color: white !important;
         }
+        /* хром, сафари */
+        body::-webkit-scrollbar { width: 0; }
+
+        /* ie 10+ */
+        body { -ms-overflow-style: none; }
+
+        /* фф (свойство больше не работает, других способов тоже нет)*/
+        body { overflow: -moz-scrollbars-none; }
+
+        @media (max-width: 990px) {
+            .h-menu {
+                display: none;
+            }
+        }
+        @media (min-width: 768px){
+            #main-wrapper[data-layout="vertical"][data-sidebartype="mini-sidebar"] .left-sidebar {
+                width: 65px;
+            }
+            #main-wrapper[data-layout="vertical"][data-sidebartype="mini-sidebar"] .left-sidebar:hover {
+                width: 65px;
+            }
+        }
+        
     </style>
 </head>
 <body>
@@ -21,64 +45,31 @@
         data-sidebar-position="absolute" data-header-position="absolute" data-boxed-layout="full">
         <aside class="left-sidebar p-0" data-sidebarbg="skin6">
             <!-- Sidebar scroll-->
-            <div class="scroll-sidebar">
+            <div class="scroll-sidebar bgc-dark-2 position-fixed h-100">
                 <!-- Sidebar navigation-->
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
                         <!-- User Profile-->
-                        <li class="sidebar-item pt-2">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="index.html"
+                        <li class="sidebar-item pt-2 bgc-dark-2">
+                            <a class="sidebar-link waves-effect waves-dark sidebar-link bgc-dark-2 bgc-dark-4-hover" href="index.html"
                                 aria-expanded="false">
                                 <i class="far fa-clock" aria-hidden="true"></i>
-                                <span class="hide-menu">Dashboard</span>
+                                <span class="h-menu" style="color:white !important;">Dashboard</span>
                             </a>
                         </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="profile.html"
+                        <li class="sidebar-item bgc-dark-2">
+                            <a class="sidebar-link waves-effect waves-dark sidebar-link bgc-dark-2 bgc-dark-4-hover" href="profile.html"
                                 aria-expanded="false">
                                 <i class="fa fa-user" aria-hidden="true"></i>
-                                <span class="hide-menu">Profile</span>
+                                <span class="h-menu" style="color:white !important;">Profile</span>
                             </a>
                         </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="basic-table.html"
+                        <li class="sidebar-item bgc-dark-2">
+                            <a class="sidebar-link waves-effect waves-dark sidebar-link bgc-dark-2 bgc-dark-4-hover" href="basic-table.html"
                                 aria-expanded="false">
                                 <i class="fa fa-table" aria-hidden="true"></i>
-                                <span class="hide-menu">Basic Table</span>
+                                <span class="h-menu" style="color:white !important;">Basic Table</span>
                             </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="fontawesome.html"
-                                aria-expanded="false">
-                                <i class="fa fa-font" aria-hidden="true"></i>
-                                <span class="hide-menu">Icon</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="map-google.html"
-                                aria-expanded="false">
-                                <i class="fa fa-globe" aria-hidden="true"></i>
-                                <span class="hide-menu">Google Map</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="blank.html"
-                                aria-expanded="false">
-                                <i class="fa fa-columns" aria-hidden="true"></i>
-                                <span class="hide-menu">Blank Page</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-item">
-                            <a class="sidebar-link waves-effect waves-dark sidebar-link" href="404.html"
-                                aria-expanded="false">
-                                <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                <span class="hide-menu">Error 404</span>
-                            </a>
-                        </li>
-                        <li class="text-center p-20 upgrade-btn">
-                            <a href="https://www.wrappixel.com/templates/ampleadmin/"
-                                class="btn d-grid btn-danger text-white" target="_blank">
-                                Upgrade to Pro</a>
                         </li>
                     </ul>
 
@@ -88,17 +79,13 @@
             <!-- End Sidebar scroll-->
         </aside>
         <div class="page-wrapper">
-            <div class="page-breadcrumb bg-white">
-                <div class="row align-items-center">
-                    <div class="col-lg-3 col-md-4 col-sm-4 col-xs-12 py-2">
-                        <h4 class="page-title">Dashboard</h4>
-                    </div>
-                </div>
+            <div class="bgc-dark-1 d-flex align-items-center px-4 py-4">
+                <h4 class="page-title p-0 m-0">Dashboard</h4>
             </div>
-            <div class="container-fluid">
+            <div class="container-fluid bgc-dark-4">
                 <div class="row justify-content-center">
-                    <div class="col-lg-4 col-md-12">
-                        <div class="white-box analytics-info">
+                    <div class="col-lg-4 col-md-12 ">
+                        <div class="white-box analytics-info bgc-dark-3">
                             <h3 class="box-title">Пользователей</h3>
                             <ul class="list-inline two-part d-flex align-items-center mb-0">
                                 <li>
@@ -106,12 +93,12 @@
                                             style="display: inline-block; width: 67px; height: 30px; vertical-align: top;"></canvas>
                                     </div>
                                 </li>
-                                <li class="ms-auto"><span class="counter text-success">659</span></li>
+                                <li class="ms-auto"><span class="counter" style="color:#7ace4c !important;">659</span></li>
                             </ul>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-12">
-                        <div class="white-box analytics-info">
+                    <div class="col-lg-4 col-md-12"> 
+                        <div class="white-box analytics-info bgc-dark-3">
                             <h3 class="box-title">Статей</h3>
                             <ul class="list-inline two-part d-flex align-items-center mb-0">
                                 <li>
@@ -124,7 +111,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-12">
-                        <div class="white-box analytics-info">
+                        <div class="white-box analytics-info bgc-dark-3">
                             <h3 class="box-title">Групп</h3>
                             <ul class="list-inline two-part d-flex align-items-center mb-0">
                                 <li>
@@ -132,7 +119,7 @@
                                             style="display: inline-block; width: 67px; height: 30px; vertical-align: top;"></canvas>
                                     </div>
                                 </li>
-                                <li class="ms-auto"><span class="counter text-info">911</span>
+                                <li class="ms-auto"><span class="counter" style="color:#11a0f8 !important;">911</span>
                                 </li>
                             </ul>
                         </div>
@@ -140,7 +127,7 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12 col-lg-12 col-sm-12">
-                        <div class="white-box">
+                        <div class="white-box bgc-dark-3">
                             <div class="d-md-flex mb-3">
                                 <h3 class="box-title mb-0">Топ сообществ</h3>
                             </div>
@@ -214,7 +201,7 @@
                 <div class="row">
                     <!-- .col -->
                     <div class="col-md-12 col-lg-8 col-sm-12">
-                        <div class="card white-box p-0">
+                        <div class="card white-box p-0 bgc-dark-3">
                             <div class="card-body">
                                 <h3 class="box-title mb-0">Лучшие комментарии</h3>
                             </div>
@@ -225,9 +212,7 @@
                                     <div class="comment-text ps-2 ps-md-3 w-100">
                                         <h5 class="font-medium">James Anderson</h5>
                                         <span class="mb-3 d-block">Lorem Ipsum is simply dummy text of the printing and type setting industry.It has survived not only five centuries. </span>
-                                        <div class="comment-footer d-md-flex align-items-center">
-                                             <span class="badge bg-primary rounded">Pending</span>
-                                             
+                                        <div class="comment-footer d-md-flex align-items-center">                                             
                                             <div class="text-muted fs-2 ms-auto mt-2 mt-md-0">April 14, 2021</div>
                                         </div>
                                     </div>
@@ -238,10 +223,7 @@
                                     <div class="comment-text ps-2 ps-md-3 active w-100">
                                         <h5 class="font-medium">Michael Jorden</h5>
                                         <span class="mb-3 d-block">Lorem Ipsum is simply dummy text of the printing and type setting industry.It has survived not only five centuries. </span>
-                                        <div class="comment-footer d-md-flex align-items-center">
-
-                                            <span class="badge bg-success rounded">Approved</span>
-                                            
+                                        <div class="comment-footer d-md-flex align-items-center">                                            
                                             <div class="text-muted fs-2 ms-auto mt-2 mt-md-0">April 14, 2021</div>
                                         </div>
                                     </div>
@@ -252,10 +234,7 @@
                                     <div class="comment-text ps-2 ps-md-3 w-100">
                                         <h5 class="font-medium">Johnathan Doeting</h5>
                                         <span class="mb-3 d-block">Lorem Ipsum is simply dummy text of the printing and type setting industry.It has survived not only five centuries. </span>
-                                        <div class="comment-footer d-md-flex align-items-center">
-
-                                            <span class="badge rounded bg-danger">Rejected</span>
-                                            
+                                        <div class="comment-footer d-md-flex align-items-center">                                            
                                             <div class="text-muted fs-2 ms-auto mt-2 mt-md-0">April 14, 2021</div>
                                         </div>
                                     </div>
@@ -264,8 +243,8 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-12 col-sm-12">
-                        <div class="card white-box p-0">
-                            <div class="card-heading">
+                        <div class="card white-box p-0 bgc-dark-3">
+                            <div class="card-heading bgc-dark-3 border-bottom border-1">
                                 <h3 class="box-title mb-0">Активные пользователи</h3>
                             </div>
                             <div class="card-body">
@@ -274,8 +253,7 @@
                                         <a href="javascript:void(0)" class="d-flex align-items-center"><img
                                                 src="plugins/images/users/varun.jpg" alt="user-img" class="img-circle">
                                             <div class="ms-2">
-                                                <span class="text-dark">Varun Dhavan <small
-                                                        class="d-block text-success d-block">online</small></span>
+                                                <span class="text-white">Varun Dhavan</span>
                                             </div>
                                         </a>
                                     </li>
@@ -284,8 +262,8 @@
                                         <a href="javascript:void(0)" class="d-flex align-items-center"><img
                                                 src="plugins/images/users/genu.jpg" alt="user-img" class="img-circle">
                                             <div class="ms-2">
-                                                <span class="text-dark">Genelia
-                                                    Deshmukh <small class="d-block text-warning">Away</small></span>
+                                                <span class="text-white">Genelia
+                                                    Deshmukh</span>
                                             </div>
                                         </a>
                                     </li>
@@ -293,8 +271,8 @@
                                         <a href="javascript:void(0)" class="d-flex align-items-center"><img
                                                 src="plugins/images/users/ritesh.jpg" alt="user-img" class="img-circle">
                                             <div class="ms-2">
-                                                <span class="text-dark">Ritesh
-                                                    Deshmukh <small class="d-block text-danger">Busy</small></span>
+                                                <span class="text-white">Ritesh
+                                                    Deshmukh</span>
                                             </div>
                                         </a>
                                     </li>
@@ -302,8 +280,8 @@
                                         <a href="javascript:void(0)" class="d-flex align-items-center"><img
                                                 src="plugins/images/users/arijit.jpg" alt="user-img" class="img-circle">
                                             <div class="ms-2">
-                                                <span class="text-dark">Arijit
-                                                    Sinh <small class="d-block text-muted">Offline</small></span>
+                                                <span class="text-white">Arijit
+                                                    Sinh</span>
                                             </div>
                                         </a>
                                     </li>
@@ -312,8 +290,8 @@
                                                 src="plugins/images/users/govinda.jpg" alt="user-img"
                                                 class="img-circle">
                                             <div class="ms-2">
-                                                <span class="text-dark">Govinda
-                                                    Star <small class="d-block text-success">online</small></span>
+                                                <span class="text-white">Govinda
+                                                    Star</span>
                                             </div>
                                         </a>
                                     </li>
@@ -321,8 +299,8 @@
                                         <a href="javascript:void(0)" class="d-flex align-items-center"><img
                                                 src="plugins/images/users/hritik.jpg" alt="user-img" class="img-circle">
                                             <div class="ms-2">
-                                                <span class="text-dark">John
-                                                    Abraham<small class="d-block text-success">online</small></span>
+                                                <span class="text-white">John
+                                                    Abraham</span>
                                             </div>
                                         </a>
                                     </li>
@@ -333,29 +311,11 @@
                     <!-- /.col -->
                 </div>
             </div>
-            <!-- ============================================================== -->
-            <!-- End Container fluid  -->
-            <!-- ============================================================== -->
-            <!-- ============================================================== -->
-            <!-- footer -->
-            <!-- ============================================================== -->
-            <footer class="footer text-center"> 2021 © Ample Admin brought to you by <a
+            <footer class="footer text-center bgc-dark-3"> 2021 © Ample Admin brought to you by <a
                     href="https://www.wrappixel.com/">wrappixel.com</a>
             </footer>
-            <!-- ============================================================== -->
-            <!-- End footer -->
-            <!-- ============================================================== -->
         </div>
-        <!-- ============================================================== -->
-        <!-- End Page wrapper  -->
-        <!-- ============================================================== -->
     </div>
-    <!-- ============================================================== -->
-    <!-- End Wrapper -->
-    <!-- ============================================================== -->
-    <!-- ============================================================== -->
-    <!-- All Jquery -->
-    <!-- ============================================================== -->
     <script src="plugins/bower_components/jquery/dist/jquery.min.js"></script>
     <!-- Bootstrap tether Core JavaScript -->
     <script src="bootstrap/dist/js/bootstrap.bundle.min.js"></script>
