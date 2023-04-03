@@ -1,10 +1,35 @@
-.App {
-  /* background-color: #282c34; */
+input {
+    outline: none !important;
+}
+.Home {
+  background-color: #f0f0f0;
   width: auto;
   height: auto;
   min-height: 100vh;
 }
 
+.Header {
+    background-color: #303b44;
+}
+
+.card-title-company {
+    opacity: .8;
+    font-size: 14px;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.box-shadow {
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+.send-message {
+    width: 25px;
+    height: 25px;
+    margin-left: 5px;
+}
+.padding-top-20-px {
+    padding-top: 15px !important;
+}
 .min-width {
   width: min-content;
 }

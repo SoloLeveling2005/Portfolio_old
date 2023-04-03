@@ -1,7 +1,8 @@
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
 
-chatbot = ChatBot("Chatpot")
+chatbot = ChatBot("my_bot", storage_adapter='chatterbot.storage.SQLStorageAdapter',
+                  database_uri='postgresql://postgres:2023@127.0.0.1:5433/portfolio')
 
 trainer = ListTrainer(chatbot)
 exit_conditions = (":q", "quit", "exit")
@@ -11,8 +12,6 @@ while True:
         break
     else:
         print(f"🪴 {chatbot.get_response(query)}")
-
-
 
 from transformers import pipeline
 
