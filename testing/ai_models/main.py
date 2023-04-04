@@ -4,6 +4,8 @@ from chatterbot import ChatBot
 from chatterbot.trainers import ChatterBotCorpusTrainer
 from chatterbot.storage import SQLStorageAdapter
 import nltk
+from nltk import WordNetLemmatizer
+
 nltk.download('punkt') # загрузка ресурсов NLTK
 nltk.download('averaged_perceptron_tagger_ru') # загрузка модели для определения частей речи
 
@@ -14,7 +16,13 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.text_rank import TextRankSummarizer
 
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
+from nltk.probability import FreqDist
+
+nltk.download('punkt')
+nltk.download('stopwords')
 title = "Преимущества изучения C# для начинающих программистов"
 content = """
 Приветствую, дорогой хаброжитель! В этой статье я расскажу тебе про прекрасный мир C# (произносится "Си-шарп"). Если ты новичок в программировании или только хочешь начать свое путешествие с C#, у меня есть десять отличных фактов про этот язык, с помощью которых я попробую доказать, что язык C# должен стать твоим основным языком программирования.
@@ -56,42 +64,32 @@ C# - не только отличный выбор для начинающих �
 
 
 # todo title
-# Создание парсера и токенизатора
-parser_title = PlaintextParser.from_string(title, Tokenizer("russian"))
-# Создание суммаризатора и выполнение суммаризации
-summarizer_title = TextRankSummarizer()
-summary_title = summarizer_title(parser_title.document, sentences_count=len(title.split('.'))//2)
 
-# токенизация текста
-tokens = word_tokenize(title, language='russian')
-# определение частей речи для каждого слова
-tagged_tokens = pos_tag(tokens, lang='rus')
-# извлечение существительных и глаголов
-nouns_title = [word for word, pos in tagged_tokens if pos.startswith('N')]
-verbs_title = [word for word, pos in tagged_tokens if pos.startswith('V')]
+tokens = word_tokenize(title.lower())
+stop_words = set(stopwords.words('russian'))
+tokens = [token for token in tokens if token not in stop_words and token.isalnum()]
+
 
 
 # todo description
 # Создание парсера и токенизатора
-parser_description = PlaintextParser.from_string(title, Tokenizer("russian"))
-# Создание суммаризатора и выполнение суммаризации
+parser_description = PlaintextParser.from_string(content, Tokenizer("russian"))
+# Создание суммаризатора и выполнение суммаризации (сокращение контекста)
 summarizer_description = TextRankSummarizer()
-summary_description = summarizer_description(parser_description.document, sentences_count=len(title.split('.'))//2)
-
-# токенизация текста
-tokens = word_tokenize(title, language='russian')
-# определение частей речи для каждого слова
-tagged_tokens = pos_tag(tokens, lang='rus')
-# извлечение существительных и глаголов
-nouns_description = [word for word, pos in tagged_tokens if pos.startswith('N')]
-verbs_description = [word for word, pos in tagged_tokens if pos.startswith('V')]
+summary_description = summarizer_description(parser_description.document, sentences_count=len(content.split('.'))//3)
 
 
-print(nouns_title,verbs_title)
-# Создаем массив комбинаций пересечений с помощью генераторов списков
-cross_array = [x + '|' + y for x in nouns_title for y in verbs_title if x != y]
+tokens_content = word_tokenize(content.lower())
+stop_words_content = set(stopwords.words('russian'))
+tokens_content = [token for token in tokens_content if token not in stop_words and token.isalnum()]
 
-print(cross_array)
+
+print(summary_description)
+print(tokens)
+print(tokens_content)
+freq_dist = FreqDist(tokens_content)
+print(freq_dist.items())
+
 
 #
 #
