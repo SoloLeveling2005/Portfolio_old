@@ -1,17 +1,38 @@
 input {
     outline: none !important;
 }
+a {
+    text-decoration: none !important;
+}
 .Home {
   background-color: #f0f0f0;
   width: auto;
   height: auto;
   min-height: 100vh;
 }
+.pre_ {
+    white-space: pre-wrap;
+
+}
 
 .Header {
     background-color: #303b44;
 }
-
+.img-small-24 {
+    width: 22px;
+    height: 22px;
+}
+.img-normal-50 {
+    width: 50px;
+    height: 50px;
+}
+.card-img-top {
+    height: 30vw !important;
+}
+.img-small-19-24 {
+    width: 19px;
+    height: 24px;
+}
 .card-title-company {
     opacity: .8;
     font-size: 14px;

@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
-import '../assets/img/send.png'
 import Header from '../components/Header';
+import { Link } from 'react-router-dom';
 
 function Home() {
-    const [articles, setArticle] = useState([{}])
-    // let new_articles = []
-    // for (let index = 10; index > 0; index--) {
-    //     new_articles.push({
-    //         'id': index,
-    //         'title': 'title'+index,
-    //         'description': 'description'+index
-    //     })        
-    // }
-    // setArticle([...new_articles]);
+    const [articles, setArticle] = useState([{}]);
+    
+    const [scrollPosition, setScrollPosition] = useState(0);
+
+    // устанавливаем прокрутку после рендеринга компонента
+    useEffect(() => {
+        window.scrollTo(0, scrollPosition);
+    }, [scrollPosition]);
+
     return (
         <div className="Home text-white">
             <div className=''>
@@ -44,18 +43,34 @@ function Home() {
 
                                 </div>
                             </div>
-
                             <div className="tab-content m-0 p-0 mt-4" id="pills-tabContent">
                                 <div className="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
                                     {articles.map((item, index) => (
                                         <section>
-                                            <div className="card m-0 p-3 bg-white mb-3">
+                                            <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
+                                                <h5 className="card-title">Как использовать промты в ChatGPT для генерации кода на Python</h5>
+                                                <span className='card-title-company mb-3 cursor-pointer'>Cтатья компании Company</span>
+                                                <img src="https://hsto.org/r/w1560/getpro/habr/upload_files/a35/c93/4fb/a35c934fb02dcef6687214136bc7f2cc.png" className="card-img-top overflow-hidden object-fit-cover w-100" alt="..."></img>
+                                                <div className="card-body ps-0">
+                                                    <p className="card-text">
+                                                        Привет, друзья! Сегодня я хочу рассказать вам о том, как использовать промты в ChatGPT для создания программного кода на Python. Если вы работаете с Python или интересуетесь программированием, то вы, наверняка, знаете, насколько важно уметь быстро и эффективно создавать код.
+
+                                                        Для тех, кто не знаком с термином "промт", это специальные подсказки, которые выводятся в интерактивной среде Python и позволяют пользователю быстро и легко вводить команды. Обычно они выводятся в виде текста, который предлагает пользователю варианты продолжения его команды.
+
+                                                        Чатбот ChatGPT основан на искусственном интеллекте и способен генерировать текст на основе предыдущих входных данных. Таким образом, мы можем использовать его для генерации промтов для создания кода на Python.
+
+                                                        После множества экспериментов и ошибок, я нашел наиболее оптимальный промт для работы с ChatGPT, который позволяет мне полностью автоматизировать процесс разработки программы в соответствии с моим ТЗ. Сейчас я готов поделиться с вами своим опытом.
+                                                    </p>
+                                                    <Link to={`/article/1`} className="btn btn-primary">Подробнее</Link>
+                                                </div>
+                                            </div>
+                                            <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
                                                 <h5 className="card-title">LAION и энтузиасты по всему миру разрабатывают Open Assistant — открытый аналог ChatGPT</h5>
                                                 <span className='card-title-company mb-3 cursor-pointer'>Cтатья компании Company</span>
                                                 <img src="https://hsto.org/r/w1560/getpro/habr/upload_files/829/a55/1fa/829a551facb757c2c2c827c243d561a2.png" className="card-img-top" alt="..."></img>
                                                 <div className="card-body ps-0">
                                                     <p className="card-text">Некоммерческая организация LAION и энтузиасты по всему миру занимаются разработкой Open Assistant — это проект, цель которого в предоставлении всем желающим доступа к продвинутой большой языковой модели, основанной на принципах чат-бота, с конечной целью революции в инновациях в области обработки естественного языка...</p>
-                                                    <a href="#" className="btn btn-primary">Подробнее</a>
+                                                    <Link to={`/article/1`}  className="btn btn-primary">Подробнее</Link>
                                                 </div>
                                             </div>
                                             <div className="card m-0 p-3 bg-white mb-3">
@@ -78,8 +93,8 @@ function Home() {
                                         
                                     ))}
                                 </div>
-                                <div className="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">2</div>
-                                <div className="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">3</div>
+                                <div className="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">...</div>
+                                <div className="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab">...</div>
                             </div>
 
                         </div>
@@ -95,16 +110,12 @@ function Home() {
                                             <input type="email" className="form-control border border-2 me-2" id="exampleFormControlInput1" placeholder=""></input>
                                             <button className='btn btn-success'>Send</button>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
-                            
                         </div>
                     </div>
-                    
                 </div>
-                
             </div>
         </div>
     );

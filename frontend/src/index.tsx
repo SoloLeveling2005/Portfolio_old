@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 
-import App from './App';
+// import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
@@ -10,6 +10,8 @@ import {
 } from "react-router-dom";
 import "./index.css";
 import Home from './pages/Home';
+import User from './pages/User';
+import Article from './pages/Article';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -18,6 +20,15 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Home/>,
+
+  },
+  {
+    path: "/user/:id",
+    element: <User/>,
+  },
+  {
+    path: "/article/:id",
+    element: <Article/>,
   },
 ]);
 root.render(
@@ -31,3 +42,7 @@ root.render(
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
+function createBrowserHistory() {
+  throw new Error('Function not implemented.');
+}
+
