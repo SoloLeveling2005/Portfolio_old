@@ -51,6 +51,9 @@ a {
 .padding-top-20-px {
     padding-top: 15px !important;
 }
+.min-width-50-per {
+    width: 50% !important;
+}
 .min-width {
   width: min-content;
 }
