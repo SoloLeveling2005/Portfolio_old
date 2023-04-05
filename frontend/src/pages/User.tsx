@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Smart_search from '../components/Smart_search';
 import { Link } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
+import ActivityUser from '../components/ActivityUser';
 function Home() {
 
     const [nav, switchNav] = useState('profile');
@@ -52,14 +53,8 @@ function Home() {
                             <div className="card m-0 p-0 bg-white mb-3 w-100 ">
                                 
                                 <div className="card-body">
-                                    <h5>Профиль</h5>
-                                    <div className="answer_guestion mb-4">
-                                        <span className="message">- Hello. There are some questions? Ask I will try to answer.</span>
-                                    </div>
-                                    <div className="d-flex align-items-center">
-                                        <input type="email" className="form-control border border-2 me-2" id="exampleFormControlInput1" placeholder=""></input>
-                                        <button className='btn btn-success'>Send</button>
-                                    </div>
+                                    <h5 className=''>Профиль</h5>
+                                    <p>Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание </p>
                                 </div>
                             </div>
                             }   
@@ -123,7 +118,7 @@ function Home() {
                         <div className='col-4 position-relative p-0 m-0'>
                             <div className='padding-top-20-px position-sticky top-0'>
                                 <UserInfo country='Россия' registered='22 марта' last_login='сегодня в 01:11'/>
-                                
+                                <ActivityUser articles={[{url:'string', title:'string', count_activity:2}]}/>
                             </div>
                         </div>
                     </div>
