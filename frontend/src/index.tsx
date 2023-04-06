@@ -1,17 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-
-// import App from './App';
-import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
+import { Provider } from 'react-redux'
+
 import "./index.css";
+
+import store from './store/store'
+import reportWebVitals from './reportWebVitals';
 import Home from './pages/Home';
 import User from './pages/User';
 import Article from './pages/Article';
+import Profile from './pages/Profile';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -23,6 +25,10 @@ const router = createBrowserRouter([
 
   },
   {
+    path: "/profile",
+    element: <Profile/>,
+  },
+  {
     path: "/user/:id",
     element: <User/>,
   },
@@ -32,9 +38,12 @@ const router = createBrowserRouter([
   },
 ]);
 root.render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
+  <Provider store={store}>
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
+  </Provider>
+
 );
 
 

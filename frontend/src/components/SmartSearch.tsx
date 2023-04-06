@@ -7,7 +7,6 @@ function Smart_search() {
       <h5 className="card-header w-100">Умный поиск</h5>
       <div className="card-body">
           <div className="answer_guestion mb-4">
-              <span className="message">- Hello. There are some questions? Ask I will try to answer.</span>
               <div className='w-100'>
                 <div className="alert alert-dark min-width min-width-50-per p-2 fs-6" role="alert">
                   A simple primary alert—check it out!
