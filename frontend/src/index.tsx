@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import User from './pages/User';
 import Article from './pages/Article';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
   {
     path: "/article/:id",
     element: <Article/>,
+  },
+  {
+    path: "/settings",
+    element: <Settings/>,
   },
 ]);
 root.render(

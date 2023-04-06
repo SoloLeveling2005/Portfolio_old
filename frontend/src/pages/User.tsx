@@ -113,7 +113,6 @@ function Home() {
                                 
                             </div>
                             }           
-                            
                         </div>
                         <div className='col-4 position-relative p-0 m-0'>
                             <div className='padding-top-20-px position-sticky top-0'>

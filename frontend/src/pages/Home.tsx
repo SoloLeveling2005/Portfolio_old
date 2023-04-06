@@ -40,19 +40,19 @@ function Home() {
                                 <div className="card-body">
                                     <ul className="nav nav-pills" id="pills-tab" role="tablist">
                                         {nav == 'news' ? (
-                                            <button className="nav-link active" value="news" onClick={switchNavF} type="button">Новости</button>
+                                            <button className="nav-link active me-2" value="news" onClick={switchNavF} type="button">Новости</button>
                                         ):(
-                                            <button className="nav-link" value="news" onClick={switchNavF} type="button">Новости</button>
+                                            <button className="nav-link me-2" value="news" onClick={switchNavF} type="button">Новости</button>
                                         )}
                                         {nav == 'articleNews' ? (
-                                            <button className="nav-link active" value="articleNews" onClick={switchNavF} type="button">Новости сообществ</button>
+                                            <button className="nav-link active me-2" value="articleNews" onClick={switchNavF} type="button">Новости сообществ</button>
                                         ):(
-                                            <button className="nav-link" value="articleNews" onClick={switchNavF} type="button">Новости сообществ</button>
+                                            <button className="nav-link me-2" value="articleNews" onClick={switchNavF} type="button">Новости сообществ</button>
                                         )}
                                         {nav == 'articles' ? (
-                                            <button className="nav-link active" value="articles" onClick={switchNavF} type="button">Сообщества</button>
+                                            <button className="nav-link active me-2" value="articles" onClick={switchNavF} type="button">Сообщества</button>
                                         ):(
-                                            <button className="nav-link" value="articles" onClick={switchNavF} type="button">Сообщества</button>
+                                            <button className="nav-link me-2" value="articles" onClick={switchNavF} type="button">Сообщества</button>
                                         )}
                                     </ul>
                                 </div>

@@ -26,6 +26,11 @@ a {
     width: 50px;
     height: 50px;
 }
+.textarea-height-200 {
+    min-height: 200px !important;
+    height: 200px !important;
+    max-height: 200px !important;
+}
 .min-img-40-px {
     min-width: 40px !important;    
     width: 40px !important;
