@@ -18,7 +18,7 @@ function Home (props: any) {
     return (
         <div className="Home text-black">
             <div className='' >
-                <Header/>
+                <Header page='Article'/>
             </div>
             <div className="w-100 h-100">
                 <div className='table container'>

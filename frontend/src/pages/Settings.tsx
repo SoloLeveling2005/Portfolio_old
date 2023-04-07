@@ -20,7 +20,7 @@ function Settings() {
     return (
         <div className="Home ">
             <div className=''>
-                <Header/>
+                <Header page='Settings'/>
             </div>
             <div className="w-100 h-100 pb-3">
                 <div className='container my-3'>
@@ -38,11 +38,11 @@ function Settings() {
                                 ):(
                                     <button className="nav-link me-2" value="specialization" onClick={switchNavF} type="button">Специализация</button>
                                 )}
-                                {nav == 'account' ? (
+                                {/* {nav == 'account' ? (
                                     <button className="nav-link active me-2" value="account" onClick={switchNavF} type="button">Аккаунт</button>
                                 ):(
                                     <button className="nav-link me-2" value="account" onClick={switchNavF} type="button">Аккаунт</button>
-                                )}
+                                )} */}
                                 {nav == 'privacy' ? (
                                     <button className="nav-link active me-2" value="privacy" onClick={switchNavF} type="button">Приватность</button>
                                 ):(
@@ -179,7 +179,7 @@ function Settings() {
                                         </div>
 
                                     
-                                        <button type="submit" className="btn btn-success mt-3">Сохранить</button>
+                                        <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     </form>
                                     
                                 </div>
@@ -227,7 +227,7 @@ function Settings() {
                                         
                                         
                                     
-                                        <button type="submit" className="btn btn-success mt-3">Сохранить</button>
+                                        <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     </form>
                                     
                                 </div>
@@ -293,7 +293,10 @@ function Settings() {
 
                                         {/* <h6 className="card-title mb-3" >Профессиональные навыки</h6> */}
                                         <h6 className='mt-3'>Выберите свои профессиональные навыки.</h6>
-                                        <input className="form-control" placeholder='Навыки' readOnly></input>
+                                        <div className="form-control py-2 d-flex flex-wrap" placeholder='Навыки'>
+                                            <button type="button" className="btn btn-outline-info disabled me-2 my-1 px-3">Info</button>    
+ 
+                                        </div>
                                         <div className='d-flex mt-2 flex-wrap'>
                                             <button type="button" className="btn btn-outline-primary m-1">Git</button>
                                             <button type="button" className="btn btn-outline-primary m-1">JavaScript</button>
@@ -333,7 +336,7 @@ function Settings() {
                                                 <option value="3">Евро</option>
                                             </select>
                                         </div>
-                                        <button type="submit" className="btn btn-success mt-3">Сохранить</button>
+                                        <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     </form>
                                     
                                 </div>
@@ -381,8 +384,61 @@ function Settings() {
                                         
                                         
                                     
-                                        <button type="submit" className="btn btn-success mt-3">Сохранить</button>
+                                        <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     </form>
+                                    
+                                </div>
+                            </div>
+                        </section>
+                    }
+                    {nav == 'privacy' &&
+                        <section>
+                            <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">
+                                <div className="card-body ps-0 pt-0 mt-0">
+                                    <h5 className="card-title mb-3" >Приватность</h5>
+                                    <h6 className='mt-4'>Показывать ваши сайты и аккаунты в соцсетях</h6>
+                                    <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_website_and_social_network" id="check_website_and_social_network1" checked></input>
+                                        <label className="form-check-label" htmlFor="check_website_and_social_network1">
+                                            Всем
+                                        </label>
+                                        </div>
+                                        <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_website_and_social_network" id="check_website_and_social_network2"></input>
+                                        <label className="form-check-label" htmlFor="check_website_and_social_network2">
+                                            Только тем, на кого вы подписаны
+                                        </label>
+                                    </div>
+                                    <h6 className='mt-4'>Показывать вашу активность на сайте</h6>
+                                    <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_active_in_website" id="check_active_in_website1" checked></input>
+                                        <label className="form-check-label" htmlFor="check_active_in_website1">
+                                            Всем
+                                        </label>
+                                        </div>
+                                        <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_active_in_website" id="check_active_in_website2"></input>
+                                        <label className="form-check-label" htmlFor="check_active_in_website2">
+                                            Только тем, на кого вы подписаны
+                                        </label>
+                                    </div>
+                                    <h6 className='mt-4'>Показывать ваши сайты и аккаунты в соцсетях</h6>
+                                    <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_" id="check_1"></input>
+                                        <label className="form-check-label" htmlFor="check_1">
+                                            Default radio
+                                        </label>
+                                        </div>
+                                        <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_" id="check_2" checked></input>
+                                        <label className="form-check-label" htmlFor="check_2">
+                                            Default checked radio
+                                        </label>
+                                    </div>
+                                    
+
+                                    
+                                    <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     
                                 </div>
                             </div>

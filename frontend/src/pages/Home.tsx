@@ -27,7 +27,7 @@ function Home() {
     return (
         <div className="Home text-white">
             <div className=''>
-                <Header/>
+                <Header page='Home'/>
             </div>
             <div className="w-100 h-100">
                 <div className='table container'>

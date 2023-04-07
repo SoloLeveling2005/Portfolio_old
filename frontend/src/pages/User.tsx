@@ -7,6 +7,7 @@ import Smart_search from '../components/SmartSearch';
 import { Link } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
+import Navbar from '../components/Navbar';
 function Home() {
 
     const [nav, switchNav] = useState('profile');
@@ -19,7 +20,7 @@ function Home() {
     return (
         <div className="Home text-white">
             <div className=''>
-                <Header/>
+                <Header page='User'/>
             </div>
             <div className="w-100 h-100">
                 <div className='table container'>

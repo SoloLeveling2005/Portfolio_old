@@ -15,38 +15,15 @@ import User from './pages/User';
 import Article from './pages/Article';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import App from './App';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Home/>,
 
-  },
-  {
-    path: "/profile",
-    element: <Profile/>,
-  },
-  {
-    path: "/user/:id",
-    element: <User/>,
-  },
-  {
-    path: "/article/:id",
-    element: <Article/>,
-  },
-  {
-    path: "/settings",
-    element: <Settings/>,
-  },
-]);
 root.render(
   <Provider store={store}>
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
+    <App/>
   </Provider>
 
 );

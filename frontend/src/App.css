@@ -14,7 +14,10 @@ a {
     white-space: pre-wrap;
 
 }
-
+.Navbar a {
+    display: flex !important;
+    height: min-content !important;
+}
 .Header {
     background-color: #303b44;
 }
