@@ -12,15 +12,18 @@ class User(models.Model):
     Модель пользователя.
     """
     username = models.CharField(max_length=100, null=False)
+    login = models.CharField(max_length=100, null=False)
     password = models.CharField(max_length=255, null=False)
+    biography = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     deleted_at = models.DateTimeField(null=True)
 
     @classmethod
-    def new_user(cls, username: str, password: str):
+    def new_user(cls, username: str, login: str, password: str):
         """
         Создает нового пользователя в базе данных и хеширует его пароль.
-        :param username: Никнейм
+        :param login: Логин
+        :param username: Имя Фамилия
         :param password: Пароль
         """
         cls.objects.create(username=username, password=make_password(password))
@@ -31,11 +34,44 @@ class User(models.Model):
         """
         return self.user_avatar.get()
 
+    def info(self):
+        pass
+
+    def rating(self):
+        pass
+
+    def comments(self):
+        pass
+
     def articles(self):
         """
         :return: Возвращает статьи пользователя.
         """
         return self.user_article.all()
+
+    def news(self):
+        pass
+
+    def article_bookmakers(self):
+        pass
+
+    def news_bookmakers(self):
+        pass
+
+    def communities(self):
+        pass
+
+    def chats(self):
+        pass
+
+    def banned_chat(self):
+        pass
+
+    def banned_user(self):
+        pass
+
+    def subscribers_users(self):
+        pass
 
 
 class UserAvatar(models.Model):
@@ -281,5 +317,3 @@ class ChatMessage(models.Model):
     user = models.ForeignKey(User, related_name="messages", on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
-
-
