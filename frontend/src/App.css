@@ -10,9 +10,11 @@ a {
   height: auto;
   min-height: 100vh;
 }
+.card {
+    border-radius: 0 !important;
+}
 .pre_ {
     white-space: pre-wrap;
-
 }
 .Navbar a {
     display: flex !important;
@@ -110,3 +112,5 @@ a {
 .bgc-dark-5-hover:hover {
     background-color: #4042498d !important;
 }
+
+

@@ -17,9 +17,8 @@ function Header(props:{'page':string}) {
   return (
     <section>
       <div className="Header">
-        
         <section className='container py-3 d-flex justify-content-between align-items-center'>
-          <Link to='/' className='fs-4 text-decoration-none text-white'>HubAnywhere</Link>
+          <Link to='/' className='fw-bold fs-4 text-decoration-none text-white'>HubAnywhere</Link>
         </section>
       </div>
       <Navbar page={`page`}/>
