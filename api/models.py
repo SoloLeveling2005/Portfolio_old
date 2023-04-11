@@ -7,6 +7,19 @@ from django.db import models
 # Create your models here.
 
 
+class UserSettings(models.Model):
+    """
+    Модель настроек пользователя.
+    """
+    show_additional_information = models.BooleanField(default=True)
+    show_activity_on_the_site = models.BooleanField(default=True)
+    telegram_mailing_list = models.BooleanField(default=False)
+    notification_new_entries = models.BooleanField(default=False)
+    notification_comments_under_posts = models.BooleanField(default=True)
+    notification_mentions = models.BooleanField(default=True)
+    notification_new_friend = models.BooleanField(default=True)
+
+
 class User(models.Model):
     """
     Модель пользователя.
@@ -14,19 +27,27 @@ class User(models.Model):
     username = models.CharField(max_length=100, null=False)
     login = models.CharField(max_length=100, null=False)
     password = models.CharField(max_length=255, null=False)
-    biography = models.TextField()
+    settings = models.ForeignKey(UserSettings, on_delete=models.CASCADE, related_name='user')
+    biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    deleted_at = models.DateTimeField(null=True)
 
     @classmethod
-    def new_user(cls, username: str, login: str, password: str):
+    def new_user(cls, username: str, login: str, password: str, biography: str):
         """
         Создает нового пользователя в базе данных и хеширует его пароль.
         :param login: Логин
         :param username: Имя Фамилия
         :param password: Пароль
+        :param biography: Биография пользователя
         """
-        cls.objects.create(username=username, password=make_password(password))
+        settings = UserSettings.objects.create()
+        cls.objects.create(
+            username=username,
+            password=make_password(password),
+            settings=settings,
+            login=login,
+            biography=biography
+        )
 
     def avatar(self):
         """
@@ -78,8 +99,8 @@ class UserAvatar(models.Model):
     """
     Модель аватарка пользователя.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
     img = models.ImageField(null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
 
     @classmethod
     def new_avatar(cls, user_id: int, img):
@@ -92,6 +113,128 @@ class UserAvatar(models.Model):
         cls.objects.create(user=user, img=img)
 
 
+class TagSkill(models.Model):
+    """
+    Модель всевозможных скиллов пользователей.
+    """
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_skill')
+    tag = models.CharField(max_length=150)
+
+    @classmethod
+    def new_tag_skill(cls, user_id: int, tag: str):
+        """
+        Создает новый тег скилл.
+        :param user_id: ID пользователя.
+        :param tag: Название тега.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(author=user, tag=tag)
+
+
+class TagUserSkill(models.Model):
+    """
+    Модель скиллов пользователя.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
+    tag = models.ForeignKey(TagSkill, on_delete=models.CASCADE, related_name='tag_user_skill')
+
+    @classmethod
+    def new_tag_skill(cls, user_id: int, tag_id: int):
+        """
+        Создает новый тег скилл.
+        :param user_id: ID пользователя.
+        :param tag_id: ID тег скилла.
+        """
+        user = User.objects.get(id=user_id)
+        tag = TagSkill.objects.get(id=tag_id)
+        cls.objects.create(author=user, tag=tag)
+
+
+class UserInfo(models.Model):
+    """
+    Модель аватарка пользователя.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_info')
+    gender = models.CharField(max_length=5)  # man, woman
+    birthday = models.DateTimeField()
+    location = models.CharField(max_length=100)
+    vk_profile = models.CharField(max_length=100)
+    telegram_profile = models.CharField(max_length=100)
+    youtube_chanel = models.CharField(max_length=100)
+    other_info = models.TextField()
+
+    @classmethod
+    def new_avatar(cls, user_id: int, gender: str, birthday: datetime, location: str, vk_profile: str,
+                   telegram_profile: str, youtube_chanel: str, other_info: str):
+        """
+        Создает доп. информацию пользователя.
+        :param user_id: ID пользователя.
+        :param gender: Пол.
+        :param birthday: Дата рождения.
+        :param location: Местоположение.
+        :param vk_profile: Ссылка на вк профиль.
+        :param telegram_profile: Ссылка на telegram профиль.
+        :param youtube_chanel: Ссылка на youtube профиль.
+        :param other_info: Остальная информация.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(user=user, gender=gender, birthday=birthday, location=location, vk_profile=vk_profile,
+                           telegram_profile=telegram_profile, youtube_chanel=youtube_chanel, other_info=other_info)
+
+    def user_tags(self):
+        """
+        :return: Возвращает теги пользователя.
+        """
+        return self.tag_user_skill.all()
+
+
+class UserSubscriptions(models.Model):
+    """
+    Модель подписок на пользователей.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
+    status = models.BooleanField(default=False)
+
+    @classmethod
+    def new_user_subscriptions(cls, user_id: int, subscriber_id: int, status: bool):
+        """
+        Создает новую связь двух пользователей.
+        :param user_id: ID пользователя.
+        :param subscriber_id: ID собеседника.
+        :param status: Статус ban/friend.
+        """
+        user = User.objects.get(id=user_id)
+        subscriber = User.objects.get(id=subscriber_id)
+        cls.objects.create(user=user, subscriber=subscriber, status=status)
+
+    def chats(self):
+        pass
+
+
+class UserRating(models.Model):
+    """
+    Модель рейтинг пользователя.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating')
+    appraiser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating')
+    estimation = models.IntegerField()
+
+    @classmethod
+    def new_rating(cls, user_id: int, appraiser_id: int, estimation: int):
+        """
+        Создает новый рейтинг.
+        :param user_id: ID пользователя, которому ставят рейтинг.
+        :param appraiser_id: ID пользователя, который ставит рейтинг.
+        :param estimation:
+        :return:
+        """
+        user = User.objects.get(id=user_id)
+        appraiser = User.objects.get(id=appraiser_id)
+        cls.objects.create(user=user, appraiser=appraiser, estimation=estimation)
+
+
+# todo --------------------------------------------------------------------------------------------------------
 class Article(models.Model):
     """
     Модель статьи.
