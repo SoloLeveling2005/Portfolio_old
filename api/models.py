@@ -6,7 +6,7 @@ from django.db import models
 
 # Create your models here.
 
-
+# todo START USERS
 class UserSettings(models.Model):
     """
     Модель настроек пользователя.
@@ -30,6 +30,7 @@ class User(models.Model):
     settings = models.ForeignKey(UserSettings, on_delete=models.CASCADE, related_name='user')
     biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField()
 
     @classmethod
     def new_user(cls, username: str, login: str, password: str, biography: str):
@@ -68,7 +69,7 @@ class User(models.Model):
         """
         :return: Возвращает статьи пользователя.
         """
-        return self.user_article.all()
+        return Article.objects.filter(author=self)
 
     def news(self):
         pass
@@ -98,12 +99,14 @@ class User(models.Model):
 class UserAvatar(models.Model):
     """
     Модель аватарка пользователя.
+    - user - ссылка на пользователя, который имеет данную аватарку.
+    - img - аватарка пользователя.
     """
     img = models.ImageField(null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
 
     @classmethod
-    def new_avatar(cls, user_id: int, img):
+    def create_avatar(cls, user_id: int, img):
         """
         Создает новую аватарку для пользователя в базе данных.
         :param user_id: ID пользователя
@@ -112,8 +115,17 @@ class UserAvatar(models.Model):
         user = User.objects.get(id=user_id)
         cls.objects.create(user=user, img=img)
 
+    @classmethod
+    def get_avatar(cls, user_id: int):
+        """
+        Возвращает модель картинки.
+        :param user_id: ID пользователя.
+        """
+        user = User.objects.get(id=user_id)
+        return UserAvatar.objects.get(user=user)
 
-class TagSkill(models.Model):
+
+class TagUserSkills(models.Model):
     """
     Модель всевозможных скиллов пользователей.
     """
@@ -123,7 +135,7 @@ class TagSkill(models.Model):
     @classmethod
     def new_tag_skill(cls, user_id: int, tag: str):
         """
-        Создает новый тег скилл.
+        Создает новый тег скилла.
         :param user_id: ID пользователя.
         :param tag: Название тега.
         """
@@ -136,18 +148,7 @@ class TagUserSkill(models.Model):
     Модель скиллов пользователя.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
-    tag = models.ForeignKey(TagSkill, on_delete=models.CASCADE, related_name='tag_user_skill')
-
-    @classmethod
-    def new_tag_skill(cls, user_id: int, tag_id: int):
-        """
-        Создает новый тег скилл.
-        :param user_id: ID пользователя.
-        :param tag_id: ID тег скилла.
-        """
-        user = User.objects.get(id=user_id)
-        tag = TagSkill.objects.get(id=tag_id)
-        cls.objects.create(author=user, tag=tag)
+    tag = models.ForeignKey(TagUserSkills, on_delete=models.CASCADE, related_name='tag_user_skill')
 
 
 class UserInfo(models.Model):
@@ -163,9 +164,8 @@ class UserInfo(models.Model):
     youtube_chanel = models.CharField(max_length=100)
     other_info = models.TextField()
 
-    @classmethod
-    def new_avatar(cls, user_id: int, gender: str, birthday: datetime, location: str, vk_profile: str,
-                   telegram_profile: str, youtube_chanel: str, other_info: str):
+    def create_user_info(self, user_id: int, gender: str, birthday: datetime, location: str, vk_profile: str,
+                         telegram_profile: str, youtube_chanel: str, other_info: str):
         """
         Создает доп. информацию пользователя.
         :param user_id: ID пользователя.
@@ -178,14 +178,14 @@ class UserInfo(models.Model):
         :param other_info: Остальная информация.
         """
         user = User.objects.get(id=user_id)
-        cls.objects.create(user=user, gender=gender, birthday=birthday, location=location, vk_profile=vk_profile,
-                           telegram_profile=telegram_profile, youtube_chanel=youtube_chanel, other_info=other_info)
+        self.objects.create(user=user, gender=gender, birthday=birthday, location=location, vk_profile=vk_profile,
+                            telegram_profile=telegram_profile, youtube_chanel=youtube_chanel, other_info=other_info)
 
     def user_tags(self):
         """
         :return: Возвращает теги пользователя.
         """
-        return self.tag_user_skill.all()
+        return TagUserSkill.objects.filter(user=self.user)
 
 
 class UserSubscriptions(models.Model):
@@ -194,22 +194,18 @@ class UserSubscriptions(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
     subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
-    status = models.BooleanField(default=False)
+    status = models.BooleanField(default=False)  # ban - false / friend - true
 
-    @classmethod
-    def new_user_subscriptions(cls, user_id: int, subscriber_id: int, status: bool):
+    def new_user_subscriptions(self, user_id: int, subscriber_id: int, status: bool):
         """
         Создает новую связь двух пользователей.
         :param user_id: ID пользователя.
         :param subscriber_id: ID собеседника.
-        :param status: Статус ban/friend.
+        :param status: Статус ban/friend false/true.
         """
         user = User.objects.get(id=user_id)
         subscriber = User.objects.get(id=subscriber_id)
-        cls.objects.create(user=user, subscriber=subscriber, status=status)
-
-    def chats(self):
-        pass
+        self.objects.create(user=user, subscriber=subscriber, status=status)
 
 
 class UserRating(models.Model):
@@ -234,17 +230,28 @@ class UserRating(models.Model):
         cls.objects.create(user=user, appraiser=appraiser, estimation=estimation)
 
 
-# todo --------------------------------------------------------------------------------------------------------
+# todo END USERS   ---------------------------------------------------------------------
+# todo START ARTICLES   ---------------------------------------------------------------------
+
+class TitleImageArticle(models.Model):
+    """
+    Модель картинки в заголовке.
+    """
+    img = models.ImageField(null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_title_img')
+
+
 class Article(models.Model):
     """
     Модель статьи.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='user_article')
     title = models.CharField(max_length=255, null=False)
     content = models.TextField(null=False)
     status = models.SmallIntegerField(null=False, default=1)  # global = 1 / local = 2
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField()
 
     @classmethod
     def new_article(cls, user_id: int, title: str, content: str, status: int):
@@ -276,6 +283,88 @@ class Article(models.Model):
         """
         return self.article_assessment.filter(status=True), self.article_assessment.filter(status=False)
 
+
+class AllTagArticle(models.Model):
+    """
+    Модель всевозможных скиллов пользователей.
+    """
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
+    tag = models.CharField(max_length=150)
+
+    @classmethod
+    def new_tag_article(cls, user_id: int, tag: str):
+        """
+        Создает новый тег скилл.
+        :param user_id: ID пользователя.
+        :param tag: Название тег скилла.
+        """
+        user = User.objects.get(id=user_id)
+
+        cls.objects.create(author=user, tag=tag)
+
+
+class TagArticle(models.Model):
+    """
+    Модель скиллов пользователя.
+    """
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_tag')
+    tag = models.ForeignKey(AllTagArticle, on_delete=models.CASCADE, related_name='article_tag', unique=True)
+
+    @classmethod
+    def new_tag_article(cls, article_id: int, tag_id: int):
+        """
+        Создает новый тег скилл.
+        :param article_id: ID тега статьи.
+        :param tag_id: ID тега скилла.
+        """
+        article = Article.objects.get(id=article_id)
+        tag = TagSkill.objects.get(id=tag_id)
+        cls.objects.create(article=article, tag=tag)
+
+
+class ArticleComment(models.Model):
+    """
+    Модель комментария статьи.
+    """
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_comment')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_comment')
+    content = models.CharField(max_length=300)
+
+
+class ArticleAssessment(models.Model):
+    """
+    Модель оценок для статьи.
+    """
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_assessment')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_assessment')
+    status = models.BooleanField(null=False)
+
+
+class UserBookmarks(models.Model):
+    """
+    Модель закладок пользователя.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_bookmark')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='user_bookmark')
+
+
+class UserBannedChat(models.Model):
+    """
+    Модель заблокированных пользователями чатов.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='user_banned_chat')
+
+
+class BannedUser(models.Model):
+    """
+    Модель заблокированных пользователей.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
+    reason = models.ForeignKey(Reason, on_delete=models.CASCADE, related_name='banned_user')
+
+
+# todo --------------------------------------------------------------------------------------------------------
 
 class TitleImageArticle(models.Model):
     """
