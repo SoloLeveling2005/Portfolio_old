@@ -19,8 +19,9 @@ from django.urls import path, include
 urlpatterns = [
     path('grappelli/', include('grappelli.urls')), # grappelli URLS
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),
-    path('/', include('web.urls')),
+    # path('api/', include('api.urls')),
+    path('chat_lm/', include('chat_lm.urls')),
+    # path('/', include('web.urls')),
 
     path('api-auth/', include('rest_framework.urls'))
 ]

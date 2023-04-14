@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'api',
-    'web',
+    'chat_lm',
+    # 'api',
+    # 'web',
     'rest_framework',
 ]
 
