@@ -5,8 +5,6 @@ from django.db import models
 from django.template.defaultfilters import slugify
 
 
-# Create your models here.
-
 # todo START USERS
 class UserSettings(models.Model):
     """
@@ -25,9 +23,9 @@ class User(models.Model):
     """
     Модель пользователя.
     """
-    username = models.CharField(max_length=100, null=False)
-    login = models.CharField(max_length=100, null=False)
-    password = models.CharField(max_length=255, null=False)
+    username = models.CharField(max_length=100)
+    login = models.CharField(max_length=100, unique=True)
+    password = models.CharField(max_length=255)
     settings = models.ForeignKey(UserSettings, on_delete=models.CASCADE, related_name='user')
     biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -43,13 +41,16 @@ class User(models.Model):
         :param biography: Биография пользователя
         """
         settings = UserSettings.objects.create()
-        cls.objects.create(
-            username=username,
-            password=make_password(password),
-            settings=settings,
-            login=login,
-            biography=biography
-        )
+        if User.objects.filter(login=login).exists() == False:
+            cls.objects.create(
+                username=username,
+                password=make_password(password),
+                settings=settings,
+                login=login,
+                biography=biography
+            )
+        else:
+            return
 
     def avatar(self):
         """
@@ -229,6 +230,53 @@ class UserRating(models.Model):
         user = User.objects.get(id=user_id)
         appraiser = User.objects.get(id=appraiser_id)
         cls.objects.create(user=user, appraiser=appraiser, estimation=estimation)
+
+
+class Chat(models.Model):
+    """
+    Модель чата между двумя пользователями.
+    """
+    title = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def create_community_chat(cls, title: str, first_user_id: int, second_user_id: int):
+        """
+        Метод создает чат между двумя пользователями.
+        :param title:
+        :param first_user_id:
+        :param second_user_id:
+        :return:
+        """
+        first_user = User.objects.get(id=first_user_id)
+        second_user = User.objects.get(id=second_user_id)
+        chat = cls.objects.create(title=title)
+        ChatParticipant.objects.create(chat=chat, user=first_user)
+        ChatParticipant.objects.create(chat=chat, user=second_user)
+
+    def get_messages(self):
+        return ChatMessage.objects.filter(chat=self)
+
+    def get_participants(self):
+        return ChatParticipant.objects.filter(chat=self)
+
+
+class ChatMessage(models.Model):
+    """
+    Модель сообщения чата между двумя пользователями.
+    """
+    chat = models.ForeignKey(Chat, related_name="chat_messages", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="chat_messages", on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now=True)
+
+
+class ChatParticipant(models.Model):
+    """
+    Модель участника чата между двумя пользователями.
+    """
+    chat = models.ForeignKey(Chat, related_name="chat_participant", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="chat_participant", on_delete=models.CASCADE)
 
 
 # todo END USERS   ---------------------------------------------------------------------
@@ -413,20 +461,20 @@ class CommunityChat(models.Model):
         cls.objects.create(title=title, community=community, slug=slug)
 
     def get_messages(self):
-        return ChatMessage.objects.filter(room=self)
+        return CommunityChatMessage.objects.filter(room=self)
 
     def get_participants(self):
-        return ChatParticipant.objects.filter(chat=self)
+        return CommunityChatParticipant.objects.filter(chat=self)
 
 
-class ChatMessage(models.Model):
+class CommunityChatMessage(models.Model):
     room = models.ForeignKey(CommunityChat, related_name="chat_messages", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="chat_messages", on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
 
 
-class ChatParticipant(models.Model):
+class CommunityChatParticipant(models.Model):
     chat = models.ForeignKey(CommunityChat, related_name="chat_participant", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="chat_participant", on_delete=models.CASCADE)
 
@@ -627,4 +675,3 @@ class BannedUser(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user', unique=True)
     reason = models.CharField(max_length=100)
-
