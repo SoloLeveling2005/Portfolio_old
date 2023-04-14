@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth.hashers import make_password
 from django.db import models
+from django.template.defaultfilters import slugify
 
 
 # Create your models here.
@@ -129,7 +130,7 @@ class TagUserSkills(models.Model):
     """
     Модель всевозможных скиллов пользователей.
     """
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_skill')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_skill')
     tag = models.CharField(max_length=150)
 
     @classmethod
@@ -140,7 +141,7 @@ class TagUserSkills(models.Model):
         :param tag: Название тега.
         """
         user = User.objects.get(id=user_id)
-        cls.objects.create(author=user, tag=tag)
+        cls.objects.create(user=user, tag=tag)
 
 
 class TagUserSkill(models.Model):
@@ -231,230 +232,53 @@ class UserRating(models.Model):
 
 
 # todo END USERS   ---------------------------------------------------------------------
-# todo START ARTICLES   ---------------------------------------------------------------------
-
-class TitleImageArticle(models.Model):
-    """
-    Модель картинки в заголовке.
-    """
-    img = models.ImageField(null=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_title_img')
-
-
-class Article(models.Model):
-    """
-    Модель статьи.
-    """
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='user_article')
-    title = models.CharField(max_length=255, null=False)
-    content = models.TextField(null=False)
-    status = models.SmallIntegerField(null=False, default=1)  # global = 1 / local = 2
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField()
-
-    @classmethod
-    def new_article(cls, user_id: int, title: str, content: str, status: int):
-        """
-        Создает статью в бд.
-        :param user_id: Объект пользователя, который создает статью.
-        :param title: Название статьи.
-        :param content: Текст статьи.
-        :param status: global = 1 / local = 2.
-        """
-        user = User.objects.get(id=user_id)
-        cls.objects.create(user=user, title=title, content=content, status=status)
-
-    def get_title_img(self):
-        """
-        :return: Возвращает титульную картинку статьи.
-        """
-        return self.article_title_img.get()
-
-    def get_comments(self):
-        """
-        :return: Возвращает все комментарии к статье.
-        """
-        return self.article_comment.get()
-
-    def get_assessment(self):
-        """
-        :return: Возвращает все оценки в виде [положительные,отрицательные].
-        """
-        return self.article_assessment.filter(status=True), self.article_assessment.filter(status=False)
-
-
-class AllTagArticle(models.Model):
-    """
-    Модель всевозможных скиллов пользователей.
-    """
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
-    tag = models.CharField(max_length=150)
-
-    @classmethod
-    def new_tag_article(cls, user_id: int, tag: str):
-        """
-        Создает новый тег скилл.
-        :param user_id: ID пользователя.
-        :param tag: Название тег скилла.
-        """
-        user = User.objects.get(id=user_id)
-
-        cls.objects.create(author=user, tag=tag)
-
-
-class TagArticle(models.Model):
-    """
-    Модель скиллов пользователя.
-    """
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_tag')
-    tag = models.ForeignKey(AllTagArticle, on_delete=models.CASCADE, related_name='article_tag', unique=True)
-
-    @classmethod
-    def new_tag_article(cls, article_id: int, tag_id: int):
-        """
-        Создает новый тег скилл.
-        :param article_id: ID тега статьи.
-        :param tag_id: ID тега скилла.
-        """
-        article = Article.objects.get(id=article_id)
-        tag = TagSkill.objects.get(id=tag_id)
-        cls.objects.create(article=article, tag=tag)
-
-
-class ArticleComment(models.Model):
-    """
-    Модель комментария статьи.
-    """
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_comment')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_comment')
-    content = models.CharField(max_length=300)
-
-
-class ArticleAssessment(models.Model):
-    """
-    Модель оценок для статьи.
-    """
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_assessment')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_assessment')
-    status = models.BooleanField(null=False)
-
-
-class UserBookmarks(models.Model):
-    """
-    Модель закладок пользователя.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_bookmark')
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='user_bookmark')
-
-
-class UserBannedChat(models.Model):
-    """
-    Модель заблокированных пользователями чатов.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='user_banned_chat')
-
-
-class BannedUser(models.Model):
-    """
-    Модель заблокированных пользователей.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
-    reason = models.ForeignKey(Reason, on_delete=models.CASCADE, related_name='banned_user')
-
-
-# todo --------------------------------------------------------------------------------------------------------
-
-class TitleImageArticle(models.Model):
-    """
-    Модель титульная картинка статьи.
-    """
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_title_img')
-    img = models.ImageField(null=False)
-
-    @classmethod
-    def title_img(cls, article_id: int, img):
-        """
-        Создает или обновляет титульную картинку статьи в базе данных.
-        :param article_id: ID статьи.
-        :param img: Аватарка.
-        Если
-        """
-        article = Article.objects.get(id=article_id)
-
-        # Если аватарка была добавлена, то обновляем ее, иначе создаем
-        if cls.objects.filter(article=article).exists():
-            img_article = cls.objects.get(article=article)
-            img_article.img = img
-            img_article.save()
-        else:
-            cls.objects.create(article=article, img=img)
-
-
-class ArticleComment(models.Model):
-    """
-    Модель комментарий статьи.
-    """
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_comment')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_create_by_user')
-    content = models.CharField(max_length=255)
-
-    @classmethod
-    def new_comment(cls, article_id: int, user_id: int, content: str):
-        """
-        Создает новый комментарий в базе данных.
-        :param article_id: ID статьи.
-        :param user_id: ID автора.
-        :param content: Текст комментария.
-        """
-        article = Article.objects.get(id=article_id)
-        user = User.objects.get(id=user_id)
-        cls.objects.create(article=article, user=user, content=content)
-
-
-class ArticleAssessment(models.Model):
-    """
-    Модель оценка статьи.
-    """
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_assessment')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_assessment')
-    status = models.BooleanField()  # true - like, false - dislike
-
-    @classmethod
-    def new_assessment(cls, article_id: int, user_id: int, status: bool):
-        """
-        Создает новый комментарий в базе данных.
-        :param article_id: ID статьи.
-        :param user_id: ID автора.
-        :param status: Оценка статьи (true - like, false - dislike).
-        """
-        article = Article.objects.get(id=article_id)
-        user = User.objects.get(id=user_id)
-
-        # Если оценка уже поставлена, удаляем старую оценку
-        if cls.objects.filter(article=article, user=user).exists():
-            cls.objects.get(article=article, user=user).delete()
-
-        cls.objects.create(article=article, user=user, status=status)
-
+# todo START COMMUNITY   ---------------------------------------------------------------------
 
 class Community(models.Model):
     """
     Модель сообщества.
     """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community')
     title = models.CharField(max_length=100, null=False)
     description = models.CharField(max_length=255, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     @classmethod
-    def new_community(cls, title: str, description: str):
+    def new_community(cls, user_id: int, title: str, description: str):
         """
         Создает новое сообщество в бд.
+        :param user_id: ID пользователя, создателя сообщества.
         :param title: Название сообщества.
         :param description: Описание сообщества.
         """
         cls.objects.create(title=title, description=description)
+
+    def get_tags(self):
+        pass
+
+    def get_settings(self):
+        pass
+
+    def get_avatar(self):
+        pass
+
+    def get_participants(self):
+        pass
+
+    def get_banned_user(self):
+        pass
+
+    def get_chats(self):
+        pass
+
+    def get_articles(self):
+        pass
+
+    def get_news(self):
+        pass
+
+    def get_roles(self):
+        pass
 
 
 class CommunityAvatar(models.Model):
@@ -488,30 +312,43 @@ class CommunityRole(models.Model):
     """
     title = models.CharField(max_length=100)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_role')
-    create_articles = models.BooleanField(default=False)
+    administrator = models.BooleanField(default=False)
+    content_moderator = models.BooleanField(default=False)
+    invite_participants = models.BooleanField(default=False)
+    edit_community_information = models.BooleanField(default=False)
     manage_participants = models.BooleanField(default=False)
-    community_editing = models.BooleanField(default=False)
-    article_editing = models.BooleanField(default=False)
+    publish_articles = models.BooleanField(default=False)
+    publish_news = models.BooleanField(default=False)
 
     @classmethod
-    def new_role(cls, title: str, community_id: int, create_articles: bool, manage_participants: bool,
-                 community_editing: bool, article_editing: bool):
+    def new_role(cls, title: str, community_id: int, administrator: bool = False, content_moderator: bool = False,
+                 invite_participants: bool = False, edit_community_information: bool = False,
+                 manage_participants: bool = False,
+                 publish_articles: bool = False, publish_news: bool = False):
         """
         Создает новую роль для сообщества в бд.
         :param title: Название роли.
         :param community_id: ID сообщества.
-        :param create_articles: Разрешение на создание статей - true/false
-        :param manage_participants: Разрешение на управление участниками - true/false
-        :param community_editing: Разрешение на редактирование сообщества - true/false
-        :param article_editing: Разрешение на редактирование статей - true/false
+        :param administrator: Доступ ко всем функциям.
+        :param content_moderator: Разрешение на удаление/создание/редактирование контента.
+        :param invite_participants: Разрешение на принятие пользователей в сообщество.
+        :param edit_community_information: Разрешение на редактирование информации о сообществе.
+        :param manage_participants: Разрешение на бан/разбан пользователей.
+        :param publish_articles: Разрешение на публикацию статей от имени сообщества.
+        :param publish_news: Разрешение на публикацию новостей от имени сообщества.
+        :return:
         """
         community = Community.objects.get(id=community_id)
         cls.objects.create(title=title,
                            community=community,
-                           create_articles=create_articles,
+                           administrator=administrator,
+                           content_moderator=content_moderator,
+                           invite_participants=invite_participants,
+                           edit_community_information=edit_community_information,
                            manage_participants=manage_participants,
-                           community_editing=community_editing,
-                           article_editing=article_editing)
+                           publish_articles=publish_articles,
+                           publish_news=publish_news,
+                           )
 
 
 class CommunityParticipant(models.Model):
@@ -537,15 +374,257 @@ class CommunityParticipant(models.Model):
         cls.objects.create(community=community, user=user, role=role)
 
 
+class CommunityTags(models.Model):
+    """
+    Модель всевозможных тегов сообщества.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_tags')
+    tag = models.CharField(max_length=150, unique=True)
+
+    @classmethod
+    def new_tag_community(cls, user_id: int, tag: str):
+        """
+        Создает новый тег сообщества.
+        :param user_id: ID пользователя автора.
+        :param tag: Название тег скилла.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(user=user, tag=tag)
+
+
+class CommunityTag(models.Model):
+    """
+    Модель тега сообщества.
+    """
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_tag')
+    tag = models.ForeignKey(CommunityTags, on_delete=models.CASCADE, related_name='community_tag')
+
+
 class CommunityChat(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_room')
     slug = models.SlugField(unique=True)
-    name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def create_community_chat(cls, community_id: int, title: str):
+        community = Community.objects.get(id=community_id)
+        slug = slugify(title)
+        cls.objects.create(title=title, community=community, slug=slug)
+
+    def get_messages(self):
+        return ChatMessage.objects.filter(room=self)
+
+    def get_participants(self):
+        return ChatParticipant.objects.filter(chat=self)
 
 
 class ChatMessage(models.Model):
-    room = models.ForeignKey(CommunityChat, related_name="messages", on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name="messages", on_delete=models.CASCADE)
+    room = models.ForeignKey(CommunityChat, related_name="chat_messages", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="chat_messages", on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
+
+
+class ChatParticipant(models.Model):
+    chat = models.ForeignKey(CommunityChat, related_name="chat_participant", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="chat_participant", on_delete=models.CASCADE)
+
+
+# todo END COMMUNITY   ---------------------------------------------------------------------
+# todo START ARTICLES   ---------------------------------------------------------------------
+
+class TitleImageArticle(models.Model):
+    """
+    Модель картинки в заголовке.
+    """
+    img = models.ImageField(null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_title_img', unique=True)
+
+
+class Article(models.Model):
+    """
+    Модель статьи.
+    """
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='user_article')
+    title = models.CharField(max_length=155, null=False)
+    description = models.CharField(max_length=355, null=False)
+    content = models.TextField(null=False)
+    status = models.SmallIntegerField(null=False, default=1)  # global = 1 / local = 2
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField()
+
+    @classmethod
+    def new_article(cls, user_id: int, title: str, description: str, content: str, status: int):
+        """
+        Создает статью в бд.
+        :param user_id: Объект пользователя, который создает статью.
+        :param title: Название статьи.
+        :param description: Описание статьи.
+        :param content: Текст статьи.
+        :param status: global = 1 / local = 2.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(user=user, title=title, description=description, content=content, status=status)
+
+    def get_title_img(self):
+        """
+        :return: Возвращает титульную картинку статьи.
+        """
+        return TitleImageArticle.objects.get(user=self)
+
+    def get_comments(self):
+        """
+        :return: Возвращает все комментарии к статье.
+        """
+        return ArticleComment.objects.filter(user=self)
+
+    def get_assessments(self):
+        """
+        :return: Возвращает все оценки в виде [положительные,отрицательные].
+        """
+        return ArticleAssessment.objects.filter(user=self, status=True), \
+            ArticleAssessment.objects.filter(user=self, status=False)
+
+
+class AllArticleTags(models.Model):
+    """
+    Модель всевозможных скиллов пользователей.
+    """
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
+    tag = models.CharField(max_length=150, unique=True)
+
+    @classmethod
+    def new_tag_article(cls, user_id: int, tag: str):
+        """
+        Создает новый тег скилл.
+        :param user_id: ID пользователя.
+        :param tag: Название тег скилла.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(author=user, tag=tag)
+
+
+class ArticleTags(models.Model):
+    """
+    Модель скиллов пользователя.
+    """
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_tag')
+    tag = models.ForeignKey(AllArticleTags, on_delete=models.CASCADE, related_name='article_tag')
+
+
+class ArticleComment(models.Model):
+    """
+    Модель комментария статьи.
+    """
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_comment')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_comment')
+    content = models.CharField(max_length=300)
+
+
+class ArticleAssessment(models.Model):
+    """
+    Модель оценок для статьи.
+    """
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_assessment')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_assessment')
+    status = models.BooleanField(null=False)
+
+
+# todo END ARTICLES   ---------------------------------------------------------------------
+# todo START  NEWS  ---------------------------------------------------------------------
+
+class News(models.Model):
+    """
+    Модель новости.
+    """
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='user_article')
+    title = models.CharField(max_length=155, null=False)
+    description = models.CharField(max_length=355, null=False)
+    status = models.SmallIntegerField(null=False, default=1)  # global = 1 / local = 2
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField()
+
+    @classmethod
+    def new_news(cls, user_id: int, title: str, description: str, status: int):
+        """
+        Создает статью в бд.
+        :param user_id: Объект пользователя, который создает статью.
+        :param title: Название статьи.
+        :param description: Описание статьи.
+        :param status: global = 1 / local = 2.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(user=user, title=title, description=description, status=status)
+
+    def get_assessments(self):
+        """
+        :return: Возвращает все оценки в виде [положительные,отрицательные].
+        """
+        return NewsAssessment.objects.filter(user=self, status=True), \
+            NewsAssessment.objects.filter(user=self, status=False)
+
+
+class AllNewsTags(models.Model):
+    """
+    Модель всевозможных скиллов пользователей.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tags_news')
+    tag = models.CharField(max_length=150, unique=True)
+
+    @classmethod
+    def new_tag_article(cls, user_id: int, tag: str):
+        """
+        Создает новый тег скилл.
+        :param user_id: ID пользователя автора.
+        :param tag: Название тег скилла.
+        """
+        user = User.objects.get(id=user_id)
+        cls.objects.create(user=user, tag=tag)
+
+
+class NewsTags(models.Model):
+    """
+    Модель скиллов пользователя.
+    """
+    news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='news_tag')
+    tag = models.ForeignKey(AllArticleTags, on_delete=models.CASCADE, related_name='news_tag')
+
+
+class NewsAssessment(models.Model):
+    """
+    Модель оценок для статьи.
+    """
+    news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='news_assessment')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_assessment')
+    status = models.BooleanField(null=False)
+
+
+# todo END NEWS   ---------------------------------------------------------------------
+
+
+class UserBookmarks(models.Model):
+    """
+    Модель закладок пользователя.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_bookmark')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='user_bookmark')
+
+
+class UserBannedChat(models.Model):
+    """
+    Модель заблокированных пользователями чатов.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
+    chat = models.ForeignKey(ChatMessage, on_delete=models.CASCADE, related_name='user_banned_chat')
+
+
+class BannedUser(models.Model):
+    """
+    Модель заблокированных пользователей.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user', unique=True)
+    reason = models.CharField(max_length=100)
+
