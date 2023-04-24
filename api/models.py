@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from django.contrib.auth.hashers import make_password
 from django.db import models
@@ -29,37 +30,38 @@ class User(models.Model):
     settings = models.ForeignKey(UserSettings, on_delete=models.CASCADE, related_name='user')
     biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField()
+    updated_at = models.DateTimeField(auto_now_add=True)
 
     @classmethod
-    def new_user(cls, username: str, login: str, password: str, biography: str):
+    def new_user(cls, username: str, password: str, biography: str):
         """
         Создает нового пользователя в базе данных и хеширует его пароль.
-        :param login: Логин
         :param username: Имя Фамилия
         :param password: Пароль
         :param biography: Биография пользователя
         """
         settings = UserSettings.objects.create()
-        if User.objects.filter(login=login).exists() == False:
-            cls.objects.create(
+        login = slugify(username + ' ' + str(random.randint(100,999)))
+        if not User.objects.filter(username=username).exists():
+            user = cls.objects.create(
                 username=username,
                 password=make_password(password),
                 settings=settings,
                 login=login,
-                biography=biography
+                biography_small=biography,
             )
+            return cls.objects.get(login=login)
         else:
-            return
+            return None
 
     def avatar(self):
         """
         :return: Возвращает аватарку пользователя.
         """
-        return self.user_avatar.get()
+        return UserAvatar.objects.get(user=self)
 
     def info(self):
-        pass
+        return UserInfo.objects.get(user=self)
 
     def rating(self):
         pass
@@ -131,7 +133,7 @@ class TagUserSkills(models.Model):
     """
     Модель всевозможных скиллов пользователей.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_skill')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skills')
     tag = models.CharField(max_length=150)
 
     @classmethod
@@ -149,8 +151,8 @@ class TagUserSkill(models.Model):
     """
     Модель скиллов пользователя.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
-    tag = models.ForeignKey(TagUserSkills, on_delete=models.CASCADE, related_name='tag_user_skill')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill_on_user')
+    tag = models.ForeignKey(TagUserSkills, on_delete=models.CASCADE, related_name='tag_user_skill_on_tag')
 
 
 class UserInfo(models.Model):
@@ -194,8 +196,8 @@ class UserSubscriptions(models.Model):
     """
     Модель подписок на пользователей.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
-    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
     status = models.BooleanField(default=False)  # ban - false / friend - true
 
     def new_user_subscriptions(self, user_id: int, subscriber_id: int, status: bool):
@@ -214,8 +216,8 @@ class UserRating(models.Model):
     """
     Модель рейтинг пользователя.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating')
-    appraiser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating_on_user')
+    appraiser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating_on_appraiser')
     estimation = models.IntegerField()
 
     @classmethod
@@ -265,8 +267,8 @@ class ChatMessage(models.Model):
     """
     Модель сообщения чата между двумя пользователями.
     """
-    chat = models.ForeignKey(Chat, related_name="chat_messages", on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name="chat_messages", on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="chat_messages")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages")
     content = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
 
@@ -275,8 +277,8 @@ class ChatParticipant(models.Model):
     """
     Модель участника чата между двумя пользователями.
     """
-    chat = models.ForeignKey(Chat, related_name="chat_participant", on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name="chat_participant", on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="chat_participant")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_participant")
 
 
 # todo END USERS   ---------------------------------------------------------------------
@@ -468,15 +470,15 @@ class CommunityChat(models.Model):
 
 
 class CommunityChatMessage(models.Model):
-    room = models.ForeignKey(CommunityChat, related_name="chat_messages", on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name="chat_messages", on_delete=models.CASCADE)
+    room = models.ForeignKey(CommunityChat, related_name="community_chat_message", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="community_chat_message", on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
 
 
 class CommunityChatParticipant(models.Model):
-    chat = models.ForeignKey(CommunityChat, related_name="chat_participant", on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name="chat_participant", on_delete=models.CASCADE)
+    chat = models.ForeignKey(CommunityChat, related_name="community_chat_participant", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="community_chat_participant", on_delete=models.CASCADE)
 
 
 # todo END COMMUNITY   ---------------------------------------------------------------------
@@ -487,15 +489,15 @@ class TitleImageArticle(models.Model):
     Модель картинки в заголовке.
     """
     img = models.ImageField(null=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_title_img', unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_title_img')
 
 
 class Article(models.Model):
     """
     Модель статьи.
     """
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='user_article')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='article')
     title = models.CharField(max_length=155, null=False)
     description = models.CharField(max_length=355, null=False)
     content = models.TextField(null=False)
@@ -540,7 +542,7 @@ class AllArticleTags(models.Model):
     """
     Модель всевозможных скиллов пользователей.
     """
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_tags')
     tag = models.CharField(max_length=150, unique=True)
 
     @classmethod
@@ -587,8 +589,8 @@ class News(models.Model):
     """
     Модель новости.
     """
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_article')
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='user_article')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='news')
     title = models.CharField(max_length=155, null=False)
     description = models.CharField(max_length=355, null=False)
     status = models.SmallIntegerField(null=False, default=1)  # global = 1 / local = 2
@@ -619,7 +621,7 @@ class AllNewsTags(models.Model):
     """
     Модель всевозможных скиллов пользователей.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tags_news')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_tags')
     tag = models.CharField(max_length=150, unique=True)
 
     @classmethod
@@ -666,12 +668,12 @@ class UserBannedChat(models.Model):
     Модель заблокированных пользователями чатов.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
-    chat = models.ForeignKey(ChatMessage, on_delete=models.CASCADE, related_name='user_banned_chat')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='user_banned_chat')
 
 
 class BannedUser(models.Model):
     """
     Модель заблокированных пользователей.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user', unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
     reason = models.CharField(max_length=100)
