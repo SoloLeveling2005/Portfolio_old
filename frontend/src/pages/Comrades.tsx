@@ -2,23 +2,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
+
+
+
 import Header from '../components/Header';
 import { Link, ScrollRestoration, useParams } from "react-router-dom";
 import SmartSearch from '../components/SmartSearch';
 
-function Search (props: any) {
-    let { id } = useParams(); 
-    let user_id = 1;
-    const h2ref = useRef();
+function Comrades () {
 
-    // устанавливаем прокрутку после рендеринга компонента
-    
-
-    
     return (
         <div className="Home text-black">
             <div className='' >
-                <Header page='Search'/>
+                <Header page='Comrades'/>
             </div>
             <div className="w-100 h-100">
                 <div className='table container'>
@@ -42,4 +38,4 @@ function Search (props: any) {
     );
 }
 
-export default Search;
+export default Comrades;

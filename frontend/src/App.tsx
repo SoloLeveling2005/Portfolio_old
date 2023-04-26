@@ -17,6 +17,8 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Search from './pages/Search';
 import Messenger from './pages/Messenger';
+import Comrades from './pages/Comrades'
+import Communities from './pages/Communities' 
 const router = createBrowserRouter([
   {
     path: "/",
@@ -43,6 +45,15 @@ const router = createBrowserRouter([
     path:'/search',
     element: <Search/>
   },
+  {
+    path:'/comrades',
+    element: <Comrades/>
+  },
+  {
+    path:'/communities',
+    element: <Communities/>
+  },
+  
   {
     path:'/messenger',
     element: <Messenger/>

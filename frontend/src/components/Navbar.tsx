@@ -10,16 +10,13 @@ function Navbar(props:{'page':string}) {
             <div className="container d-flex py-3 justify-content-between align-items-center">
                 <div className='d-flex justify-content-between align-items-center'>
                     <Link to={`/`} className='text-black me-4'>Лента</Link>
-                    <Link to={`/search`} className='text-black me-4'>Поиск</Link>
                     <Link to={`/profile`} className='text-black me-4'>Профиль</Link>
                     <Link to={`/messenger`} className='text-black me-4'>Мессенджер</Link>
                     <Link to={`/comrades`} className='text-black me-4'>Друзья и коллеги</Link>                    
+                    <Link to={`/communities`} className='text-black me-4'>Сообщества</Link>                    
                     <Link to={`/settings`} className='text-black me-4'>Настройки</Link>
                 </div>
                 <div className='d-flex'>
-                    {/* <img src="/img/day-and-night-white.png" alt="" className='img-small-19-24 cursor-pointer ms-4' /> */}
-                    {/* <Link to={`/settings`} className='fs-4 text-decoration-none text-white'><img src="/img/settings.png" alt="Настройки" title='Настройки' className='img-small-24 cursor-pointer ms-4' /></Link> */}
-                    {/* <Link to={`/profile`} className='fs-4 text-decoration-none text-white'><img src="/img/user2.png" alt="Профиль" title='Профиль' className='img-small-24 cursor-pointer ms-4'/></Link> */}
                     <img src="/img/logout.png" alt="Выход" title='Выход' className='img-small-24 cursor-pointer ms-4' />
                 </div>
             </div>
