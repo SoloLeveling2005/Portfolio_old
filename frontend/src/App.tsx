@@ -15,6 +15,8 @@ import User from './pages/User';
 import Article from './pages/Article';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Search from './pages/Search';
+import Messenger from './pages/Messenger';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -36,6 +38,14 @@ const router = createBrowserRouter([
   {
     path: "/settings",
     element: <Settings/>,
+  },
+  {
+    path:'/search',
+    element: <Search/>
+  },
+  {
+    path:'/messenger',
+    element: <Messenger/>
   },
 ]);
 function App() {

@@ -25,15 +25,14 @@ function Card(props:{'title':string, 'img_url':string, 'articale_url':string, 'd
             <div className='d-flex mt-2'>
                 <div className='d-flex align-items-center  me-3 ms-1'>
                     <img src="/img/like_active.png" alt="Отзыв" title='Отзыв' className='img-small-20 cursor-pointer me-1' />
-                    1
+                    11
                 </div>
-                    <div className='d-flex align-items-center  me-3 ms-1'>
+                <div className='d-flex align-items-center  me-3 ms-1'>
                     <img src="/img/bookmark_active.png" alt="В закладки" title='В закладки' className='img-small-20 cursor-pointer me-1' />
-                    1
+                    15
                 </div>
-                    <div className='d-flex align-items-center  me-3 ms-1'>
+                <div className='d-flex align-items-center  me-3 ms-1'>
                     <img src="/img/comment.png" alt="Комментарий" title='Комментарий' className='img-small-20 cursor-pointer me-1' />
-                    1
                 </div>
             </div>
         </div>
