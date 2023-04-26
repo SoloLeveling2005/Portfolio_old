@@ -53,21 +53,27 @@ function Home() {
 
                                         После множества экспериментов и ошибок, я нашел наиболее оптимальный промт для работы с ChatGPT, который позволяет мне полностью автоматизировать процесс разработки программы в соответствии с моим ТЗ. Сейчас я готов поделиться с вами своим опытом.'
                                         img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/a35/c93/4fb/a35c934fb02dcef6687214136bc7f2cc.png'
-                                        articale_url='/article/1'
+                                        articale_id='1'
+                                         count_likes="12" 
+                                         bookmark_active={false} 
                                     />
                                     <Card 
                                         title='LAION и энтузиасты по всему миру разрабатывают Open Assistant — открытый аналог ChatGPT' 
                                         who='Company'
                                         description='Некоммерческая организация LAION и энтузиасты по всему миру занимаются разработкой Open Assistant — это проект, цель которого в предоставлении всем желающим доступа к продвинутой большой языковой модели, основанной на принципах чат-бота, с конечной целью революции в инновациях в области обработки естественного языка...'
                                         img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/829/a55/1fa/829a551facb757c2c2c827c243d561a2.png'
-                                        articale_url='/article/1'
+                                        articale_id='2'
+                                         count_likes="15" 
+                                         bookmark_active={true} 
                                     />
                                     <Card 
                                         title='Менеджмент зависимостей в Javascript' 
                                         who='Company'
                                         description='Для многих разработчиков процесс установки зависимостей представляет собой некую "магию", которая происходит при выполнении npm install. Понимание принципов работы этой "магии" может сильно помочь при возникновении ошибки во время установки очередной библиотеки. Нынешний NPM — результат многих лет проб и ошибок, поэтому для его детального понимания я предлагаю начать с самого начала.'
                                         img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/b35/be9/fd4/b35be9fd4106e6e52b741b2f353ff605.png'
-                                        articale_url='/article/1'
+                                        articale_id='3'
+                                         count_likes="152" 
+                                         bookmark_active={true} 
                                     />
                                 </section>
                             </div>

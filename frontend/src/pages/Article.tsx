@@ -5,6 +5,7 @@ import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import { Link, ScrollRestoration, useParams } from "react-router-dom";
 import SmartSearch from '../components/SmartSearch';
+import RelatedArticles from '../components/RelatedArticles';
 
 function Home (props: any) {
     let { id } = useParams(); 
@@ -68,35 +69,15 @@ function Home (props: any) {
                             </div>
 
                             <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
-                                <h5 className="card-title">Вопросы и ответы</h5>
+                                <h5 className="card-title">Похожие запросы</h5>
                                 <div className="card-body ps-0">
                                     <div className="card-text">
-                                    <div className="list-group">
-                                        <a href="#" className="list-group-item list-group-item-action" aria-current="true">
-                                            <div className="d-flex w-100 justify-content-between">
-                                                {/* <h5 className="mb-1">List group item heading</h5> */}
-                                                {/* <small>3 days ago</small> */}
-                                            </div>
-                                            <p className="mb-1 fw-bold">Some placeholder content in a paragraph?</p>
-                                            <small>And some small print.</small>
-                                        </a>
-                                        <a href="#" className="list-group-item list-group-item-action">
-                                            <div className="d-flex w-100 justify-content-between">
-                                                {/* <h5 className="mb-1">List group item heading</h5> */}
-                                                {/* <small className="text-muted">3 days ago</small> */}
-                                            </div>
-                                            <p className="mb-1 fw-bold">Some placeholder content in a paragraph?</p>
-                                            <small className="text-muted">And some muted small print.</small>
-                                        </a>
-                                        <a href="#" className="list-group-item list-group-item-action">
-                                            <div className="d-flex w-100 justify-content-between">
-                                                {/* <h5 className="mb-1">List group item heading</h5> */}
-                                                {/* <small className="text-muted">3 days ago</small> */}
-                                            </div>
-                                            <p className="mb-1 fw-bold">Some placeholder content in a paragraph?</p>
-                                            <small className="text-muted">And some muted small print.</small>
-                                        </a>
-                                    </div>
+                                        <div className="list-group">
+                                            <RelatedArticles id='1' title='Some placeholder content in a paragraph?'/>
+                                            <RelatedArticles id='2' title='Some placeholder content in a paragraph?'/>
+                                            <RelatedArticles id='3' title='Some placeholder content in a paragraph?'/>
+
+                                        </div>
                                     </div>
                                 </div>
                             </div>

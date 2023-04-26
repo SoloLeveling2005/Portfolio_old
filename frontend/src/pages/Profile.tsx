@@ -7,6 +7,9 @@ import Smart_search from '../components/SmartSearch';
 import { Link } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
+import Comment from '../components/Comment';
+import Card from '../components/Card';
+
 function Home() {
 
     const [nav, switchNav] = useState('profile');
@@ -50,75 +53,42 @@ function Home() {
                                 </div>
                             </div>
                             {nav == 'profile' && 
-                            <div className="card m-0 p-0 bg-white mb-3 w-100 ">
-                                
-                                <div className="card-body">
-                                    <h5 className=''>Профиль</h5>
-                                    <p>Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание </p>
+                                <div className="card m-0 p-0 bg-white mb-3 w-100 ">
+                                    <div className="card-body">
+                                        <h5 className=''>Профиль</h5>
+                                        <p>Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание </p>
+                                    </div>
                                 </div>
-                            </div>
                             }   
                             {nav == 'articles' && 
-                            <div className="p-0 m-0">
-                                
-                                <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
-                                    <h5 className="card-title">Как использовать промты в ChatGPT для генерации кода на Python</h5>
-                                    <span className='card-title-company mb-3 cursor-pointer'>Cтатья компании Company</span>
-                                    <img src="https://hsto.org/r/w1560/getpro/habr/upload_files/a35/c93/4fb/a35c934fb02dcef6687214136bc7f2cc.png" className="card-img-top overflow-hidden object-fit-cover w-100" alt="..."></img>
-                                    <div className="card-body ps-0">
-                                        <p className="card-text">
-                                            Привет, друзья! Сегодня я хочу рассказать вам о том, как использовать промты в ChatGPT для создания программного кода на Python. Если вы работаете с Python или интересуетесь программированием, то вы, наверняка, знаете, насколько важно уметь быстро и эффективно создавать код.
+                                <div className="p-0 m-0">
+                                    <Card title='Как использовать промты в ChatGPT для генерации кода на Python' img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/a35/c93/4fb/a35c934fb02dcef6687214136bc7f2cc.png' description='
+                                    Привет, друзья! Сегодня я хочу рассказать вам о том, как использовать промты в ChatGPT для создания программного кода на Python. Если вы работаете с Python или интересуетесь программированием, то вы, наверняка, знаете, насколько важно уметь быстро и эффективно создавать код.
 
-                                            Для тех, кто не знаком с термином "промт", это специальные подсказки, которые выводятся в интерактивной среде Python и позволяют пользователю быстро и легко вводить команды. Обычно они выводятся в виде текста, который предлагает пользователю варианты продолжения его команды.
+                                    Для тех, кто не знаком с термином "промт", это специальные подсказки, которые выводятся в интерактивной среде Python и позволяют пользователю быстро и легко вводить команды. Обычно они выводятся в виде текста, который предлагает пользователю варианты продолжения его команды.
 
-                                            Чатбот ChatGPT основан на искусственном интеллекте и способен генерировать текст на основе предыдущих входных данных. Таким образом, мы можем использовать его для генерации промтов для создания кода на Python.
+                                    Чатбот ChatGPT основан на искусственном интеллекте и способен генерировать текст на основе предыдущих входных данных. Таким образом, мы можем использовать его для генерации промтов для создания кода на Python.
 
-                                            После множества экспериментов и ошибок, я нашел наиболее оптимальный промт для работы с ChatGPT, который позволяет мне полностью автоматизировать процесс разработки программы в соответствии с моим ТЗ. Сейчас я готов поделиться с вами своим опытом.
-                                        </p>
-                                        <Link to={`/article/1`} className="btn btn-primary">Подробнее</Link>
-                                    </div>
+                                    После множества экспериментов и ошибок, я нашел наиболее оптимальный промт для работы с ChatGPT, который позволяет мне полностью автоматизировать процесс разработки программы в соответствии с моим ТЗ. Сейчас я готов поделиться с вами своим опытом.
+                                    ' articale_id='1' who='Company' count_likes="12" bookmark_active={false} />
                                 </div>
-                            </div>
                             }     
                             {nav == 'comments' && 
-                            <div className="p-0 m-0">
-                                <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
-                                    <Link to={`/article/1`} className=""><h5 className="card-title mb-1 pb-1">Как использовать промты в ChatGPT для генерации кода на Python</h5></Link>
-                                    <div className="card-body ps-0 py-1">
-                                        <p className="card-text">
-                                            Комментарии
-                                        </p>
-                                        
-                                    </div>
-                                </div>
-                                <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
-                                    <Link to={`/article/1`} className=""><h5 className="card-title mb-1 pb-1">Как использовать промты в ChatGPT для генерации кода на Python</h5></Link>
-                                    <div className="card-body ps-0 py-1">
-                                        <p className="card-text">
-                                            Комментарии
-                                        </p>
-                                        
-                                    </div>
-                                </div>
-                                <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
-                                    <Link to={`/article/1`} className=""><h5 className="card-title mb-1 pb-1">Как использовать промты в ChatGPT для генерации кода на Python</h5></Link>
-                                    <div className="card-body ps-0 py-1">
-                                        <p className="card-text">
-                                            Комментарии
-                                        </p>
-                                        
-                                    </div>
-                                </div>
+                                <div className="p-0 m-0">
+                                    <Comment id='1' post_title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                    <Comment id='2' post_title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                    <Comment id='3' post_title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
                                 
-                                
-                            </div>
+                                    
+                                    
+                                </div>
                             }           
                             
                         </div>
                         <div className='col-4 position-relative p-0 m-0'>
                             <div className='padding-top-20-px position-sticky top-0'>
                                 <UserInfo country='Россия' registered='22 марта' last_login='сегодня в 01:11'/>
-                                <ActivityUser articles={[{url:'string', title:'string', count_activity:2}]}/>
+                                {/* <ActivityUser articles={[{url:'string', title:'string', count_activity:2}]}/> */}
                             </div>
                         </div>
                     </div>

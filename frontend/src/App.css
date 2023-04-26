@@ -177,3 +177,7 @@ a {
     width: 80px;
     height: 80px;
 }
+
+.w-49 {
+    width: 49.6% !important;
+}
