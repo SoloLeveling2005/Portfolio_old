@@ -13,7 +13,7 @@ function Navbar(props:{'page':string}) {
                     <Link to={`/profile`} className='text-black me-4'>Профиль</Link>
                     <Link to={`/messenger`} className='text-black me-4'>Мессенджер</Link>
                     <Link to={`/comrades`} className='text-black me-4'>Друзья и коллеги</Link>                    
-                    <Link to={`/communities`} className='text-black me-4'>Сообщества</Link>                    
+                    <Link to={`/communities`} className='text-black me-4'>Компании и сообщества</Link>                    
                     <Link to={`/settings`} className='text-black me-4'>Настройки</Link>
                 </div>
                 <div className='d-flex'>
