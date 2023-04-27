@@ -26,9 +26,9 @@ function Communities () {
                                             Мои сообщества
                                         </div>
                                     </div>
-                                    <Community id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание компании1. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='100' signed={true} categories={['Учим','Математика']} />
-                                    <Community id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title2' description='Описание компании2. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='1003' signed={true} categories={['Учим','Русский']} />
-                                    <Community id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title3' description='Описание компании3. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='3000' signed={true} categories={['Учим','Физика']} />
+                                    <Community id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание сообщества 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='100' signed={true} categories={['Учим','Математика']} recommended={false} />
+                                    <Community id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title2' description='Описание сообщества 2. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='1003' signed={true} categories={['Учим','Русский']} recommended={true} />
+                                    <Community id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title3' description='Описание сообщества 3. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='3000' signed={true} categories={['Учим','Физика']} recommended={true} />
                                     
 
                                 </div>
@@ -38,9 +38,9 @@ function Communities () {
                                             Мои компании
                                         </div>
                                     </div>
-                                    <Company company_id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' company_title='Title1' signed={true} />
-                                    <Company company_id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' company_title='Title2' signed={true} />
-                                    <Company company_id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' company_title='Title3' signed={true} />
+                                    <Company id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание компании 1.' subscribers='1234' signed={true} categories={['Учим','Математика']} recommended={false} />
+                                    <Company id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание компании 2.' subscribers='566' signed={true} categories={['Учим','Русский']} recommended={false} />
+                                    <Company id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание компании 3.' subscribers='900' signed={true} categories={['Учим','Физика']} recommended={true} />
                                 </div>
                                 <div className="tab-pane fade h-100" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">
                                     <div className="card bg-white p-0 m-0 border-1 mb-2 ">
@@ -52,20 +52,9 @@ function Communities () {
                                             <button className='btn btn-primary ms-2'>Поиск</button>
                                         </div>
                                     </div>
-                                    <div className="card mb-1">
-                                        <div className="d-flex p-0 m-0 mx-2">
-                                            <div className="m-0 d-flex align-items-center justify-content-center">
-                                                <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                            </div>
-                                            <div className="p-0 m-0">
-                                                <div className="card-body">
-                                                    <h5 className="card-title">Username</h5>
-                                                    <a href="#" className="btn btn-primary me-2">Принять заявку</a>
-                                                    <a href="#" className="btn btn-danger">В черный список</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <Community id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title3' description='Описание сообщества 3. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='3000' signed={false} categories={['Учим','Физика']} recommended={false} />
+                                    <Company id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание компании 1.' subscribers='1234' signed={false} categories={['Учим','Математика']} recommended={false} />
+
                                 </div>
                                 <div className="tab-pane fade h-100" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">
                                     <div className="card bg-white p-0 m-0 border-1 mb-2 ">
@@ -73,35 +62,8 @@ function Communities () {
                                             Рекомендации друзей
                                         </div>
                                     </div>
-                                    <div className="card mb-1">
-                                        <div className="d-flex p-0 m-0 mx-2">
-                                            <div className="m-0 d-flex align-items-center justify-content-center">
-                                                <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                            </div>
-                                            <div className="p-0 m-0">
-                                                <div className="card-body">
-                                                    <h5 className="card-title">Username</h5>
-                                                    <a href="#" className="btn btn-primary me-2">Принять заявку</a>
-                                                    <a href="#" className="btn btn-danger">В черный список</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="card mb-1">
-                                        <div className="d-flex p-0 m-0 mx-2">
-                                            <div className="m-0 d-flex align-items-center justify-content-center">
-                                                <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                            </div>
-                                            <div className="p-0 m-0">
-                                                <div className="card-body">
-                                                    <h5 className="card-title">Username</h5>
-                                                    <a href="#" className="btn btn-primary me-2">Принять заявку</a>
-                                                    <a href="#" className="btn btn-danger">В черный список</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                    <Community id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title3' description='Описание сообщества 3. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='3000' signed={false} categories={['Учим','Физика']} recommended={false} />
+                                    <Company id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание компании 1.' subscribers='1234' signed={false} categories={['Учим','Математика']} recommended={false} />
                                 </div>
                             </div>
                             

@@ -8,6 +8,9 @@ import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import { Link, ScrollRestoration, useParams } from "react-router-dom";
 import SmartSearch from '../components/SmartSearch';
+import MyFriend from '../components/Comrades/MyFriend';
+import FriendRequest from '../components/Comrades/FriendRequest';
+import FindFriend from '../components/Comrades/FindFriend';
 
 function Comrades () {
 
@@ -31,32 +34,10 @@ function Comrades () {
                                             <button className='btn btn-primary ms-2'>Поиск</button>
                                         </div>
                                     </div>
-                                    <div className="card mb-1">
-                                        <div className="d-flex p-0 m-0 mx-2">
-                                            <div className="m-0 d-flex align-items-center justify-content-center">
-                                                <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                            </div>
-                                            <div className="p-0 m-0">
-                                                <div className="card-body my-1">
-                                                    <h5 className="card-title">Username</h5>
-                                                    <a href="#" className="">Написать сообщение</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="card mb-1">
-                                        <div className="d-flex p-0 m-0 mx-2">
-                                            <div className="m-0 d-flex align-items-center justify-content-center">
-                                                <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                            </div>
-                                            <div className="p-0 m-0">
-                                                <div className="card-body my-1">
-                                                    <h5 className="card-title">Username</h5>
-                                                    <a href="#" className="">Написать сообщение</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <MyFriend id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+                                    <MyFriend id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+                                    <MyFriend id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+
                                 </div>
                                 <div className="tab-pane fade h-100" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">
                                     <div className="card bg-white p-0 m-0 border-1 mb-2 ">
@@ -64,20 +45,11 @@ function Comrades () {
                                             Запросы в друзья
                                         </div>
                                     </div>
-                                    <div className="card mb-1">
-                                        <div className="d-flex p-0 m-0 mx-2">
-                                            <div className="m-0 d-flex align-items-center justify-content-center">
-                                                <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                            </div>
-                                            <div className="p-0 m-0">
-                                                <div className="card-body">
-                                                    <h5 className="card-title">Username</h5>
-                                                    <a href="#" className="btn btn-primary me-2">Принять заявку</a>
-                                                    <a href="#" className="btn btn-danger">В черный список</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <FriendRequest id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+                                    <FriendRequest id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+                                    <FriendRequest id='4' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+                                    <FriendRequest id='5' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+   
                                 </div>
                                 <div className="tab-pane fade h-100" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">
                                     <div className="card bg-white p-0 m-0 border-1 mb-2 ">
@@ -89,46 +61,11 @@ function Comrades () {
                                             <button className='btn btn-primary ms-2'>Поиск</button>
                                         </div>
                                     </div>
+                                    
                                     <div className="d-flex flex-wrap justify-content-between">
-                                        <div className="card mb-1 w-49">
-                                            <div className="d-flex p-0 m-0 mx-2">
-                                                <div className="m-0 d-flex align-items-center justify-content-center">
-                                                    <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                                </div>
-                                                <div className="p-0 m-0">
-                                                    <div className="card-body my-1">
-                                                        <h5 className="card-title">Username</h5>
-                                                        <a href="#" className="">Написать сообщение</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="card mb-1 w-49">
-                                            <div className="d-flex p-0 m-0 mx-2">
-                                                <div className="m-0 d-flex align-items-center justify-content-center">
-                                                    <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                                </div>
-                                                <div className="p-0 m-0">
-                                                    <div className="card-body my-1">
-                                                        <h5 className="card-title">Username</h5>
-                                                        <a href="#" className="">Написать сообщение</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="card mb-1 w-49">
-                                            <div className="d-flex p-0 m-0 mx-2">
-                                                <div className="m-0 d-flex align-items-center justify-content-center">
-                                                    <img src="http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg" alt="" className='friend-logo rounded-2' />
-                                                </div>
-                                                <div className="p-0 m-0">
-                                                    <div className="card-body my-1">
-                                                        <h5 className="card-title">Username</h5>
-                                                        <a href="#" className="">Написать сообщение</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <FindFriend id='1' username='Username' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg'/>
+                                        <FindFriend id='2' username='Username' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg'/>
+                                        <FindFriend id='3' username='Username' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg'/>
                                     </div>
                                     
                                 </div>

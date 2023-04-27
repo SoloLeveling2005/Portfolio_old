@@ -19,6 +19,8 @@ import Search from './pages/Search';
 import Messenger from './pages/Messenger';
 import Comrades from './pages/Comrades'
 import Communities from './pages/Communities' 
+import Community from './pages/Community';
+import Company from './pages/Company';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -57,6 +59,15 @@ const router = createBrowserRouter([
   {
     path:'/messenger',
     element: <Messenger/>
+  },
+
+  {
+    path:'/community/:id',
+    element: <Community/>
+  },
+  {
+    path:'/company/:id',
+    element: <Company/>
   },
 ]);
 function App() {
