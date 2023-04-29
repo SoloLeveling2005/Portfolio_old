@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import Navbar from '../components/Navbar';
-function Home() {
+function User() {
 
     const [nav, switchNav] = useState('profile');
 
@@ -128,4 +128,4 @@ function Home() {
     );
 }
 
-export default Home;
+export default User;

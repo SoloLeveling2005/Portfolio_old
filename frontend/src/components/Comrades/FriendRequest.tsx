@@ -16,10 +16,13 @@ function MyFriend(props:{'logo_url':string,'id':string, 'username':string}) {
                     <img src={logo_url} alt="" className='friend-logo rounded-2' />
                 </div>
                 <div className="p-0 m-0">
-                    <div className="card-body">
-                        <h5 className="card-title">{username}</h5>
-                        <a href="#" className="btn btn-primary me-2 py-1 px-3 m-0 me-2"><small>Принять заявку</small></a>
-                        <a href="#" className="btn btn-danger py-1 px-3 m-0"><small>В черный список</small></a>
+                    <div className="card-body d-flex flex-wrap flex-column">
+                        <Link to={`/user/${id}`} className="card-title fs-5 fw-bold">{username}</Link>
+                        <div>
+                            <a href="#" className="btn btn-primary me-2 py-1 px-3 m-0 me-2"><small>Принять заявку</small></a>
+                            <a href="#" className="btn btn-danger py-1 px-3 m-0"><small>В черный список</small></a>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
