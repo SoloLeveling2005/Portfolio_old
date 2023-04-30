@@ -87,7 +87,7 @@ function Home() {
                         </div>
                         <div className='col-4 position-relative p-0 m-0'>
                             <div className='padding-top-20-px position-sticky top-0'>
-                                <UserInfo country='Россия' registered='22 марта' last_login='сегодня в 01:11'/>
+                                <UserInfo country='Россия' registered='22 марта' last_login='сегодня в 01:11' gender="Мужчина" age="24"/>
                                 {/* <ActivityUser articles={[{url:'string', title:'string', count_activity:2}]}/> */}
                             </div>
                         </div>

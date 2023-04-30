@@ -28,7 +28,15 @@ function User() {
                         <div className='col py-3'>
                             <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                 <div className="card-title">
-                                    <img src="https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png" alt="" className='img-normal-50' />
+                                    <div className='d-flex flex-start justify-content-between'>
+                                        <img src="https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png" alt="" className='img-normal-50' />
+                                        <div className="d-flex align-items-center">
+                                            <button className='btn btn-primary py-1 px-3 me-2 '><small>Написать</small></button>
+                                            <button className='btn btn-success py-1 px-3 me-2 '><small>В друзья</small></button>
+                                            <button className='btn btn-danger py-1 px-3 '><small>В ЧС</small></button>
+                                        </div>
+                                    </div>
+                                    
                                     <h4 className='pb-1 mb-0'>artem mikhailov</h4>
                                     <p>Люблю данные и все что с ними связано</p>
                                     <div className='d-flex '>
@@ -54,8 +62,20 @@ function User() {
                             <div className="card m-0 p-0 bg-white mb-3 w-100 ">
                                 
                                 <div className="card-body">
-                                    <h5 className=''>Профиль</h5>
-                                    <p>Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание Описание </p>
+                                    <h5 className='mb-3'>Профиль</h5>
+                                    <h6>Значки</h6>
+                                    <div className='d-flex align-items-center'>
+                                        <p className='btn btn-outline-secondary disabled me-1'>Подпсчик</p>   
+                                        <p className='btn btn-outline-secondary disabled'>Главный мозг</p>   
+                                    </div>
+                                    <h6 className='mb-1'>Состоит в сообществах</h6>
+                                    <div className='d-flex align-items-center'>
+                                        <Link to={`/community/1`} className='btn btn-secondary me-1'>VK</Link>   
+                                    </div>
+                                    <h6 className='mt-3 mb-1'>Состоит в компаниях</h6>
+                                    <div className='d-flex align-items-center'>
+                                        <Link to={`/company/1`} className='btn btn-secondary'>Apple</Link>   
+                                    </div>
                                 </div>
                             </div>
                             }   
@@ -117,7 +137,7 @@ function User() {
                         </div>
                         <div className='col-4 position-relative p-0 m-0'>
                             <div className='padding-top-20-px position-sticky top-0'>
-                                <UserInfo country='Россия' registered='22 марта' last_login='сегодня в 01:11'/>
+                                <UserInfo country='Россия' registered='22 марта' last_login='сегодня в 01:11' gender="Мужчина" age="24"/>
                                 <ActivityUser articles={[{url:'string', title:'string', count_activity:2}]}/>
                             </div>
                         </div>

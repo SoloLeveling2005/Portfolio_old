@@ -72,7 +72,17 @@ function Settings() {
                                             <input type="password" className="form-control" id="exampleInputPassword1"></input>
                                             <div id="emailHelp" className="form-text">Напишите небольшое описание себя.</div>
                                         </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="exampleInputPassword1" className="form-label">Страна проживания</label>
+                                            <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
+                                                <option selected>Не указан</option>
+                                                <option value="1">Казахстан</option>
 
+                                                <option value="2">Россия</option>
+                                                <option value="3">США</option>
+                                                <option value="4">Китай</option>
+                                            </select>
+                                        </div>
                                         <div className="mb-3">
                                             <div className="table">
                                                 <div className="row">
@@ -208,17 +218,7 @@ function Settings() {
                                             <input type="password" className="form-control" id="exampleInputPassword1"></input>
                                             <div id="emailHelp" className="form-text">Ссылка на страницу Твиттер.</div>
                                         </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="exampleInputPassword1" className="form-label">Страна проживания</label>
-                                            <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
-                                                <option selected>Не указан</option>
-                                                <option value="1">Казахстан</option>
-
-                                                <option value="2">Россия</option>
-                                                <option value="3">США</option>
-                                                <option value="4">Китай</option>
-                                            </select>
-                                        </div>
+                                        
                                         <div className="mb-3">
                                             <label htmlFor="floatingTextarea2">Описание</label>
                                             <textarea className="form-control textarea-height-200 mt-2" placeholder="" id="floatingTextarea2"></textarea>
