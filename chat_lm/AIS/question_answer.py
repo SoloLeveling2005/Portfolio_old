@@ -13,6 +13,7 @@ from nltk.corpus import stopwords
 import nltk
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Загружаем стоп слова для фильтрации предложений
 nltk.download('stopwords')
 
 
@@ -71,28 +72,31 @@ class Core:
         # очищаем прошлый запрос
         self.answer_data = []
 
+        # Вытаскиваем все токены с вопроса
         question_tokens = [i for i in [
             self.lemmatizer.lemmatize(word)[0] for word in [
                 word for word in word_tokenize(question.translate(self.translator))
                 if word.lower() not in self.stop_words
             ]
         ]]
-        data = []
+
+        # Получаем всевозможные совпадения с токенами
         with ThreadPoolExecutor(max_workers=4) as executor:
             future_results = [executor.submit(self.get_token_on_question, question_token) for question_token in
                               question_tokens]
-
         results = []
         for future in concurrent.futures.as_completed(future_results):
             result = future.result()
             results.append(result)
 
+        # Вычисляем самый подходящий ответ (id key)
         counts = {}
         for item in self.answer_data:
             count = counts.get(item[2], 0)
             counts[item[2]] = count + 1
         max_key = max(counts.items(), key=lambda x: x[1])[0]
 
+        # Вытаскиваем ответ
         response = self.bot_cursor.execute(f"SELECT answer FROM answers WHERE id={max_key}")
         response = response.fetchone()
         return response[0]
