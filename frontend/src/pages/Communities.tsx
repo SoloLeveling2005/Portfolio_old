@@ -71,8 +71,7 @@ function Communities () {
                         <div className='col-4 py-3'>
                             <div className="list-group py-0 my-0 rounded-0 box-shadow" id="list-tab" role="tablist">
                                 <a className="list-group-item list-group-item-action active" id="list-communities-list" data-bs-toggle="list" href="#list-communities" role="tab" aria-controls="list-communities">Мои сообщества</a>
-                                <a className="list-group-item list-group-item-action" id="list-companies-list" data-bs-toggle="list" href="#list-companies" role="tab" aria-controls="list-companies">Мои компании</a>
-                                <a className="list-group-item list-group-item-action" id="list-profile-list" data-bs-toggle="list" href="#list-profile" role="tab" aria-controls="list-profile">Поиск сообществ и компаний</a>
+                                <a className="list-group-item list-group-item-action" id="list-profile-list" data-bs-toggle="list" href="#list-profile" role="tab" aria-controls="list-profile">Поиск сообществ</a>
                                 <a className="list-group-item list-group-item-action" id="list-messages-list" data-bs-toggle="list" href="#list-messages" role="tab" aria-controls="list-messages">Рекомендации друзей</a>
                             </div>
                         </div>

@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
-import Header from '../components/Header';
+import Header from '../../components/Header';
 import { Link, ScrollRestoration, useParams } from "react-router-dom";
-import ActivityUser from '../components/ActivityUser';
-import UserInfo from '../components/UserInfo';
+import ActivityUser from '../../components/ActivityUser';
+import UserInfo from '../../components/UserInfo';
 
 function Company (props: any) { 
     const { id } = useParams(); 

@@ -20,7 +20,7 @@ import Messenger from './pages/Messenger';
 import Comrades from './pages/Comrades'
 import Communities from './pages/Communities' 
 import Community from './pages/Community';
-import Company from './pages/Company';
+import Company from './pages/history/Company';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -55,20 +55,14 @@ const router = createBrowserRouter([
     path:'/communities',
     element: <Communities/>
   },
-  
   {
     path:'/messenger',
     element: <Messenger/>
   },
-
   {
     path:'/community/:id',
     element: <Community/>
-  },
-  {
-    path:'/company/:id',
-    element: <Company/>
-  },
+  }
 ]);
 function App() {
   return (

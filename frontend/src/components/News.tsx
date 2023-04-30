@@ -8,17 +8,32 @@ function News(props:{'id':string, 'title':string, 'content':string}) {
     const id = props.id
     const title = props.title
     const content = props.content
+    const [check, switchCheck] = useState(false);
+    function switchCheckF () {
+        
+        if (check == false) {
+            switchCheck(sw => (true))
+            console.log("false")
+        } else {
+            switchCheck(sw => (false))
+            console.log("true")
+        }
+    }
 
 
     return (
-        <a className="list-group-item list-group-item-action" type="button" data-bs-toggle="collapse" data-bs-target={"#collapseExample"+id} aria-expanded="false" aria-controls="collapseExample">
+        <div className="list-group-item list-group-item-action" onClick={switchCheckF}>
             <p className="mb-1 fw-bold">{title}</p>
-            <div className="collapse" id={"collapseExample"+id}>
-                <small className="text-muted">
-                    {content}
-                </small>
+            <div className="">
+                {check===true ? (
+                    <small className="text-muted">
+                        {content}
+                        12
+                    </small>
+                ): null}
+                
             </div>
-        </a>
+        </div>
         
     );
 }

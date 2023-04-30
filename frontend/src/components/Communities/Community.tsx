@@ -22,7 +22,7 @@ function Community(props:{'logo_url':string, 'signed':boolean, 'id':string, 'tit
                 </div>
                 <div className="col-md-8">
                 <div className="card-body">
-                    <Link to={`/company/${id}`} className="card-title fs-5">{title}</Link>
+                    <Link to={`/community/${id}`} className="card-title fs-5">{title}</Link>
                     <p className="card-text mb-2">{description}</p>
                     <p className="card-text m-0"><small className="text-muted">Категории: {categories.map((item)=>(
                         <button className='btn btn-secondary py-1 px-2 me-1'><small>item</small></button>
