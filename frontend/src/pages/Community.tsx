@@ -193,7 +193,50 @@ function Community (props: any) {
                                             <News id='3' title='News' content='Description news'/>
                                         </div>
                                     </div>
-                                }           
+                                }     
+                                {nav == 'participants' && 
+                                    <div className="card bg-white">
+                                        <table className="table">
+                                            <thead>
+                                                <tr>
+                                                    <th className='col'>
+                                                        Пользователь
+                                                    </th>
+                                                    <th className='col-2'>
+                                                        Роль
+                                                    </th>
+                                                    <th className='col-2'>
+                                                        Рейтинг
+                                                    </th>
+                                                </tr>
+                                            </thead> 
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <Link to={`/user/1`}>Username</Link>
+                                                    </td>
+                                                    <td>
+                                                        user
+                                                    </td>
+                                                    <td>
+                                                        122
+                                                    </td>
+                                                </tr> 
+                                                <tr>
+                                                    <td>
+                                                        <Link to={`/user/1`}>Username</Link>
+                                                    </td>
+                                                    <td>
+                                                        user
+                                                    </td>
+                                                    <td>
+                                                        122
+                                                    </td>
+                                                </tr>    
+                                            </tbody>   
+                                        </table>                                        
+                                    </div>
+                                }        
                             </div>
                             <div className='col-3 position-relative p-0 m-0'>
                                 <div className='padding-top-20-px position-sticky top-0'>
