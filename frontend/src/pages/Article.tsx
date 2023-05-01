@@ -6,6 +6,8 @@ import Header from '../components/Header';
 import { Link, ScrollRestoration, useParams } from "react-router-dom";
 import SmartSearch from '../components/SmartSearch';
 import RelatedArticles from '../components/RelatedArticles';
+import Comment from '../components/Comment';
+import CommunityComment from '../components/Communities/CommunityComment';
 
 function Home (props: any) {
     let { id } = useParams(); 
@@ -81,12 +83,25 @@ function Home (props: any) {
                                     </div>
                                 </div>
                             </div>
+                            <div className="card bg-white p-0 m-0 w-100">
+                                <div className="card-body">
+                                    <CommunityComment user_id='1' username='username' text='comment'/>
+                                    <CommunityComment user_id='2' username='username' text='comment'/>
+                                    <CommunityComment user_id='3' username='username' text='comment'/>
+                                    <hr />
+                                    <div className='d-flex align-items-center justify-content-between'>
+                                        <input type="text" className="form-control me-2" />
+                                        <button className='btn btn-success'>Отправить</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div className='col-4 position-relative p-0 m-0'>
                             <div className='padding-top-20-px position-sticky top-0'>
                                 <SmartSearch/>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>

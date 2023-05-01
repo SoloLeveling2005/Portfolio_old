@@ -75,9 +75,9 @@ function Home() {
                             }     
                             {nav == 'comments' && 
                                 <div className="p-0 m-0">
-                                    <Comment id='1' post_title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
-                                    <Comment id='2' post_title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
-                                    <Comment id='3' post_title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                    <Comment id='1' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                    <Comment id='2' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                    <Comment id='3' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
                                 
                                     
                                     

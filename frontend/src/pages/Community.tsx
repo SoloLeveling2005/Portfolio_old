@@ -61,6 +61,11 @@ function Community (props: any) {
                                             ):(
                                                 <button className='btn me-2' value='participants' onClick={switchNavF}>Участники</button>
                                             )}
+                                            {nav == 'chats' ? (
+                                                <button className='btn btn-primary me-2' value='chats' onClick={switchNavF}>Чаты</button>
+                                            ):(
+                                                <button className='btn me-2' value='chats' onClick={switchNavF}>Чаты</button>
+                                            )}
                                             {nav == 'settings' ? (
                                                 <button className='btn btn-primary me-2' value='settings' onClick={switchNavF}>Настройки</button>
                                             ):(
