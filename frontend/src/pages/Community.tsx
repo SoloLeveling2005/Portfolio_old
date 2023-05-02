@@ -242,6 +242,19 @@ function Community (props: any) {
                                         </table>                                        
                                     </div>
                                 }        
+                                {nav == 'chats' && 
+                                    <div className="p-0 m-0">
+                                        <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
+                                            <Link to={`/messenger/2`} className=""><h5 className="card-title mb-1 pb-1">Чат болталка</h5></Link>
+                                            <div className="card-body ps-0 py-1">
+                                                <p className="card-text">
+                                                    Описание чата болталки
+                                                </p>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                }   
                                 {nav == 'settings' && 
                                     <div className='p-0 m-0'>
                                         <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">

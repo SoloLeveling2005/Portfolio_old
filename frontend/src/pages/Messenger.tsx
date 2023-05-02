@@ -4,16 +4,16 @@ import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import Smart_search from '../components/SmartSearch';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import Dialogue from '../components/Messenger/Dialogue';
 import Message from '../components/Messenger/Message';
 import MyMessage from '../components/Messenger/MyMessage';
 function Messenger() {
-
-    const [chat, switchChat] = useState('');
-
+    var {messenger_id} = useParams();
+    const [chat, switchChat] = useState(`${messenger_id}`);
+    
     function switchChatF (id:string) {
         switchChat(sw => (id))
     }
@@ -35,7 +35,7 @@ function Messenger() {
                                 <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='2' onClick={switchChatF}/>
                             </div>
                             <div className="col h-100 p-0 m-0">
-                                {chat == '' ? (
+                                {chat == '' || chat == '0' ? (
                                     <div className="d-flex align-items-center justify-content-center h80 p-0 m-0">
                                         <p className="fs-5 opacity-75">Выберите чат</p>
                                     </div>

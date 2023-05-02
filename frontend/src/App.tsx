@@ -57,7 +57,7 @@ const router = createBrowserRouter([
     element: <Communities/>
   },
   {
-    path:'/messenger',
+    path:'/messenger/:messenger_id',
     element: <Messenger/>
   },
   {
