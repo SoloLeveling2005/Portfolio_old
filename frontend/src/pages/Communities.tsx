@@ -22,8 +22,8 @@ function Communities () {
                             <div className="tab-content p-0 m-0" id="nav-tabContent">
                                 <div className="tab-pane fade show active h-100" id="list-communities" role="tabpanel" aria-labelledby="list-communities-list">
                                     <div className="card bg-white p-0 m-0 border-1 mb-2 ">
-                                        <div className="card-header">
-                                            Мои сообщества
+                                        <div className="card-header d-flex justify-content-between align-items-center">
+                                            Мои сообщества <Link to={'/createCommunity'} className='btn btn-primary p-1 px-2'><small>Добавить</small></Link>
                                         </div>
                                     </div>
                                     <Community id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' title='Title1' description='Описание сообщества 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' subscribers='100' signed={true} categories={['Учим','Математика']} recommended={false} />
