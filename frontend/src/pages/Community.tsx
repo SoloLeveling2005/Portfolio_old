@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import { Link, ScrollRestoration, useParams } from "react-router-dom";
 import Card from '../components/Card';
 import News from '../components/News';
+import Advertisement from '../components/Advertisement';
 
 function Community (props: any) { 
     const { id } = useParams(); 
@@ -14,6 +15,12 @@ function Community (props: any) {
     function switchNavF (event:any) {
         const { value } = event.target;
         switchNav(sw => (value))
+    }
+
+    const [createRole, createRoleChange] = useState(false);
+
+    function createRoleF () {
+        createRole == false ? createRoleChange(sw => (true)) : createRoleChange(sw => (false))
     }
 
 
@@ -200,6 +207,60 @@ function Community (props: any) {
                                     </div>
                                 }     
                                 {nav == 'participants' && 
+                                <div className='p-0 m-0'>
+                                    <div className='card bg-white mb-2'>
+                                        <div className="card-body">
+                                            {createRole==false?(
+                                                <button className='btn btn-primary' onClick={createRoleF}>Добавить роль</button>
+                                            ):(
+                                                <div className='p-0 m-0'>
+                                                    <h5>Основные параметры</h5>
+                                                    <h6>Название роли:</h6>
+                                                    <input type="text" placeholder='name' className='form-control w-100 mb-2'/>
+                                                    <h5>Разрешения</h5>
+                                                    <h6 title='Может все, от создания постов до удаления сообщества' className='cursor-help'>Администратор (Назначайте с осторожностью) <small>(Наведите чтобы узнать больше)</small></h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true">Да</option>
+                                                        <option value="false" selected>Нет</option>
+                                                    </select>
+                                                    <h6 title='Имеет права на редактирование постов, новостей, рекламы и т.д.' className='cursor-help'>Модератор (Назначайте с осторожностью) <small>(Наведите чтобы узнать больше)</small></h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true">Да</option>
+                                                        <option value="false" selected>Нет</option>
+                                                    </select>
+                                                    <h6>Создание статей</h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true" selected>Да</option>
+                                                        <option value="false">Нет</option>
+                                                    </select>
+                                                    <h6>Создание новостей</h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true">Да</option>
+                                                        <option value="false" selected>Нет</option>
+                                                    </select>
+                                                    <h6>Создание рекламы</h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true">Да</option>
+                                                        <option value="false" selected>Нет</option>
+                                                    </select>
+                                                    <h6>Создание чатов</h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true">Да</option>
+                                                        <option value="false" selected>Нет</option>
+                                                    </select>
+                                                    <h6>Принимать заявки пользователей на вступление в сообщество</h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="true">Да</option>
+                                                        <option value="false" selected>Нет</option>
+                                                    </select>
+
+                                                    <button className='btn btn-primary w-100' onClick={createRoleF}>Добавить роль</button>
+                                                </div>
+                                            )}
+                                            
+
+                                        </div>
+                                    </div>
                                     <div className="card bg-white">
                                         <table className="table">
                                             <thead>
@@ -241,16 +302,27 @@ function Community (props: any) {
                                             </tbody>   
                                         </table>                                        
                                     </div>
+                                </div>
+                                    
+                                    
                                 }        
                                 {nav == 'chats' && 
                                     <div className="p-0 m-0">
+                                        
+                                        
                                         <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
                                             <Link to={`/messenger/2`} className=""><h5 className="card-title mb-1 pb-1">Чат болталка</h5></Link>
                                             <div className="card-body ps-0 py-1">
                                                 <p className="card-text">
                                                     Описание чата болталки
                                                 </p>
-                                                
+                                            </div>
+                                        </div>
+                                        <div className='card bg-white mb-2'>
+                                            <div className="card-body">
+                                                <input type="text" placeholder='Заголовок' className='form-control w-100 mb-2' />
+                                                <input type="text" placeholder='Описание' className='form-control w-100 mb-2' />
+                                                <button className='btn btn-success w-100'>Добавить чат</button>
                                             </div>
                                         </div>
                                     </div>
@@ -276,7 +348,6 @@ function Community (props: any) {
                                                         <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
                                                             <option selected>Не указан</option>
                                                             <option value="1">Казахстан</option>
-
                                                             <option value="2">Россия</option>
                                                             <option value="3">США</option>
                                                             <option value="4">Китай</option>
@@ -379,18 +450,14 @@ function Community (props: any) {
                                                                     </select>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        
+                                                        </div>           
                                                     </div>
                                                     <div className="mb-3 mt-4">
                                                         <label htmlFor="formFileReadonly" className="form-label">Выберите аватарку</label>
                                                         <input className="form-control btn" type="file" id="formFileReadonly" readOnly></input>
                                                     </div>
-
-                                                
                                                     <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                                 </form>
-                                                
                                             </div>
                                         </div>
                                     </div>
@@ -399,13 +466,7 @@ function Community (props: any) {
                             <div className='col-3 position-relative p-0 m-0'>
                                 <div className='padding-top-20-px position-sticky top-0'>
                                     {nav == 'profile' ? (
-                                        <div className="card">
-                                            <div className="card-body">
-                                                <h5 className='mb-3'>Предложение</h5>
-                                                <img src="https://hsto.org/getpro/habr/widget/4b4/92d/44f/4b492d44fd837fedf2fe66cfdf1b9a57.png" alt="" className='w-100'/>
-                                            </div>
-                                        </div>
-                                        
+                                        <Advertisement landing_page_url='https://habr.com/ru/all/' img_url='https://hsto.org/getpro/habr/widget/4b4/92d/44f/4b492d44fd837fedf2fe66cfdf1b9a57.png'/>
                                     ): null}
                                     {nav == 'articles' ? (
                                         <div>
@@ -521,12 +582,7 @@ function Community (props: any) {
                                                 </div>
                                                 
                                             </div>
-                                            <div className="card">
-                                                <div className="card-body">
-                                                    <h5 className='mb-3'>Предложение</h5>
-                                                    <img src="https://hsto.org/getpro/habr/widget/4b4/92d/44f/4b492d44fd837fedf2fe66cfdf1b9a57.png" alt="" className='w-100'/>
-                                                </div>
-                                            </div>
+                                            <Advertisement landing_page_url='https://habr.com/ru/all/' img_url='https://hsto.org/getpro/habr/widget/4b4/92d/44f/4b492d44fd837fedf2fe66cfdf1b9a57.png'/>
                                         </div>
                                     ):null}
                                     {nav == 'news' ? (

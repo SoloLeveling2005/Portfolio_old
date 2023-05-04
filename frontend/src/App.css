@@ -186,3 +186,7 @@ a {
 .disabled {
     opacity: 1 !important;
 }
+
+.cursor-help {
+    cursor: help;
+}
