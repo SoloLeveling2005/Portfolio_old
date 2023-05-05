@@ -33,11 +33,11 @@ function Settings() {
                                 ):(
                                     <button className="nav-link me-2" value="profile" onClick={switchNavF} type="button">Профиль</button>
                                 )}
-                                {nav == 'specialization' ? (
+                                {/* {nav == 'specialization' ? (
                                     <button className="nav-link active me-2" value="specialization" onClick={switchNavF} type="button">Специализация</button>
                                 ):(
                                     <button className="nav-link me-2" value="specialization" onClick={switchNavF} type="button">Специализация</button>
-                                )}
+                                )} */}
                                 {/* {nav == 'account' ? (
                                     <button className="nav-link active me-2" value="account" onClick={switchNavF} type="button">Аккаунт</button>
                                 ):(
@@ -230,6 +230,14 @@ function Settings() {
                                         <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     </form>
                                     
+                                </div>
+                            </div>
+                            <div className="card">
+                                <div className="card-body">
+                                    <h5>
+                                        Опасная зона
+                                    </h5>
+                                    <button className='btn btn-danger'>Выйти с аккаунта</button>
                                 </div>
                             </div>
                         </section>

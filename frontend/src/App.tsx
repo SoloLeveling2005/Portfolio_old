@@ -23,10 +23,16 @@ import Community from './pages/Community';
 import Company from './pages/history/Company';
 import NewCommunity from './pages/NewCommunity';
 import NewArticle from './pages/NewArticle';
+import AuthorizationRegistration from './pages/AuthorizationRegistration';
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Home/>,
+
+  },
+  {
+    path: "/auth",
+    element: <AuthorizationRegistration/>,
 
   },
   {

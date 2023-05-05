@@ -187,6 +187,13 @@ a {
     opacity: 1 !important;
 }
 
+.opacity-50 {
+    opacity: .5 !important;
+}
+.opacity-75 {
+    opacity: .75 !important;
+}
+
 .cursor-help {
     cursor: help;
 }
