@@ -8,6 +8,13 @@ import Card from '../components/Card';
 import News from '../components/News';
 import Advertisement from '../components/Advertisement';
 
+
+
+interface Option {
+    value: string;
+    label: string;
+  }
+
 function Community (props: any) { 
     const { id } = useParams(); 
     const [nav, switchNav] = useState('profile');
@@ -21,6 +28,13 @@ function Community (props: any) {
 
     function createRoleF () {
         createRole == false ? createRoleChange(sw => (true)) : createRoleChange(sw => (false))
+    }
+
+
+    const [createNews, createNewsChange] = useState(false);
+
+    function createNewsF () {
+        createNews == false ? createNewsChange(sw => (true)) : createNewsChange(sw => (false))
     }
 
 
@@ -147,6 +161,11 @@ function Community (props: any) {
                                 }   
                                 {nav == 'articles' && 
                                     <div className="p-0 m-0">
+                                        <div className="card bg-white mb-2">
+                                            <div className="card-body">
+                                                <Link to={`/community/${id}/createArticle`} className="btn btn-primary w-100">Создать статью</Link>
+                                            </div>
+                                        </div>
                                         <Card 
                                             title='LAION и энтузиасты по всему миру разрабатывают Open Assistant — открытый аналог ChatGPT' 
                                             who='Company'
@@ -198,6 +217,28 @@ function Community (props: any) {
                                     </div>
                                 }    
                                 {nav == 'news' && 
+                                <div className="p-0 m-0">
+                                    <div className="card bg-white mb-2">
+                                        <div className="card-body">
+                                            {createNews == false ? (
+                                                <button className='btn btn-primary w-100' onClick={createNewsF} >Создание новости</button>
+                                            ):(
+                                                <div>
+                                                    <h5>Создание нвоостей</h5>
+                                                    <h6>Заголовок новости</h6>
+                                                    <input type="text" placeholder='Заголовок' className='form-control'/>
+                                                    <h6 className='my-2'>Описание новости</h6>
+                                                    <input type="text" placeholder='Описание' className='form-control'/>
+                                                    <h6 className='my-2'>Публикация</h6>
+                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                        <option value="local" selected>Локально</option>
+                                                        <option value="global">Глобально</option>
+                                                    </select>
+                                                    <button className='btn btn-primary w-100'>Опубликовать новость</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="card p-0  bg-white mb-3 text-decoration-none text-black">
                                         <div className="list-group m-0">   
                                             <News id='1' title='News' content='Description news'/>
@@ -205,16 +246,57 @@ function Community (props: any) {
                                             <News id='3' title='News' content='Description news'/>
                                         </div>
                                     </div>
+                                </div>
+                                    
                                 }     
                                 {nav == 'participants' && 
                                 <div className='p-0 m-0'>
                                     <div className='card bg-white mb-2'>
                                         <div className="card-body">
+                                            
                                             {createRole==false?(
-                                                <button className='btn btn-primary' onClick={createRoleF}>Добавить роль</button>
+                                                <button className='btn btn-primary w-100' onClick={createRoleF}>Добавить роль</button>
                                             ):(
                                                 <div className='p-0 m-0'>
-                                                    <h5>Основные параметры</h5>
+                                                    <button className='btn btn-primary w-100 mb-3' onClick={createRoleF}>Скрыть создание ролей</button>
+                                                    <h5>Существующие роли</h5>
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th className='col'>Роль</th>
+                                                                <th className='col'>Администратор</th>
+                                                                <th className='col'>Модератор</th>
+                                                                <th className='col'>Создание статей</th>
+                                                                <th className='col'>Создание новостей</th>
+                                                                <th className='col'>Создание рекламы</th>
+                                                                <th className='col'>Создание чатов</th>
+                                                                <th className='col'>Принимать заявки</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td className='fw-bold'>user</td>
+                                                                <td>Нет</td>
+                                                                <td>Нет</td>
+                                                                <td>Да</td>
+                                                                <td>Нет</td>
+                                                                <td>Нет</td>
+                                                                <td>Нет</td>
+                                                                <td>Нет</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className='fw-bold'>admin</td>
+                                                                <td>Да</td>
+                                                                <td>Да</td>
+                                                                <td>Да</td>
+                                                                <td>Да</td>
+                                                                <td>Да</td>
+                                                                <td>Да</td>
+                                                                <td>Да</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <h5 className='mt-3'>Создание роли (Основные параметры)</h5>
                                                     <h6>Название роли:</h6>
                                                     <input type="text" placeholder='name' className='form-control w-100 mb-2'/>
                                                     <h5>Разрешения</h5>
@@ -262,45 +344,70 @@ function Community (props: any) {
                                         </div>
                                     </div>
                                     <div className="card bg-white">
-                                        <table className="table">
-                                            <thead>
-                                                <tr>
-                                                    <th className='col'>
-                                                        Пользователь
-                                                    </th>
-                                                    <th className='col-2'>
-                                                        Роль
-                                                    </th>
-                                                    <th className='col-2'>
-                                                        Рейтинг
-                                                    </th>
-                                                </tr>
-                                            </thead> 
-                                            <tbody>
-                                                <tr>
-                                                    <td>
-                                                        <Link to={`/user/1`}>Username</Link>
-                                                    </td>
-                                                    <td>
-                                                        user
-                                                    </td>
-                                                    <td>
-                                                        122
-                                                    </td>
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <Link to={`/user/1`}>Username</Link>
-                                                    </td>
-                                                    <td>
-                                                        user
-                                                    </td>
-                                                    <td>
-                                                        122
-                                                    </td>
-                                                </tr>    
-                                            </tbody>   
-                                        </table>                                        
+                                        <div className="card-body">
+                                            <table className="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th className='col'>
+                                                            Пользователь
+                                                        </th>
+                                                        <th className='col-2'>
+                                                            Роль
+                                                        </th>
+                                                        <th className='col-2'>
+                                                            Рейтинг
+                                                        </th>
+                                                        <th className='col-2'>
+                                                            Действия
+                                                        </th>
+                                                    </tr>
+                                                </thead> 
+                                                <tbody>
+                                                    <tr>
+                                                        <td>
+                                                            <Link to={`/user/1`}>Username</Link>
+                                                        </td>
+                                                        <td>
+                                                            <select className="form-select" aria-label="Default select example">
+                                                                <option value="admin">admin</option>
+                                                                <option value="user" selected>user</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            122
+                                                        </td>
+                                                        <td>
+                                                            <select className="form-select" aria-label="Default select example">
+                                                                <option value="nobody" selected>Ничего</option>
+                                                                <option value="ban" className='bg-danger text-white'>Забанить</option>
+                                                                <option value="unban" className='bg-success text-white'>Разбанить</option>
+                                                            </select>
+                                                        </td>
+                                                    </tr> 
+                                                    <tr>
+                                                        <td>
+                                                            <Link to={`/user/1`}>Username</Link>
+                                                        </td>
+                                                        <td>
+                                                            <select className="form-select" aria-label="Default select example">
+                                                                <option value="admin" selected>admin</option>
+                                                                <option value="user">user</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            122
+                                                        </td>
+                                                        <td>
+                                                            <select className="form-select" aria-label="Default select example">
+                                                                <option value="admin" selected>Ничего</option>
+                                                                <option value="user" className='bg-danger text-white'>Забанить</option>
+                                                            </select>
+                                                        </td>
+                                                    </tr>    
+                                                </tbody>   
+                                            </table>               
+                                        </div>
+                                                                 
                                     </div>
                                 </div>
                                     
@@ -331,133 +438,62 @@ function Community (props: any) {
                                     <div className='p-0 m-0'>
                                         <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">
                                             <div className="card-body ps-0 pt-0 mt-0">
-                                                <h5 className="card-title mb-3" >Основной</h5>
+                                                <h5 className="card-title mb-3">Настройки</h5>
                                                 <form>
                                                     <div className="mb-3">
-                                                        <label htmlFor="exampleInputEmail1" className="form-label ">Настоящие имя и фамилия</label>
-                                                        <input type="email" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"></input>
-                                                        <div id="emailHelp" className="form-text">Укажите ваши имя и фамилию, чтобы другие пользователи смогли узнать, как вас зовут</div>
-                                                    </div>
-                                                    <div className="mb-3">
-                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Немного о вас</label>
+                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Название</label>
                                                         <input type="password" className="form-control" id="exampleInputPassword1"></input>
-                                                        <div id="emailHelp" className="form-text">Напишите небольшое описание себя.</div>
+                                                        <div id="emailHelp" className="form-text">Наименование сообщества.</div>
                                                     </div>
                                                     <div className="mb-3">
-                                                        <label htmlFor="exampleInputPassword1" className="form-label">Страна проживания</label>
-                                                        <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
-                                                            <option selected>Не указан</option>
-                                                            <option value="1">Казахстан</option>
-                                                            <option value="2">Россия</option>
-                                                            <option value="3">США</option>
-                                                            <option value="4">Китай</option>
-                                                        </select>
+                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Небольшое описание</label>
+                                                        <input type="password" className="form-control" id="exampleInputPassword1"></input>
+                                                        <div id="emailHelp" className="form-text">Дайте небольшое описание, в чем суть сообщества.</div>
                                                     </div>
                                                     <div className="mb-3">
-                                                        <div className="table">
-                                                            <div className="row">
-                                                                <div className="col">
-                                                                    <label htmlFor="exampleInputPassword1" className="form-label mb-0">Пол</label>
-                                                                    <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
-                                                                        <option selected>Не указан</option>
-                                                                        <option value="man">Мужской</option>
-                                                                        <option value="woman">Женский</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div className="col d-flex flex-column justify-content-end">
-                                                                    <label htmlFor="exampleInputPassword1" className="form-label mb-0">Дата рождения</label>
-                                                                    <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
-                                                                        <option selected>Число</option>
-                                                                        <option value="1">1</option>
-                                                                        <option value="2">2</option>
-                                                                        <option value="3">3</option>
-                                                                        <option value="4">4</option>
-                                                                        <option value="5">5</option>
-                                                                        <option value="6">6</option>
-                                                                        <option value="7">7</option>
-                                                                        <option value="8">8</option>
-                                                                        <option value="9">9</option>
-                                                                        <option value="10">10</option>
-                                                                        <option value="11">11</option>
-                                                                        <option value="12">12</option>
-                                                                        <option value="13">13</option>
-                                                                        <option value="14">14</option>
-                                                                        <option value="15">15</option>
-                                                                        <option value="16">16</option>
-                                                                        <option value="17">17</option>
-                                                                        <option value="18">18</option>
-                                                                        <option value="19">19</option>
-                                                                        <option value="20">20</option>
-                                                                        <option value="21">21</option>
-                                                                        <option value="22">22</option>
-                                                                        <option value="23">23</option>
-                                                                        <option value="24">24</option>
-                                                                        <option value="25">25</option>
-                                                                        <option value="26">26</option>
-                                                                        <option value="27">27</option>
-                                                                        <option value="28">28</option>
-                                                                        <option value="29">29</option>
-                                                                        <option value="30">30</option>
-                                                                        <option value="31">31</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div className="col d-flex flex-column justify-content-end">
-                                                                    <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
-                                                                        <option selected>Месяц</option>
-                                                                        <option value="01">01</option>
-                                                                        <option value="02">02</option>
-                                                                        <option value="03">03</option>
-                                                                        <option value="04">04</option>
-                                                                        <option value="05">05</option>
-                                                                        <option value="06">06</option>
-                                                                        <option value="07">07</option>
-                                                                        <option value="08">08</option>
-                                                                        <option value="09">09</option>
-                                                                        <option value="10">10</option>
-                                                                        <option value="11">11</option>
-                                                                        <option value="12">12</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div className="col d-flex flex-column justify-content-end">
-                                                                    <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
-                                                                        <option selected>Год</option>
-                                                                        <option value="2023">2023</option>
-                                                                        <option value="2022">2022</option>
-                                                                        <option value="2021">2021</option>
-                                                                        <option value="2020">2020</option>
-                                                                        <option value="2019">2019</option>
-                                                                        <option value="2018">2018</option>
-                                                                        <option value="2017">2017</option>
-                                                                        <option value="2016">2016</option>
-                                                                        <option value="2015">2015</option>
-                                                                        <option value="2014">2014</option>
-                                                                        <option value="2013">2013</option>
-                                                                        <option value="2012">2012</option>
-                                                                        <option value="2011">2011</option>
-                                                                        <option value="2010">2010</option>
-                                                                        <option value="2009">2009</option>
-                                                                        <option value="2008">2008</option>
-                                                                        <option value="2007">2007</option>
-                                                                        <option value="2006">2006</option>
-                                                                        <option value="2005">2005</option>
-                                                                        <option value="2004">2004</option>
-                                                                        <option value="2003">2003</option>
-                                                                        <option value="2002">2002</option>
-                                                                        <option value="2001">2001</option>
-                                                                        <option value="2000">2000</option>
-                                                                        <option value="1999">1999</option>
-                                                                        <option value="1998">1998</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>           
+                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Сайт</label>
+                                                        <input type="password" className="form-control" id="exampleInputPassword1"></input>
+                                                        <div id="emailHelp" className="form-text">Если у вас имеется сайт укажите его выше.</div>
                                                     </div>
-                                                    <div className="mb-3 mt-4">
-                                                        <label htmlFor="formFileReadonly" className="form-label">Выберите аватарку</label>
-                                                        <input className="form-control btn" type="file" id="formFileReadonly" readOnly></input>
+                                                    <div className="mb-3">
+                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Категории</label>
+                                                        <div className='d-flex'>
+                                                            <select className="form-select mb-2 me-2" aria-label="Default select example">
+                                                                <option selected>Не выбрано</option>
+                                                                <option value="1">Разработка</option>
+                                                                <option value="2">Дизайн</option>
+                                                                <option value="3">Инженерия</option>
+                                                                <option value="3">Строительство</option>
+                                                                <option value="3">Моделирование</option>
+                                                                <option value="3">3Д дизайн</option>
+                                                            </select>
+                                                            <select className="form-select mb-2 me-2" aria-label="Default select example">
+                                                                <option selected>Не выбрано</option>
+                                                                <option value="1">Разработка</option>
+                                                                <option value="2">Дизайн</option>
+                                                                <option value="3">Инженерия</option>
+                                                                <option value="3">Строительство</option>
+                                                                <option value="3">Моделирование</option>
+                                                                <option value="3">3Д дизайн</option>
+                                                            </select>
+                                                            <select className="form-select mb-2" aria-label="Default select example">
+                                                                <option selected>Не выбрано</option>
+                                                                <option value="1">Разработка</option>
+                                                                <option value="2">Дизайн</option>
+                                                                <option value="3">Инженерия</option>
+                                                                <option value="3">Строительство</option>
+                                                                <option value="3">Моделирование</option>
+                                                                <option value="3">3Д дизайн</option>
+                                                            </select>
+                                                        </div>
+                                                        <div id="emailHelp" className="form-text">Выберите под какие категории попадает сообщество.</div>
                                                     </div>
-                                                    <button type="button" className="btn btn-success mt-3">Сохранить</button>
+                                                    
+                                                    
+                                                
+                                                    <button type="button" className="btn btn-success mt-3">Создать</button>
                                                 </form>
+                                                
                                             </div>
                                         </div>
                                     </div>

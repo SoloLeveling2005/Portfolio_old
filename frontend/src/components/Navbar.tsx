@@ -11,7 +11,7 @@ function Navbar(props:{'page':string}) {
                 <div className='d-flex justify-content-between align-items-center'>
                     <Link to={`/`} className='text-black me-4'>Лента</Link>
                     <Link to={`/profile`} className='text-black me-4'>Профиль</Link>
-                    <Link to={`/messenger`} className='text-black me-4'>Мессенджер</Link>
+                    <Link to={`/messenger/0`} className='text-black me-4'>Мессенджер</Link>
                     <Link to={`/comrades`} className='text-black me-4'>Друзья и коллеги</Link>                    
                     <Link to={`/communities`} className='text-black me-4'>Сообщества</Link>                    
                     <Link to={`/settings`} className='text-black me-4'>Настройки</Link>

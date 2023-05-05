@@ -22,6 +22,7 @@ import Communities from './pages/Communities'
 import Community from './pages/Community';
 import Company from './pages/history/Company';
 import NewCommunity from './pages/NewCommunity';
+import NewArticle from './pages/NewArticle';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -67,6 +68,10 @@ const router = createBrowserRouter([
   {
     path:'/createCommunity',
     element:<NewCommunity/>
+  },
+  {
+    path:'/community/:id/createArticle',
+    element:<NewArticle/>
   }
 ]);
 function App() {
