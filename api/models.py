@@ -7,27 +7,13 @@ from django.template.defaultfilters import slugify
 
 
 # todo START USERS
-class UserSettings(models.Model):
-    """
-    Модель настроек пользователя.
-    """
-    show_additional_information = models.BooleanField(default=True)
-    show_activity_on_the_site = models.BooleanField(default=True)
-    telegram_mailing_list = models.BooleanField(default=False)
-    notification_new_entries = models.BooleanField(default=False)
-    notification_comments_under_posts = models.BooleanField(default=True)
-    notification_mentions = models.BooleanField(default=True)
-    notification_new_friend = models.BooleanField(default=True)
-
-
 class User(models.Model):
     """
-    Модель пользователя.
+    Модель пользователя. Создается при регистрации пользователя.
     """
     username = models.CharField(max_length=100)
     login = models.CharField(max_length=100, unique=True)
     password = models.CharField(max_length=255)
-    settings = models.ForeignKey(UserSettings, on_delete=models.CASCADE, related_name='user')
     biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
@@ -40,17 +26,15 @@ class User(models.Model):
         :param password: Пароль
         :param biography: Биография пользователя
         """
-        settings = UserSettings.objects.create()
-        login = slugify(username + ' ' + str(random.randint(100,999)))
+        login = slugify(username + ' ' + str(random.randint(100, 999)))
         if not User.objects.filter(username=username).exists():
             user = cls.objects.create(
                 username=username,
                 password=make_password(password),
-                settings=settings,
                 login=login,
                 biography_small=biography,
             )
-            return cls.objects.get(login=login)
+            return user
         else:
             return None
 
@@ -60,8 +44,8 @@ class User(models.Model):
         """
         return UserAvatar.objects.get(user=self)
 
-    def info(self):
-        return UserInfo.objects.get(user=self)
+    def profile(self):
+        return UserProfile.objects.get(user=self)
 
     def rating(self):
         pass
@@ -106,8 +90,8 @@ class UserAvatar(models.Model):
     - user - ссылка на пользователя, который имеет данную аватарку.
     - img - аватарка пользователя.
     """
-    img = models.ImageField(null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
+    img = models.ImageField(null=False)
 
     @classmethod
     def create_avatar(cls, user_id: int, img):
@@ -129,47 +113,36 @@ class UserAvatar(models.Model):
         return UserAvatar.objects.get(user=user)
 
 
-class TagUserSkills(models.Model):
+class UserSettings(models.Model):
     """
-    Модель всевозможных скиллов пользователей.
+    Модель настроек пользователя.
+    show_additional_information - показывать дополнительную информацию
+    show_activity_on_the_site - показывать активность на сайте
+    telegram_notification - уведомление в telegram
+    notification_new_entries - уведомление о новых записях
+    notification_comments_under_posts - уведомление о комментариях под публикациями
+    notification_new_friend - уведомление о новом друге
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skills')
-    tag = models.CharField(max_length=150)
-
-    @classmethod
-    def new_tag_skill(cls, user_id: int, tag: str):
-        """
-        Создает новый тег скилла.
-        :param user_id: ID пользователя.
-        :param tag: Название тега.
-        """
-        user = User.objects.get(id=user_id)
-        cls.objects.create(user=user, tag=tag)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_settings')
+    show_additional_information = models.BooleanField(default=True)
+    show_activity_on_the_site = models.BooleanField(default=True)
+    telegram_notification = models.BooleanField(default=False)
+    notification_new_entries = models.BooleanField(default=True)
+    notification_comments_under_posts = models.BooleanField(default=True)
+    notification_new_friend = models.BooleanField(default=True)
 
 
-class TagUserSkill(models.Model):
-    """
-    Модель скиллов пользователя.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_user_skill_on_user')
-    tag = models.ForeignKey(TagUserSkills, on_delete=models.CASCADE, related_name='tag_user_skill_on_tag')
-
-
-class UserInfo(models.Model):
+class UserProfile(models.Model):
     """
     Модель аватарка пользователя.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_info')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
+    location = models.CharField(max_length=100)
     gender = models.CharField(max_length=5)  # man, woman
     birthday = models.DateTimeField()
-    location = models.CharField(max_length=100)
-    vk_profile = models.CharField(max_length=100)
-    telegram_profile = models.CharField(max_length=100)
-    youtube_chanel = models.CharField(max_length=100)
-    other_info = models.TextField()
 
     def create_user_info(self, user_id: int, gender: str, birthday: datetime, location: str, vk_profile: str,
-                         telegram_profile: str, youtube_chanel: str, other_info: str):
+                         telegram_profile_link: str, telegram_profile_id: str, other_info: str):
         """
         Создает доп. информацию пользователя.
         :param user_id: ID пользователя.
@@ -177,19 +150,36 @@ class UserInfo(models.Model):
         :param birthday: Дата рождения.
         :param location: Местоположение.
         :param vk_profile: Ссылка на вк профиль.
-        :param telegram_profile: Ссылка на telegram профиль.
-        :param youtube_chanel: Ссылка на youtube профиль.
+        :param telegram_profile_link: Ссылка на telegram профиль.
+        :param telegram_profile_id: ID telegram профиля.
         :param other_info: Остальная информация.
         """
         user = User.objects.get(id=user_id)
         self.objects.create(user=user, gender=gender, birthday=birthday, location=location, vk_profile=vk_profile,
-                            telegram_profile=telegram_profile, youtube_chanel=youtube_chanel, other_info=other_info)
+                            telegram_profile_link=telegram_profile_link, telegram_profile_id=telegram_profile_id,
+                            other_info=other_info)
 
-    def user_tags(self):
+
+class UserAdditionalInformation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_additional_information')
+    vk_profile = models.CharField(max_length=100)
+    telegram_profile_link = models.CharField(max_length=100)
+    telegram_profile_id = models.CharField(max_length=100)
+    other_info = models.TextField()
+
+    def create_user_info(self, user_id: int, vk_profile: str,
+                         telegram_profile_link: str, telegram_profile_id: str, other_info: str):
         """
-        :return: Возвращает теги пользователя.
+        Создает доп. информацию пользователя.
+        :param user_id: ID пользователя.
+        :param vk_profile: Ссылка на вк профиль.
+        :param telegram_profile_link: Ссылка на telegram профиль.
+        :param telegram_profile_id: ID telegram профиля.
+        :param other_info: Остальная информация.
         """
-        return TagUserSkill.objects.filter(user=self.user)
+        user = User.objects.get(id=user_id)
+        self.objects.create(user=user, vk_profile=vk_profile, telegram_profile_link=telegram_profile_link,
+                            telegram_profile_id=telegram_profile_id, other_info=other_info)
 
 
 class UserSubscriptions(models.Model):

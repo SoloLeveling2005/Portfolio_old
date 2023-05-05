@@ -28,27 +28,27 @@ function Settings() {
                         <div className="card-body">
                             <h5 className="card-title">Настройки</h5>
                             <ul className="nav nav-pills pt-3" id="pills-tab" role="tablist">
-                                {nav == 'profile' ? (
+                                {nav === 'profile' ? (
                                     <button className="nav-link active me-2" value="profile" onClick={switchNavF} type="button">Профиль</button>
                                 ):(
                                     <button className="nav-link me-2" value="profile" onClick={switchNavF} type="button">Профиль</button>
                                 )}
-                                {/* {nav == 'specialization' ? (
+                                {/* {nav === 'specialization' ? (
                                     <button className="nav-link active me-2" value="specialization" onClick={switchNavF} type="button">Специализация</button>
                                 ):(
                                     <button className="nav-link me-2" value="specialization" onClick={switchNavF} type="button">Специализация</button>
                                 )} */}
-                                {/* {nav == 'account' ? (
+                                {/* {nav === 'account' ? (
                                     <button className="nav-link active me-2" value="account" onClick={switchNavF} type="button">Аккаунт</button>
                                 ):(
                                     <button className="nav-link me-2" value="account" onClick={switchNavF} type="button">Аккаунт</button>
                                 )} */}
-                                {nav == 'privacy' ? (
+                                {nav === 'privacy' ? (
                                     <button className="nav-link active me-2" value="privacy" onClick={switchNavF} type="button">Приватность</button>
                                 ):(
                                     <button className="nav-link me-2" value="privacy" onClick={switchNavF} type="button">Приватность</button>
                                 )}
-                                {nav == 'notifications' ? (
+                                {nav === 'notifications' ? (
                                     <button className="nav-link active me-2" value="notifications" onClick={switchNavF} type="button">Уведомления</button>
                                 ):(
                                     <button className="nav-link" value="notifications" onClick={switchNavF} type="button">Уведомления</button>
@@ -56,16 +56,16 @@ function Settings() {
                             </ul>
                         </div>
                     </div>
-                    {nav == 'profile' &&
+                    {nav === 'profile' &&
                         <section>
                             <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">
                                 <div className="card-body ps-0 pt-0 mt-0">
                                     <h5 className="card-title mb-3" >Основной</h5>
                                     <form>
                                         <div className="mb-3">
-                                            <label htmlFor="exampleInputEmail1" className="form-label ">Настоящие имя и фамилия</label>
+                                            <label htmlFor="exampleInputEmail1" className="form-label ">Никнейм</label>
                                             <input type="email" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"></input>
-                                            <div id="emailHelp" className="form-text">Укажите ваши имя и фамилию, чтобы другие пользователи смогли узнать, как вас зовут</div>
+                                            <div id="emailHelp" className="form-text">Укажите ваш никнейм, чтобы другие пользователи смогли узнать вас</div>
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">Немного о вас</label>
@@ -204,19 +204,10 @@ function Settings() {
                                             <div id="emailHelp" className="form-text">Ссылка на сайт.</div>
                                         </div>
                                         <div className="mb-3">
-                                            <label htmlFor="exampleInputPassword1" className="form-label ">ВК</label>
-                                            <input type="password" className="form-control" id="exampleInputPassword1"></input>
-                                            <div id="emailHelp" className="form-text">Ссылка на страницу ВКонтакте.</div>
-                                        </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="exampleInputPassword1" className="form-label ">Facebook</label>
-                                            <input type="password" className="form-control" id="exampleInputPassword1"></input>
-                                            <div id="emailHelp" className="form-text">Ссылка на страницу Facebook.</div>
-                                        </div>
-                                        <div className="mb-3">
-                                            <label htmlFor="exampleInputPassword1" className="form-label ">Твиттер</label>
-                                            <input type="password" className="form-control" id="exampleInputPassword1"></input>
-                                            <div id="emailHelp" className="form-text">Ссылка на страницу Твиттер.</div>
+                                            <label htmlFor="exampleInputPassword1" className="form-label ">Телеграмм</label>
+                                            <input type="text" className="form-control mb-1" id="exampleInputPassword1" placeholder='Ваша ссылка на профиль (можно получить в настройках).'></input>
+                                            <input type="text" className="form-control" id="exampleInputPassword1" placeholder='Ваш id.'></input>
+                                            <div id="emailHelp" className="form-text">Получить id профиля телеграмм можно через нашего бота <a href="https://t.me/HubAnywhereBot" target="_blank">HubAnywhereBot</a>.</div>
                                         </div>
                                         
                                         <div className="mb-3">
@@ -243,7 +234,7 @@ function Settings() {
                         </section>
                     }
 
-                    {nav == 'specialization' &&
+                    {nav === 'specialization' &&
                         <section>
                             <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">
                                 <div className="card-body ps-0 pt-0 mt-0">
@@ -399,12 +390,12 @@ function Settings() {
                             </div>
                         </section>
                     }
-                    {nav == 'privacy' &&
+                    {nav === 'privacy' &&
                         <section>
                             <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">
                                 <div className="card-body ps-0 pt-0 mt-0">
                                     <h5 className="card-title mb-3" >Приватность</h5>
-                                    <h6 className='mt-4'>Показывать ваши сайты и аккаунты в соцсетях</h6>
+                                    <h6 className='mt-4'>Показывать доп. информацию</h6>
                                     <div className="form-check">
                                         <input className="form-check-input" type="radio" name="check_website_and_social_network" id="check_website_and_social_network1" checked></input>
                                         <label className="form-check-label" htmlFor="check_website_and_social_network1">
@@ -430,22 +421,71 @@ function Settings() {
                                             Только тем, на кого вы подписаны
                                         </label>
                                     </div>
-                                    <h6 className='mt-4'>Показывать ваши сайты и аккаунты в соцсетях</h6>
+                                    <button type="button" className="btn btn-success mt-3">Сохранить</button>
+                                    
+                                </div>
+                            </div>
+                        </section>
+                    }
+                    {nav === 'notifications' &&
+                        <section>
+                            <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">
+                                <div className="card-body ps-0 pt-0 mt-0">
+                                    <h5 className="card-title mb-3" >Уведомления</h5>
+                                    <h6 className='mt-4'>Уведомления в Telegram</h6>
                                     <div className="form-check">
-                                        <input className="form-check-input" type="radio" name="check_" id="check_1"></input>
-                                        <label className="form-check-label" htmlFor="check_1">
-                                            Default radio
+                                        <input className="form-check-input" type="radio" name="check_website_and_social_network" id="check_website_and_social_network1" checked></input>
+                                        <label className="form-check-label" htmlFor="check_website_and_social_network1">
+                                            Да
                                         </label>
                                         </div>
                                         <div className="form-check">
-                                        <input className="form-check-input" type="radio" name="check_" id="check_2" checked></input>
-                                        <label className="form-check-label" htmlFor="check_2">
-                                            Default checked radio
+                                        <input className="form-check-input" type="radio" name="check_website_and_social_network" id="check_website_and_social_network2"></input>
+                                        <label className="form-check-label" htmlFor="check_website_and_social_network2">
+                                            Нет
                                         </label>
                                     </div>
-                                    
+                                    <h6 className='mt-4'>Уведомлять о новых записях</h6>
+                                    <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_active_in_website" id="check_active_in_website1" checked></input>
+                                        <label className="form-check-label" htmlFor="check_active_in_website1">
+                                            Да
+                                        </label>
+                                        </div>
+                                        <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="check_active_in_website" id="check_active_in_website2"></input>
+                                        <label className="form-check-label" htmlFor="check_active_in_website2">
+                                            Нет
+                                        </label>
+                                    </div>
 
-                                    
+                                    <h6 className='mt-4'>Уведомлять о комментраиях под постами</h6>
+                                    <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="notification_comments_under_posts" id="notification_comments_under_posts1" checked></input>
+                                        <label className="form-check-label" htmlFor="notification_comments_under_posts1">
+                                            Да
+                                        </label>
+                                        </div>
+                                        <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="notification_comments_under_posts" id="notification_comments_under_posts2"></input>
+                                        <label className="form-check-label" htmlFor="notification_comments_under_posts2">
+                                            Нет
+                                        </label>
+                                    </div>
+
+                                    <h6 className='mt-4'>Уведомлять о запросах в друзья</h6>
+                                    <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="notification_new_friend" id="notification_new_friend1" checked></input>
+                                        <label className="form-check-label" htmlFor="notification_new_friend1">
+                                            Да
+                                        </label>
+                                        </div>
+                                        <div className="form-check">
+                                        <input className="form-check-input" type="radio" name="notification_new_friend" id="notification_new_friend2"></input>
+                                        <label className="form-check-label" htmlFor="notification_new_friend2">
+                                            Нет
+                                        </label>
+                                    </div>
                                     <button type="button" className="btn btn-success mt-3">Сохранить</button>
                                     
                                 </div>
