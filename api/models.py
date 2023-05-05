@@ -1,18 +1,25 @@
 import datetime
 import random
 
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.hashers import make_password
 from django.db import models
 from django.template.defaultfilters import slugify
 
 
 # todo START USERS
-class User(models.Model):
+# При регистрации создается модель User, отправляется сигнал на создание UserProfile и UserSettings
+#
+#
+#
+
+
+class User(AbstractBaseUser):
     """
     Модель пользователя. Создается при регистрации пользователя.
     """
     username = models.CharField(max_length=100)
-    login = models.CharField(max_length=100, unique=True)
+    login = models.CharField(max_length=100, unique=True, null=True)
     password = models.CharField(max_length=255)
     biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
