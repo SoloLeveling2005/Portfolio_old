@@ -3,6 +3,7 @@ import random
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.template.defaultfilters import slugify
 
@@ -24,6 +25,7 @@ class User(AbstractBaseUser):
     biography_small = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
+
 
     @classmethod
     def new_user(cls, username: str, password: str, biography: str):
