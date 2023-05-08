@@ -23,13 +23,16 @@ class RegistrationView(APIView):
     serializer_class = RegistrationSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        print(request.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        try:
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            print(request.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print("Ошибка при создании пользователя:",e)
+            return Response({"User already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
 #
 class AuthorizationView(TokenObtainPairView):
