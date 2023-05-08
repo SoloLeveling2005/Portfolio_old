@@ -13,6 +13,12 @@ urlpatterns = [
     #     re_path('sign_in', require_http_methods(['POST'])(SignInView.as_view())),
     #     re_path('sign_out', require_http_methods(['POST'])(SignOutView.as_view())),
     # ])),
+
+
+
+
+
+    # TODO Система авторизации, регистрации, выход из системы
     path('api/register/', RegisterView.as_view(), name='register'),
     path('api/logout/', LogoutView.as_view(), name='logout'),
     path('api/token/', TokenObtainPairWithUserInfoView.as_view(), name='token_obtain_pair'),

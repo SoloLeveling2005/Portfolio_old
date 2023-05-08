@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Permission
 from django.db import models
+from django.db.models import Q
 from django.template.defaultfilters import slugify
 
 
@@ -20,10 +21,8 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    def get_user(self):
-        return User(username=self.username, password=self.password, login=self.login,
-                    biography_small=self.biography_small)
-
+    def info(self):
+        return {'user': self, 'profile': self.profile(), 'avatar': self.avatar(), }
 
     def avatar(self):
         """
@@ -34,43 +33,48 @@ class User(AbstractUser):
     def profile(self):
         return UserProfile.objects.get(user=self)
 
-#     def rating(self):
-#         pass
-#
-#     def comments(self):
-#         pass
-#
+    #     def rating(self):
+    #         pass
+    #
+    #     def comments(self):
+    #         pass
+    #
     def articles(self):
         """
         :return: Возвращает статьи пользователя.
         """
         return Article.objects.filter(author=self)
 
-#     def news(self):
-#         pass
-#
-#     def article_bookmakers(self):
-#         pass
-#
-#     def news_bookmakers(self):
-#         pass
-#
-#     def communities(self):
-#         pass
-#
-#     def chats(self):
-#         pass
-#
-#     def banned_chat(self):
-#         pass
-#
-#     def banned_user(self):
-#         pass
-#
-#     def subscribers_users(self):
-#         pass
-#
-#
+    #     def news(self):
+    #         pass
+    #
+    #     def article_bookmakers(self):
+    #         pass
+    #
+    #     def news_bookmakers(self):
+    #         pass
+    #
+    def my_communities(self):
+        communities_ = CommunityParticipant.objects.filter(Q(user=self))
+        my_communities = Community.objects.filter(Q(user=self))
+        communities_ = communities_.union(my_communities)
+        return communities_
+
+
+    #
+    #     def chats(self):
+    #         pass
+    #
+    #     def banned_chat(self):
+    #         pass
+    #
+    #     def banned_user(self):
+    #         pass
+    #
+    #     def subscribers_users(self):
+    #         pass
+    #
+    #
 class UserAvatar(models.Model):
     """
     Модель аватарка пользователя.
@@ -405,7 +409,7 @@ class CommunityTags(models.Model):
     """
     Модель всевозможных тегов сообщества.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_tags')
+    community = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_tags')
     tag = models.CharField(max_length=150, unique=True)
 
     @classmethod
