@@ -1,11 +1,9 @@
 # serializers.py
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
-
-# Регистрация пользователя (сериализатор)
 User = get_user_model()
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,4 +16,3 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
