@@ -309,7 +309,7 @@ class Community(models.Model):
         pass
 
     def get_roles(self):
-        pass
+        return CommunityRole.objects.filter(community=self)
 
 
 class CommunityAvatar(models.Model):
@@ -341,7 +341,7 @@ class CommunityRole(models.Model):
     """
     Модель роли в сообществе и его разрешения.
     """
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_role')
     administrator = models.BooleanField(default=False)
     content_moderator = models.BooleanField(default=False)
@@ -351,36 +351,6 @@ class CommunityRole(models.Model):
     publish_articles = models.BooleanField(default=False)
     publish_news = models.BooleanField(default=False)
 
-    @classmethod
-    def new_role(cls, title: str, community_id: int, administrator: bool = False, content_moderator: bool = False,
-                 invite_participants: bool = False, edit_community_information: bool = False,
-                 manage_participants: bool = False,
-                 publish_articles: bool = False, publish_news: bool = False):
-        """
-        Создает новую роль для сообщества в бд.
-        :param title: Название роли.
-        :param community_id: ID сообщества.
-        :param administrator: Доступ ко всем функциям.
-        :param content_moderator: Разрешение на удаление/создание/редактирование контента.
-        :param invite_participants: Разрешение на принятие пользователей в сообщество.
-        :param edit_community_information: Разрешение на редактирование информации о сообществе.
-        :param manage_participants: Разрешение на бан/разбан пользователей.
-        :param publish_articles: Разрешение на публикацию статей от имени сообщества.
-        :param publish_news: Разрешение на публикацию новостей от имени сообщества.
-        :return:
-        """
-        community = Community.objects.get(id=community_id)
-        cls.objects.create(title=title,
-                           community=community,
-                           administrator=administrator,
-                           content_moderator=content_moderator,
-                           invite_participants=invite_participants,
-                           edit_community_information=edit_community_information,
-                           manage_participants=manage_participants,
-                           publish_articles=publish_articles,
-                           publish_news=publish_news,
-                           )
-
 
 class CommunityParticipant(models.Model):
     """
@@ -388,21 +358,7 @@ class CommunityParticipant(models.Model):
     """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_participant')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_participant')
-    role = models.ForeignKey(CommunityRole, on_delete=models.CASCADE)
-
-    @classmethod
-    def new_participant(cls, community_id: int, user_id: int, role_id: int):
-        """
-        Добавляет нового пользователя в сообщество.
-        :param community_id: ID сообщества.
-        :param user_id: ID пользователя.
-        :param role_id: ID роли.
-        """
-        community = Community.objects.get(id=community_id)
-        user = User.objects.get(id=user_id)
-        role = CommunityRole.objects.get(id=role_id)
-
-        cls.objects.create(community=community, user=user, role=role)
+    role = models.ForeignKey(CommunityRole, on_delete=models.CASCADE, null=True)
 
 
 class CommunityTags(models.Model):
@@ -411,16 +367,6 @@ class CommunityTags(models.Model):
     """
     community = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_tags')
     tag = models.CharField(max_length=150, unique=True)
-
-    @classmethod
-    def new_tag_community(cls, user_id: int, tag: str):
-        """
-        Создает новый тег сообщества.
-        :param user_id: ID пользователя автора.
-        :param tag: Название тег скилла.
-        """
-        user = User.objects.get(id=user_id)
-        cls.objects.create(user=user, tag=tag)
 
 
 class CommunityTag(models.Model):
@@ -436,18 +382,6 @@ class CommunityChat(models.Model):
     slug = models.SlugField(unique=True)
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    @classmethod
-    def create_community_chat(cls, community_id: int, title: str):
-        community = Community.objects.get(id=community_id)
-        slug = slugify(title)
-        cls.objects.create(title=title, community=community, slug=slug)
-
-    def get_messages(self):
-        return CommunityChatMessage.objects.filter(room=self)
-
-    def get_participants(self):
-        return CommunityChatParticipant.objects.filter(chat=self)
 
 
 class CommunityChatMessage(models.Model):
