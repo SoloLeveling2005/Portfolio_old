@@ -34,16 +34,23 @@ class CommunitiesView:
         Требуемые методы:
          - Создание сообщества (method post_new_community).\n
          - Удаление сообщества (method delete_community).\n
+
          - Создание роли в сообществе (method post_create_role).\n
          - Удаление роли в сообществе (method delete_role).\n
+
          - Создание тега в сообществе (method post_create_tag).\n
          - Удаление тега в сообществе (method delete_tag).\n
+
          - Создание запроса для вступления в сообщество (method post_request_to_join_participant).\n
          - Удаление запроса для вступления в сообщество (method delete_request_to_join_participant).\n
+
          - Добавить пользователя в сообщество - вступить пользователю в сообщество (method post_add_participant).\n
          - Удалить пользователя из сообщества - выйти пользователю из сообщества (method delete_kick_out_participant).\n
+
          - Добавить рекомендацию сообщества пользователем (method post_create_user_recommendation).\n
          - Удалить рекомендацию сообщества пользователем (method delete_user_recommendation).\n
+
+         - Вывод списка запросов на вступление в сообщество (method get_request_to_join_participant)
          - Вывод списка "Мои сообщества" - сообщества в которых состоит пользовать user_id (method get_my_communities).\n
          - Вывод списка "Поиск сообществ" - все сообщества с возможностью фильтрации (method get_find_communities).\n
          - Вывод списка "Рекомендации друзей" - сообщества, которые рекомендовали друзья (method get_friend_recommendations).\n
@@ -257,41 +264,33 @@ class CommunitiesView:
 
         return Response(data={}, status=status.HTTP_200_OK)
 
-    def get_my_communities(self, request):
+    def get_user_communities(self, request):
         """
         Вывод списка "Мои сообщества"
         """
-        pass
+        user_communities = User.user_communities(user_id=self.requesting_user.id)
+        return Response(data={'communities': user_communities}, status=status.HTTP_200_OK)
 
     def get_find_communities(self, request):
         """
         Вывод списка "Поиск сообществ"
         """
-        pass
+        find_text = request.GET.get('find_text')
+        data = Community.objects.filter(Q(title=rf"{find_text}") or Q(description=rf"{find_text}"))
+        return Response(data=data, status=status.HTTP_200_OK)
 
+    def get_request_to_join_participant(self, request):
+        """
+        Вывод списка запросов на вход в сообщество.
+        """
+
+    # Остались методы
     def get_friend_recommendations(self, request):
         """
         Вывод списка "Рекомендации друзей"
         """
         pass
-
-    def get_user_communities(self, request):
-        """
-        Возвращает список сообществ в которые пользователь зашел + сообщества, которые создал пользователь.
-        """
-
-        data = self.requesting_user.my_communities()
-        return Response(data=data, status=status.HTTP_200_OK)
-
-    @staticmethod
-    def get_find_communities(request, find_data: str):
-        """
-        Возвращает список сообществ по тексту который введет пользователь при поиске.
-        """
-
-        # Экранирование происходит автоматически в Django ORM.
-        data = Community.objects.filter(Q(title=rf"{find_data}") or Q(description=rf"{find_data}"))
-        return Response(data=data, status=status.HTTP_200_OK)
+        friends = User.objects.filter()
 
 
 def articles(request, page: int, size: int):

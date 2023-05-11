@@ -54,11 +54,22 @@ class User(AbstractUser):
     #     def news_bookmakers(self):
     #         pass
     #
-    def my_communities(self):
-        communities_ = CommunityParticipant.objects.filter(Q(user=self))
-        my_communities = Community.objects.filter(Q(user=self))
+
+    @classmethod
+    def user_communities(cls, user_id: int):
+        """
+        Возвращает список сообществ в которых состоит или которыми владеет пользователь.
+         - Проверяет на существование пользователя.
+        """
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        communities_ = CommunityParticipant.objects.filter(Q(user=user_))
+        my_communities = Community.objects.filter(Q(user=user_))
         communities_ = communities_.union(my_communities)
-        return communities_
+        return {'status': 'success'}
 
     #
     #     def chats(self):
@@ -180,18 +191,14 @@ class UserSubscriptions(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
     subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
-    status = models.BooleanField(default=False)  # ban - false / friend - true
 
-    def new_user_subscriptions(self, user_id: int, subscriber_id: int, status: bool):
-        """
-        Создает новую связь двух пользователей.
-        :param user_id: ID пользователя.
-        :param subscriber_id: ID собеседника.
-        :param status: Статус ban/friend false/true.
-        """
-        user = User.objects.get(id=user_id)
-        subscriber = User.objects.get(id=subscriber_id)
-        self.objects.create(user=user, subscriber=subscriber, status=status)
+
+class RequestUserSubscriptions(models.Model):
+    """
+    Модель подписок на пользователей.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
 
 
 class UserRating(models.Model):
