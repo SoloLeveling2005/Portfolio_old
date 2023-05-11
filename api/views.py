@@ -4,13 +4,15 @@
 # todo Добавить проверки на роли: Если роль позволяет то пропускать иначе отбрасывать.
 
 from django.db.models import Q
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination
-from .models import User, Article, News, Community, CommunityRole, CommunityParticipant
+from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
+    CommunityRecommendation, RequestCommunityParticipant
 from .serializers import UserSerializer
 
 
@@ -24,24 +26,31 @@ def user(request, user_id: int):
 
 
 class CommunitiesView:
-    def __init__(self, user_id: int):
+    authentication_classes = [JWTAuthentication]
+
+    def __init__(self, request):
         """
         Контроллер для управления сообществами.\n
         Требуемые методы:
-         - Создание сообщества (method post_new_community).
-         - Удаление сообщества (method delete_community).
-         - Создание роли в сообществе (method post_create_role).
-         - Удаление роли в сообществе (method delete_role).
-         - Добавить пользователя в сообщество - вступить пользователю user_id в сообщество (method post_add_participant).
-         - Удалить пользователя из сообщества - выйти пользователю user_id из сообщества.
-         - Добавить рекомендацию сообщества пользователем.
-         - Вывод списка "Мои сообщества" - сообщества в которых состоит пользовать user_id.
-         - Вывод списка "Поиск сообществ" - все сообщества с возможностью фильтрации.
-         - Вывод списка "Рекомендации друзей" - сообщества, которые рекомендовали друзья.
+         - Создание сообщества (method post_new_community).\n
+         - Удаление сообщества (method delete_community).\n
+         - Создание роли в сообществе (method post_create_role).\n
+         - Удаление роли в сообществе (method delete_role).\n
+         - Создание тега в сообществе (method post_create_tag).\n
+         - Удаление тега в сообществе (method delete_tag).\n
+         - Создание запроса для вступления в сообщество (method post_request_to_join_participant).\n
+         - Удаление запроса для вступления в сообщество (method delete_request_to_join_participant).\n
+         - Добавить пользователя в сообщество - вступить пользователю в сообщество (method post_add_participant).\n
+         - Удалить пользователя из сообщества - выйти пользователю из сообщества (method delete_kick_out_participant).\n
+         - Добавить рекомендацию сообщества пользователем (method post_create_user_recommendation).\n
+         - Удалить рекомендацию сообщества пользователем (method delete_user_recommendation).\n
+         - Вывод списка "Мои сообщества" - сообщества в которых состоит пользовать user_id (method get_my_communities).\n
+         - Вывод списка "Поиск сообществ" - все сообщества с возможностью фильтрации (method get_find_communities).\n
+         - Вывод списка "Рекомендации друзей" - сообщества, которые рекомендовали друзья (method get_friend_recommendations).\n
         """
-        self.requesting_user = User.objects.get(id=user_id)
+        self.requesting_user = request.user
 
-    def post_new_community(self, request):
+    def post_create_community(self, request) -> Response:
         """
         Создает новое сообщество.
         """
@@ -51,7 +60,7 @@ class CommunitiesView:
         Community.new_community(user_id=self.requesting_user.id, title=title, description=description)
         return Response(data={'status': 'success'}, status=status.HTTP_201_CREATED)
 
-    def delete_community(self, request):
+    def delete_community(self, request) -> Response:
         """
         Удаляет сообщество.
         - Если сообщества не существует вызываем исключение.
@@ -69,7 +78,7 @@ class CommunitiesView:
         community.delete()
         return Response(data={}, status=status.HTTP_200_OK)
 
-    def post_create_role(self, request):
+    def post_create_role(self, request) -> Response:
         """
         Создает роль в сообществе.
         """
@@ -99,7 +108,7 @@ class CommunitiesView:
 
         return Response(data={}, status=status.HTTP_200_OK)
 
-    def delete_role(self, request):
+    def delete_role(self, request) -> Response:
         """
         Удаляет роль.
         """
@@ -118,7 +127,7 @@ class CommunitiesView:
 
         return Response(data={}, status=status.HTTP_200_OK)
 
-    def post_add_participant(self, request):
+    def post_add_participant(self, request) -> Response:
         """
         Добавляет пользователя в участники сообщества.
         """
@@ -136,23 +145,135 @@ class CommunitiesView:
 
         return Response(data={}, status=status.HTTP_201_CREATED)
 
-    def delete_kick_out_participant(self, request):
+    def delete_kick_out_participant(self, request) -> Response:
         """
         Удаляет пользователя с участников сообщества.
         """
         community_id = request.POST.get('community_id')
         target_user_id = request.POST.get('target_user_id')
 
+        # Проверка на существование сообщества.
         community = Community.objects.filter(id=community_id)
         if not community.exists():
-            return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+            return Response(data={'message': 'Community not found'}, status=status.HTTP_204_NO_CONTENT)
         community = community.first()
 
-        user = User.objects.filter(id=target_user_id)
-        if not user.exists():
-            return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-        user = user.first()
+        # Проверка на существование пользователя.
+        user_ = User.objects.filter(id=target_user_id)
+        if not user_.exists():
+            return Response(data={'message': 'User not found'}, status=status.HTTP_204_NO_CONTENT)
+        user_ = user_.first()
 
+        # Проверка на существование этого пользователя в этом сообществе.
+        participant = CommunityParticipant.objects.filter(community=community, user=user_)
+        if not participant:
+            return Response(data={'message': 'Participant not found'}, status=status.HTTP_204_NO_CONTENT)
+        participant = participant.first()
+
+        # Удаляем пользователя из сообщества.
+        participant.delete()
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def post_create_tag(self, request) -> Response:
+        """
+        Создает тег сообщества.
+        """
+        community_id = request.POST.get('community_id')
+        tag = request.POST.get('tag')
+
+        # Вызываем метод модели, там есть проверка на существование сообщества и проверка на существование тега.
+        community_tag = CommunityTag.create(community_id=community_id, tag=tag)
+        if community_tag.status == 'error':
+            return Response(data={'message': community_tag.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
+
+    def delete_tag(self, request) -> Response:
+        """
+        Удаляет тег сообщества.
+        """
+        community_id = request.POST.get('community_id')
+        tag = request.POST.get('tag')
+
+        # Вызываем метод модели, там есть проверка на существование сообщества и проверка на существование тега.
+        community_tag = CommunityTag.create(community_id=community_id, tag=tag)
+        if community_tag.status == 'error':
+            return Response(data={'message': community_tag.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def post_create_user_recommendation(self, request):
+        """
+        Добавить рекомендацию сообщества пользователем
+        """
+        community_id = request.POST.get('community_id')
+        user_id = self.requesting_user.id
+        score = request.POST.get('score')
+
+        score = score if 1 <= score <= 10 else 5
+        recommendation = CommunityRecommendation.create(community_id=community_id, user_id=user_id, score=score)
+        if recommendation.status == 'error':
+            return Response(data={'message': recommendation.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def delete_user_recommendation(self, request):
+        """
+        Удалить рекомендацию сообщества пользователем
+        """
+        community_id = request.POST.get('community_id')
+        user_id = self.requesting_user.id
+
+        recommendation = CommunityRecommendation.delete_(community_id=community_id, user_id=user_id)
+        if recommendation.status == 'error':
+            return Response(data={'message': recommendation.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def post_request_to_join_participant(self, request):
+        """
+        Создать запрос для вступления в сообщество
+        """
+        community_id = request.POST.get('community_id')
+        participant_id = request.POST.get('participant_id')
+
+        participant = RequestCommunityParticipant.create(community_id=community_id, user_id=participant_id)
+        if participant.status == 'error':
+            return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
+
+    def delete_request_to_join_participant(self, request):
+        """
+        Удалить запрос для вступления в сообщество
+        """
+        community_id = request.POST.get('community_id')
+        participant_id = request.POST.get('participant_id')
+
+        participant = RequestCommunityParticipant.delete_(community_id=community_id, user_id=participant_id)
+        if participant.status == 'error':
+            return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def get_my_communities(self, request):
+        """
+        Вывод списка "Мои сообщества"
+        """
+        pass
+
+    def get_find_communities(self, request):
+        """
+        Вывод списка "Поиск сообществ"
+        """
+        pass
+
+    def get_friend_recommendations(self, request):
+        """
+        Вывод списка "Рекомендации друзей"
+        """
+        pass
 
     def get_user_communities(self, request):
         """

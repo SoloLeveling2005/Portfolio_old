@@ -60,7 +60,6 @@ class User(AbstractUser):
         communities_ = communities_.union(my_communities)
         return communities_
 
-
     #
     #     def chats(self):
     #         pass
@@ -75,6 +74,8 @@ class User(AbstractUser):
     #         pass
     #
     #
+
+
 class UserAvatar(models.Model):
     """
     Модель аватарка пользователя.
@@ -312,29 +313,76 @@ class Community(models.Model):
         return CommunityRole.objects.filter(community=self)
 
 
+class CommunityRecommendation(models.Model):
+    """
+    Модель рекомендаций сообществ. Рейтинг сообщества.
+    """
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        related_name='community_recommendation_by_community'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='community_recommendation_by_user'
+    )
+    score = models.SmallIntegerField()  # от 1 до 10
+
+    @classmethod
+    def create(cls, community_id: int, user_id: int, score: int):
+        """
+        Создает новую рекомендацию.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование пользователя.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        cls.objects.create(community=community, user=user_, score=score)
+
+        return {'status': 'success'}
+
+    @classmethod
+    def delete_(cls, community_id: int, user_id: int):
+        """
+        Удаляет рекомендацию.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование рекомендации.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        recommendation = cls.objects.filter(community=community, user=user_)
+        if not recommendation.exists():
+            return {'message': 'Recommendation not found', 'status': 'error'}
+        recommendation = recommendation.first()
+        recommendation.delete()
+
+        return {'status': 'success'}
+
+
 class CommunityAvatar(models.Model):
     """
     Модель аватарки сообщества.
     """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_avatar')
     img = models.ImageField(null=False)
-
-    @classmethod
-    def new_avatar(cls, community_id: int, img):
-        """
-        Создает или обновляет аватарку сообщества в бд.
-        :param community_id: ID сообщества.
-        :param img: Картинка сообщества.
-        """
-        community = Community.objects.get(id=community_id)
-
-        # Если аватарка была добавлена, то обновляем ее, иначе создаем
-        if cls.objects.filter(community=community).exists():
-            img_community = cls.objects.get(community=community)
-            img_community.img = img
-            img_community.save()
-        else:
-            cls.objects.create(community=community, img=img)
 
 
 class CommunityRole(models.Model):
@@ -356,17 +404,101 @@ class CommunityParticipant(models.Model):
     """
     Модель участников сообщества.
     """
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_participant')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_participant')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
+                                  related_name='community_participant_by_community')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_participant_by_user')
     role = models.ForeignKey(CommunityRole, on_delete=models.CASCADE, null=True)
 
+    @classmethod
+    def create(cls, community_id: int, user_id: int, role_id: int):
+        """
+        Добавляет участника в сообщество.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование роли.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
 
-class CommunityTags(models.Model):
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        role = CommunityRole.objects.filter(id=role_id)
+        if not role.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        role = role.first()
+
+        participant = cls.objects.filter(community=community, user=user_, role=role)
+        if participant.exists():
+            return {'message': 'Participant already exists', 'status': 'error'}
+
+        cls.objects.create(community=community, user=user_, role=role)
+
+        return {'status': 'success'}
+
+
+class RequestCommunityParticipant(models.Model):
     """
-    Модель всевозможных тегов сообщества.
+    Модель участников сообщества.
     """
-    community = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_tags')
-    tag = models.CharField(max_length=150, unique=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='request_in_community_by_community')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_in_community_by_user')
+
+    @classmethod
+    def create(cls, community_id: int, user_id: int):
+        """
+        Добавляет участника в сообщество.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование роли.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        participant = cls.objects.filter(community=community, user=user_)
+        if participant.exists():
+            return {'message': 'Participant already exists', 'status': 'error'}
+
+        cls.objects.create(community=community, user=user_)
+
+        return {'status': 'success'}
+
+    @classmethod
+    def delete_(cls, community_id: int, user_id: int):
+        """
+        Добавляет участника в сообщество.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование роли.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        participant = cls.objects.filter(community=community, user=user_)
+        if not participant.exists():
+            return {'message': 'Participant not found', 'status': 'error'}
+
+        cls.objects.get(community=community, user=user_).delete()
+
+        return {'status': 'success'}
 
 
 class CommunityTag(models.Model):
@@ -374,7 +506,44 @@ class CommunityTag(models.Model):
     Модель тега сообщества.
     """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_tag')
-    tag = models.ForeignKey(CommunityTags, on_delete=models.CASCADE, related_name='community_tag')
+    tag = models.CharField(max_length=150)
+
+    @classmethod
+    def create(cls, community_id: int, tag: str):
+        """
+        Создает новый тег.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование тега.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        if cls.objects.filter(community=community, tag=tag).exists():
+            return {'message': 'Tag already created', 'status': 'error'}
+
+        cls.objects.create(community=community, tag=tag)
+        return {'status': 'success'}
+
+    @classmethod
+    def delete_(cls, community_id: int, tag: str):
+        """
+        Удаляет тег.
+         - Проверяет на существование сообщества.
+         - Проверяет на существование тега.
+        """
+
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        if not cls.objects.filter(community=community, tag=tag).exists():
+            return {'message': 'Tag not found', 'status': 'error'}
+
+        cls.objects.get(community=community, tag=tag).delete()
+        return {'status': 'success'}
 
 
 class CommunityChat(models.Model):
