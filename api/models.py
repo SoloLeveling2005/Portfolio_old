@@ -141,9 +141,9 @@ class UserProfile(models.Model):
     Модель профиля пользователя.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
-    location = models.CharField(max_length=100)
-    gender = models.CharField(max_length=5)  # man, woman
-    birthday = models.DateTimeField()
+    location = models.CharField(max_length=100, null=True)
+    gender = models.CharField(max_length=5, null=True)  # man, woman
+    birthday = models.DateTimeField(null=True)
 
     def create_user_info(self, user_id: int, gender: str, birthday: datetime, location: str, vk_profile: str,
                          telegram_profile_link: str, telegram_profile_id: str, other_info: str):
@@ -166,10 +166,10 @@ class UserProfile(models.Model):
 
 class UserAdditionalInformation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_additional_information')
-    vk_profile = models.CharField(max_length=100)
-    telegram_profile_link = models.CharField(max_length=100)
-    telegram_profile_id = models.CharField(max_length=100)
-    other_info = models.TextField()
+    vk_profile = models.CharField(max_length=100, null=True)
+    telegram_profile_link = models.CharField(max_length=100, null=True)
+    telegram_profile_id = models.CharField(max_length=100, null=True)
+    other_info = models.TextField(null=True)
 
     def create_user_info(self, user_id: int, vk_profile: str,
                          telegram_profile_link: str, telegram_profile_id: str, other_info: str):
@@ -391,6 +391,22 @@ class CommunityAvatar(models.Model):
     """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_avatar')
     img = models.ImageField(null=False)
+
+    @classmethod
+    def create(cls, community_id: int, img):
+        """
+        Добавляет или обновляет аватарку сообщества.
+         - Проверяет на существование сообщества.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        avatar = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
 
 
 class CommunityRole(models.Model):
