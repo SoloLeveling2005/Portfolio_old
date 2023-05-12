@@ -39,6 +39,7 @@ class User(AbstractUser):
     #     def comments(self):
     #         pass
     #
+
     def articles(self):
         """
         :return: Возвращает статьи пользователя.
@@ -137,7 +138,7 @@ class UserSettings(models.Model):
 
 class UserProfile(models.Model):
     """
-    Модель аватарка пользователя.
+    Модель профиля пользователя.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
     location = models.CharField(max_length=100)
@@ -195,10 +196,10 @@ class UserSubscriptions(models.Model):
 
 class RequestUserSubscriptions(models.Model):
     """
-    Модель подписок на пользователей.
+    Модель запросов на подписку пользователей в друзья.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
-    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_subscriptions_on_user')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_subscriptions_on_subscriber')
 
 
 class UserRating(models.Model):
@@ -454,6 +455,19 @@ class RequestCommunityParticipant(models.Model):
     """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='request_in_community_by_community')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_in_community_by_user')
+
+    @classmethod
+    def list(cls, community_id: int):
+        """
+        Выводит список запросов на вход в сообщество.
+         - Проверяет на существование сообщества.
+        """
+        community = Community.objects.filter(id=community_id)
+        if not community.exists():
+            return {'message': 'Community not found', 'status': 'error'}
+        community = community.first()
+
+        return cls.objects.filter(community=community)
 
     @classmethod
     def create(cls, community_id: int, user_id: int):

@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination
 from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
-    CommunityRecommendation, RequestCommunityParticipant
+    CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions
 from .serializers import UserSerializer
 
 
@@ -25,12 +25,26 @@ def user(request, user_id: int):
     return Response(data=requesting_user, status=status.HTTP_200_OK)
 
 
+class User:
+    authentication_classes = [JWTAuthentication]
+
+    def __init__(self, request):
+        """
+        Контроллер управления пользователем.
+        Требуемые методы:
+         - Авторизация, регистрация, создание токена уже реализовано в классах ниже.
+
+         -
+        """
+        self.requesting_user = request.user
+
+
 class CommunitiesView:
     authentication_classes = [JWTAuthentication]
 
     def __init__(self, request):
         """
-        Контроллер для управления сообществами.\n
+        Контроллер управления сообществами.\n
         Требуемые методы:
          - Создание сообщества (method post_new_community).\n
          - Удаление сообщества (method delete_community).\n
@@ -238,6 +252,18 @@ class CommunitiesView:
 
         return Response(data={}, status=status.HTTP_200_OK)
 
+    def get_request_to_join_participant(self, request):
+        """
+        Вывод списка запросов на вход в сообщество.
+        """
+        community_id = request.POST.get('community_id')
+
+        requests_participant = RequestCommunityParticipant.list()
+        if requests_participant.status == 'error':
+            return Response(data={'message': requests_participant.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={'requests_participant': requests_participant}, status=status.HTTP_200_OK)
+
     def post_request_to_join_participant(self, request):
         """
         Создать запрос для вступления в сообщество
@@ -279,18 +305,19 @@ class CommunitiesView:
         data = Community.objects.filter(Q(title=rf"{find_text}") or Q(description=rf"{find_text}"))
         return Response(data=data, status=status.HTTP_200_OK)
 
-    def get_request_to_join_participant(self, request):
-        """
-        Вывод списка запросов на вход в сообщество.
-        """
-
     # Остались методы
     def get_friend_recommendations(self, request):
         """
         Вывод списка "Рекомендации друзей"
         """
-        pass
-        friends = User.objects.filter()
+        friends = UserSubscriptions.objects.filter(user=self.requesting_user)
+        communities = [CommunityParticipant.objects.filter(user=friend.subscriber) for friend in friends]
+        # Немного страшный код, но лучше не придумал.
+        data = []
+        for community in communities:
+            data.extend(community)
+
+        return Response(data={'communities': data}, status=status.HTTP_200_OK)
 
 
 def articles(request, page: int, size: int):
