@@ -103,7 +103,7 @@ class UserProfile(models.Model):
          - Проверяет на существование пользователя.
          - Проверяет на существование профиля пользователя.
         """
-        user_ = cls.objects.filter(id=user_id)
+        user_ = User.objects.filter(id=user_id)
         if not user_.exists():
             return {'message': 'User not found', 'status': 'error'}
         user_ = user_.first()
@@ -123,7 +123,7 @@ class UserProfile(models.Model):
          - Проверяет на существование пользователя.
          - Проверяет на существование профиля пользователя.
         """
-        user_ = cls.objects.filter(id=user_id)
+        user_ = User.objects.filter(id=user_id)
         if not user_.exists():
             return {'message': 'User not found', 'status': 'error'}
         user_ = user_.first()
@@ -162,12 +162,12 @@ class UserAdditionalInformation(models.Model):
          - Проверяет на существование пользователя.
          - Проверяет на существование доп.информации пользователя.
         """
-        user_ = cls.objects.filter(id=user_id)
+        user_ = User.objects.filter(id=user_id)
         if not user_.exists():
             return {'message': 'User not found', 'status': 'error'}
         user_ = user_.first()
 
-        created = cls.objects.filter(user=user_)
+        created = User.objects.filter(user=user_)
         if created.exists():
             return {'message': 'User additional information already created', 'status': 'error'}
 
@@ -194,12 +194,12 @@ class UserAdditionalInformation(models.Model):
          - Проверяет на существование пользователя.
          - Проверяет на существование доп.информации пользователя.
         """
-        user_ = cls.objects.filter(id=user_id)
+        user_ = User.objects.filter(id=user_id)
         if not user_.exists():
             return {'message': 'User not found', 'status': 'error'}
         user_ = user_.first()
 
-        created = cls.objects.filter(user=user_)
+        created = User.objects.filter(user=user_)
         if not created.exists():
             return {'message': 'User additional information not found', 'status': 'error'}
         created = created.first()
@@ -222,6 +222,46 @@ class UserSubscriptions(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
     subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
 
+    @classmethod
+    def create(cls, user_id: int, subscriber_id: int):
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        subscriber = User.objects.filter(id=subscriber_id)
+        if not user_.exists():
+            return {'message': 'Subscriber not found', 'status': 'error'}
+        subscriber = subscriber.first()
+
+        created = cls.objects.filter(user=user_, subscriber=subscriber)
+        if created.exists():
+            return {'message': 'UserSubscriptions already exists', 'status': 'error'}
+
+        cls.objects.create(user=user_, subscriber=subscriber)
+
+        return {'status': 'success'}
+
+    @classmethod
+    def delete_(cls, user_id: int, subscriber_id: int):
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        subscriber = User.objects.filter(id=subscriber_id)
+        if not user_.exists():
+            return {'message': 'Subscriber not found', 'status': 'error'}
+        subscriber = subscriber.first()
+
+        created = cls.objects.filter(user=user_, subscriber=subscriber)
+        if not created.exists():
+            return {'message': 'UserSubscriptions not found', 'status': 'error'}
+        created = created.first()
+        created.delete()
+
+        return {'status': 'success'}
+
 
 class RequestUserSubscriptions(models.Model):
     """
@@ -233,6 +273,45 @@ class RequestUserSubscriptions(models.Model):
 
     @classmethod
     def create(cls, user_id: int, subscriber_id: int):
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        subscriber = User.objects.filter(id=subscriber_id)
+        if not user_.exists():
+            return {'message': 'Subscriber not found', 'status': 'error'}
+        subscriber = subscriber.first()
+
+        created = cls.objects.filter(user=user_, subscriber=subscriber)
+        if created.exists():
+            return {'message': 'RequestUserSubscriptions already exists', 'status': 'error'}
+
+        cls.objects.create(user=user_, subscriber=subscriber)
+
+        return {'status': 'success'}
+
+    @classmethod
+    def delete_(cls, user_id: int, subscriber_id: int):
+        user_ = User.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        subscriber = User.objects.filter(id=subscriber_id)
+        if not user_.exists():
+            return {'message': 'Subscriber not found', 'status': 'error'}
+        subscriber = subscriber.first()
+
+        created = cls.objects.filter(user=user_, subscriber=subscriber)
+        if not created.exists():
+            return {'message': 'RequestUserSubscriptions not found', 'status': 'error'}
+        created = created.first()
+        created.delete()
+
+        return {'status': 'success'}
+
+
 
 class UserRating(models.Model):
     """
@@ -253,12 +332,12 @@ class UserRating(models.Model):
          - Проверяет на существование пользователя.
          - Проверяет на существование рейтинга.
         """
-        user_ = cls.objects.filter(id=user_id)
+        user_ = User.objects.filter(id=user_id)
         if not user_.exists():
             return {'message': 'User not found', 'status': 'error'}
         user_ = user_.first()
 
-        appraiser = cls.objects.filter(id=user_id)
+        appraiser = User.objects.filter(id=appraiser_id)
         if not appraiser.exists():
             return {'message': 'Appraiser not found', 'status': 'error'}
         appraiser = appraiser.first()
@@ -275,39 +354,6 @@ class UserRating(models.Model):
 
         return {'status': 'success'}
 
-    @classmethod
-    def update(cls,
-               user_id: int,
-               website: str = None,
-               telegram_profile_link: bool = None,
-               telegram_profile_id: datetime = None,
-               other_info: str = None
-               ):
-        """
-        Редактирует доп.информацию пользователя.
-         - Проверяет на существование пользователя.
-         - Проверяет на существование доп.информации пользователя.
-        """
-        user_ = cls.objects.filter(id=user_id)
-        if not user_.exists():
-            return {'message': 'User not found', 'status': 'error'}
-        user_ = user_.first()
-
-        created = cls.objects.filter(user=user_)
-        if not created.exists():
-            return {'message': 'User additional information not found', 'status': 'error'}
-        created = created.first()
-
-        website = website if website is not None else created.website
-        telegram_profile_link = telegram_profile_link if telegram_profile_link is not None else created.telegram_profile_link
-        telegram_profile_id = telegram_profile_id if telegram_profile_id is not None else created.telegram_profile_id
-        other_info = other_info if other_info is not None else created.other_info
-        created.website, created.telegram_profile_link, created.telegram_profile_id, created.other_info = \
-            website, telegram_profile_link, telegram_profile_id, other_info
-        created.save()
-
-        return {'status': 'success'}
-
 
 class Chat(models.Model):
     """
@@ -315,27 +361,6 @@ class Chat(models.Model):
     """
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    @classmethod
-    def create_community_chat(cls, title: str, first_user_id: int, second_user_id: int):
-        """
-        Метод создает чат между двумя пользователями.
-        :param title:
-        :param first_user_id:
-        :param second_user_id:
-        :return:
-        """
-        first_user = User.objects.get(id=first_user_id)
-        second_user = User.objects.get(id=second_user_id)
-        chat = cls.objects.create(title=title)
-        ChatParticipant.objects.create(chat=chat, user=first_user)
-        ChatParticipant.objects.create(chat=chat, user=second_user)
-
-    def get_messages(self):
-        return ChatMessage.objects.filter(chat=self)
-
-    def get_participants(self):
-        return ChatParticipant.objects.filter(chat=self)
 
 
 class ChatMessage(models.Model):

@@ -12,7 +12,8 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination
 from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
-    CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation
+    CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
+    RequestUserSubscriptions
 from .serializers import UserSerializer
 
 
@@ -123,16 +124,44 @@ class UserView:
         return Response(data={}, status=status.HTTP_200_OK)
 
     def post_add_request_in_friend(self, request):
-        pass
+        user_id = self.requesting_user.id
+        subscriber_id = request.POST.get('subscriber_id')
+
+        request_user_subscriptions = RequestUserSubscriptions.create(user_id=user_id, subscriber_id=subscriber_id)
+        if request_user_subscriptions.status == 'error':
+            return Response(data={'message': request_user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
     def delete_request_in_friend(self, request):
-        pass
+        user_id = self.requesting_user.id
+        subscriber_id = request.POST.get('subscriber_id')
+
+        request_user_subscriptions = RequestUserSubscriptions.delete_(user_id=user_id, subscriber_id=subscriber_id)
+        if request_user_subscriptions.status == 'error':
+            return Response(data={'message': request_user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
 
     def post_add_new_friend_subscriptions(self, request):
-        pass
+        user_id = self.requesting_user.id
+        subscriber_id = request.POST.get('subscriber_id')
+
+        user_subscriptions = UserSubscriptions.create(user_id=user_id, subscriber_id=subscriber_id)
+        if user_subscriptions.status == 'error':
+            return Response(data={'message': user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
     def delete_friend_subscriptions(self, request):
-        pass
+        user_id = self.requesting_user.id
+        subscriber_id = request.POST.get('subscriber_id')
+
+        user_subscriptions = UserSubscriptions.delete_(user_id=user_id, subscriber_id=subscriber_id)
+        if user_subscriptions.status == 'error':
+            return Response(data={'message': user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
 
     def post_add_user_in_blacklist(self, request):
         pass
