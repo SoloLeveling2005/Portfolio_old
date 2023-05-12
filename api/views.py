@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination
 from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
-    CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions
+    CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation
 from .serializers import UserSerializer
 
 
@@ -32,32 +32,133 @@ class UserView:
         """
         Контроллер управления пользователем. \n
         Требуемые методы: \n
-         - Авторизация, регистрация, создание токена уже реализовано в классах ниже. \n
+         - Авторизация, регистрация, выход из системы, создание токена уже реализовано в классах ниже. \n
 
-         - Создание профиля пользователя. \n
-         - Редактирование (+удаление) профиля пользователя. \n
+         - Создание профиля пользователя (method post_create_user_profile). \n
+         - Редактирование профиля пользователя (method update_user_profile). \n
 
-         - Создание дополнительной информации пользователя. \n
-         - Редактирование (+удаление) дополнительной информации пользователя. \n
+         - Создание дополнительной информации пользователя (method post_create_user_additional_information). \n
+         - Редактирование дополнительной информации пользователя (method update_user_additional_information). \n
 
-         - Добавить запрос пользователя в друзья. \n
-         - Удалить запрос пользователя в друзья. \n
+         - Добавить запрос пользователя в друзья (method post_add_request_in_friend). \n
+         - Удалить запрос пользователя в друзья (method delete_request_in_friend). \n
 
-         - Добавить пользователя в друзья. \n
-         - Удалить пользователя из друзей. \n
+         - Добавить пользователя в друзья (method post_add_new_friend_subscriptions). \n
+         - Удалить пользователя из друзей (method delete_friend_subscriptions). \n
 
-         - Добавить пользователя в черный список.
-         - Удалить пользователя из черного списка.
+         - Добавить пользователя в черный список (method post_add_user_in_blacklist). \n
+         - Удалить пользователя из черного списка (method delete_user_from_blacklist). \n
 
-         - Добавить отзыв пользователя о другом пользователе.
-         - Удалить отзыв пользователя о другом пользователе.
+         - Добавить отзыв пользователя о другом пользователе (method post_add_rating_user). \n
+         - Удалить отзыв пользователя о другом пользователе (method delete_rating_user). \n
 
-
-
-
+         - Вывод информации о пользователе (method get_user). \n
+         - Вывод списка "Мои друзья" (method get_my_friends). \n
+         - Вывод списка "Заявки в друзья" (method get_request_to_friend). \n
+         - Вывод списка "Поиск друзей" (method get_find_friends). \n
 
         """
         self.requesting_user = request.user
+
+    def post_create_user_profile(self, request):
+        location = request.POST.get('location')
+        gender = request.POST.get('gender')
+        birthday = request.POST.get('birthday')
+        user_id = self.requesting_user.id
+
+        profile = UserProfile.create(user_id=user_id, location=location, gender=gender, birthday=birthday)
+        if profile.status == 'error':
+            return Response(data={'message': profile.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
+
+    def update_user_profile(self, request):
+        location = request.POST.get('location')
+        gender = request.POST.get('gender')
+        birthday = request.POST.get('birthday')
+        user_id = self.requesting_user.id
+
+        profile = UserProfile.update(user_id=user_id, location=location, gender=gender, birthday=birthday)
+        if profile.status == 'error':
+            return Response(data={'message': profile.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def post_create_user_additional_information(self, request):
+        website = request.POST.get('website')
+        telegram_profile_link = request.POST.get('telegram_profile_link')
+        telegram_profile_id = request.POST.get('telegram_profile_id')
+        other_info = request.POST.get('other_info')
+        user_id = self.requesting_user.id
+
+        additional_information = UserAdditionalInformation.create(
+            user_id=user_id,
+            website=website,
+            telegram_profile_link=telegram_profile_link,
+            telegram_profile_id=telegram_profile_id,
+            other_info=other_info
+        )
+        if additional_information.status == 'error':
+            return Response(data={'message': additional_information.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
+
+    def update_user_additional_information(self, request):
+        website = request.POST.get('website')
+        telegram_profile_link = request.POST.get('telegram_profile_link')
+        telegram_profile_id = request.POST.get('telegram_profile_id')
+        other_info = request.POST.get('other_info')
+        user_id = self.requesting_user.id
+
+        additional_information = UserAdditionalInformation.update(
+            user_id=user_id,
+            website=website,
+            telegram_profile_link=telegram_profile_link,
+            telegram_profile_id=telegram_profile_id,
+            other_info=other_info
+        )
+        if additional_information.status == 'error':
+            return Response(data={'message': additional_information.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def post_add_request_in_friend(self, request):
+        pass
+
+    def delete_request_in_friend(self, request):
+        pass
+
+    def post_add_new_friend_subscriptions(self, request):
+        pass
+
+    def delete_friend_subscriptions(self, request):
+        pass
+
+    def post_add_user_in_blacklist(self, request):
+        pass
+
+    def delete_user_from_blacklist(self, request):
+        pass
+
+    def post_add_rating_user(self, request):
+        pass
+
+    def delete_rating_user(self, request):
+        pass
+
+    def get_user(self, request):
+        pass
+
+    def get_my_friends(self, request):
+        pass
+
+    def get_request_to_friend(self, request):
+        pass
+
+    def get_find_friends(self, request):
+        pass
+
+
 
 
 class CommunitiesView:
@@ -85,6 +186,7 @@ class CommunitiesView:
          - Добавить рекомендацию сообщества пользователем (method post_create_user_recommendation).\n
          - Удалить рекомендацию сообщества пользователем (method delete_user_recommendation).\n
 
+         - todo Вывод информации об одном сообществе (method get_community). \n
          - Вывод списка запросов на вступление в сообщество (method get_request_to_join_participant)
          - Вывод списка "Мои сообщества" - сообщества в которых состоит пользовать user_id (method get_my_communities).\n
          - Вывод списка "Поиск сообществ" - все сообщества с возможностью фильтрации (method get_find_communities).\n

@@ -10,51 +10,17 @@ from django.template.defaultfilters import slugify
 
 
 # todo START USERS
-# При регистрации создается модель User, отправляется сигнал на создание UserProfile и UserSettings
-#
-#
-#
+# При регистрации создается модель User, отправляется сигнал на создание UserSettings
+
 
 class User(AbstractUser):
+    """
+    Сигнал на создание настроек пользователя создан.
+    """
     biography_small = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.username
-
-    def info(self):
-        return {'user': self, 'profile': self.profile(), 'avatar': self.avatar(), }
-
-    def avatar(self):
-        """
-        :return: Возвращает аватарку пользователя.
-        """
-        return UserAvatar.objects.get(user=self)
-
-    def profile(self):
-        return UserProfile.objects.get(user=self)
-
-    #     def rating(self):
-    #         pass
-    #
-    #     def comments(self):
-    #         pass
-    #
-
-    def articles(self):
-        """
-        :return: Возвращает статьи пользователя.
-        """
-        return Article.objects.filter(author=self)
-
-    #     def news(self):
-    #         pass
-    #
-    #     def article_bookmakers(self):
-    #         pass
-    #
-    #     def news_bookmakers(self):
-    #         pass
-    #
 
     @classmethod
     def user_communities(cls, user_id: int):
@@ -71,21 +37,6 @@ class User(AbstractUser):
         my_communities = Community.objects.filter(Q(user=user_))
         communities_ = communities_.union(my_communities)
         return {'status': 'success'}
-
-    #
-    #     def chats(self):
-    #         pass
-    #
-    #     def banned_chat(self):
-    #         pass
-    #
-    #     def banned_user(self):
-    #         pass
-    #
-    #     def subscribers_users(self):
-    #         pass
-    #
-    #
 
 
 class UserAvatar(models.Model):
@@ -142,48 +93,126 @@ class UserProfile(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
     location = models.CharField(max_length=100, null=True)
-    gender = models.CharField(max_length=5, null=True)  # man, woman
+    gender = models.BooleanField(null=True)  # man true, woman false
     birthday = models.DateTimeField(null=True)
 
-    def create_user_info(self, user_id: int, gender: str, birthday: datetime, location: str, vk_profile: str,
-                         telegram_profile_link: str, telegram_profile_id: str, other_info: str):
+    @classmethod
+    def create(cls, user_id: int, location: str = None, gender: bool = None, birthday: datetime = None):
         """
-        Создает доп. информацию пользователя.
-        :param user_id: ID пользователя.
-        :param gender: Пол.
-        :param birthday: Дата рождения.
-        :param location: Местоположение.
-        :param vk_profile: Ссылка на вк профиль.
-        :param telegram_profile_link: Ссылка на telegram профиль.
-        :param telegram_profile_id: ID telegram профиля.
-        :param other_info: Остальная информация.
+        Создает профиль пользователя.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование профиля пользователя.
         """
-        user = User.objects.get(id=user_id)
-        self.objects.create(user=user, gender=gender, birthday=birthday, location=location, vk_profile=vk_profile,
-                            telegram_profile_link=telegram_profile_link, telegram_profile_id=telegram_profile_id,
-                            other_info=other_info)
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        created = cls.objects.filter(user=user_)
+        if created.exists():
+            return {'message': 'User already created', 'status': 'error'}
+
+        cls.objects.create(user=user_, location=location, gender=gender, birthday=birthday)
+
+        return {'status': 'success'}
+
+    @classmethod
+    def update(cls, user_id: int, location: str = None, gender: bool = None, birthday: datetime = None):
+        """
+        Редактирует профиль пользователя.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование профиля пользователя.
+        """
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        created = cls.objects.filter(user=user_)
+        if not created.exists():
+            return {'message': 'User profile not found', 'status': 'error'}
+        created = created.first()
+
+        location = location if location is not None else created.location
+        gender = gender if gender is not None else created.gender
+        birthday = birthday if birthday is not None else created.birthday
+        created.location, created.gender, created.birthday = location, gender, birthday
+        created.save()
+
+        return {'status': 'success'}
 
 
 class UserAdditionalInformation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_additional_information')
-    vk_profile = models.CharField(max_length=100, null=True)
-    telegram_profile_link = models.CharField(max_length=100, null=True)
+    website = models.CharField(max_length=200, null=True)
+    telegram_profile_link = models.CharField(max_length=200, null=True)
     telegram_profile_id = models.CharField(max_length=100, null=True)
     other_info = models.TextField(null=True)
 
-    def create_user_info(self, user_id: int, vk_profile: str,
-                         telegram_profile_link: str, telegram_profile_id: str, other_info: str):
+    @classmethod
+    def create(cls,
+               user_id: int,
+               website: str = None,
+               telegram_profile_link: bool = None,
+               telegram_profile_id: datetime = None,
+               other_info: str = None
+               ):
         """
-        Создает доп. информацию пользователя.
-        :param user_id: ID пользователя.
-        :param vk_profile: Ссылка на вк профиль.
-        :param telegram_profile_link: Ссылка на telegram профиль.
-        :param telegram_profile_id: ID telegram профиля.
-        :param other_info: Остальная информация.
+        Создает доп.информацию пользователя.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование доп.информации пользователя.
         """
-        user = User.objects.get(id=user_id)
-        self.objects.create(user=user, vk_profile=vk_profile, telegram_profile_link=telegram_profile_link,
-                            telegram_profile_id=telegram_profile_id, other_info=other_info)
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        created = cls.objects.filter(user=user_)
+        if created.exists():
+            return {'message': 'User additional information already created', 'status': 'error'}
+
+        cls.objects.create(
+            user=user_,
+            website=website,
+            telegram_profile_link=telegram_profile_link,
+            telegram_profile_id=telegram_profile_id,
+            other_info=other_info
+        )
+
+        return {'status': 'success'}
+
+    @classmethod
+    def update(cls,
+               user_id: int,
+               website: str = None,
+               telegram_profile_link: bool = None,
+               telegram_profile_id: datetime = None,
+               other_info: str = None
+               ):
+        """
+        Редактирует доп.информацию пользователя.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование доп.информации пользователя.
+        """
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        created = cls.objects.filter(user=user_)
+        if not created.exists():
+            return {'message': 'User additional information not found', 'status': 'error'}
+        created = created.first()
+
+        website = website if website is not None else created.website
+        telegram_profile_link = telegram_profile_link if telegram_profile_link is not None else created.telegram_profile_link
+        telegram_profile_id = telegram_profile_id if telegram_profile_id is not None else created.telegram_profile_id
+        other_info = other_info if other_info is not None else created.other_info
+        created.website, created.telegram_profile_link, created.telegram_profile_id, created.other_info = \
+            website, telegram_profile_link, telegram_profile_id, other_info
+        created.save()
+
+        return {'status': 'success'}
 
 
 class UserSubscriptions(models.Model):
@@ -199,8 +228,11 @@ class RequestUserSubscriptions(models.Model):
     Модель запросов на подписку пользователей в друзья.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_subscriptions_on_user')
-    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_subscriptions_on_subscriber')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE,
+                                   related_name='request_user_subscriptions_on_subscriber')
 
+    @classmethod
+    def create(cls, user_id: int, subscriber_id: int):
 
 class UserRating(models.Model):
     """
@@ -208,20 +240,73 @@ class UserRating(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating_on_user')
     appraiser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating_on_appraiser')
-    estimation = models.IntegerField()
+    estimation = models.IntegerField()  # 1 ... 10
 
     @classmethod
-    def new_rating(cls, user_id: int, appraiser_id: int, estimation: int):
+    def create(cls,
+               user_id: int,
+               appraiser_id: int,
+               estimation: int
+               ):
         """
-        Создает новый рейтинг.
-        :param user_id: ID пользователя, которому ставят рейтинг.
-        :param appraiser_id: ID пользователя, который ставит рейтинг.
-        :param estimation:
-        :return:
+        Добавляет рейтинг пользователя.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование рейтинга.
         """
-        user = User.objects.get(id=user_id)
-        appraiser = User.objects.get(id=appraiser_id)
-        cls.objects.create(user=user, appraiser=appraiser, estimation=estimation)
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        appraiser = cls.objects.filter(id=user_id)
+        if not appraiser.exists():
+            return {'message': 'Appraiser not found', 'status': 'error'}
+        appraiser = appraiser.first()
+
+        created = cls.objects.filter(user=user_, appraiser=appraiser)
+        if created.exists():
+            return {'message': 'Rating already created', 'status': 'error'}
+
+        cls.objects.create(
+            user=user_,
+            appraiser=appraiser,
+            estimation=estimation,
+        )
+
+        return {'status': 'success'}
+
+    @classmethod
+    def update(cls,
+               user_id: int,
+               website: str = None,
+               telegram_profile_link: bool = None,
+               telegram_profile_id: datetime = None,
+               other_info: str = None
+               ):
+        """
+        Редактирует доп.информацию пользователя.
+         - Проверяет на существование пользователя.
+         - Проверяет на существование доп.информации пользователя.
+        """
+        user_ = cls.objects.filter(id=user_id)
+        if not user_.exists():
+            return {'message': 'User not found', 'status': 'error'}
+        user_ = user_.first()
+
+        created = cls.objects.filter(user=user_)
+        if not created.exists():
+            return {'message': 'User additional information not found', 'status': 'error'}
+        created = created.first()
+
+        website = website if website is not None else created.website
+        telegram_profile_link = telegram_profile_link if telegram_profile_link is not None else created.telegram_profile_link
+        telegram_profile_id = telegram_profile_id if telegram_profile_id is not None else created.telegram_profile_id
+        other_info = other_info if other_info is not None else created.other_info
+        created.website, created.telegram_profile_link, created.telegram_profile_id, created.other_info = \
+            website, telegram_profile_link, telegram_profile_id, other_info
+        created.save()
+
+        return {'status': 'success'}
 
 
 class Chat(models.Model):
@@ -292,33 +377,6 @@ class Community(models.Model):
         :param description: Описание сообщества.
         """
         cls.objects.create(title=title, description=description)
-
-    def get_tags(self):
-        pass
-
-    def get_settings(self):
-        pass
-
-    def get_avatar(self):
-        pass
-
-    def get_participants(self):
-        pass
-
-    def get_banned_user(self):
-        pass
-
-    def get_chats(self):
-        pass
-
-    def get_articles(self):
-        pass
-
-    def get_news(self):
-        pass
-
-    def get_roles(self):
-        return CommunityRole.objects.filter(community=self)
 
 
 class CommunityRecommendation(models.Model):
