@@ -13,7 +13,7 @@ from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination
 from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
-    RequestUserSubscriptions
+    RequestUserSubscriptions, UserBlacklist, UserRating
 from .serializers import UserSerializer
 
 
@@ -53,7 +53,8 @@ class UserView:
          - Добавить отзыв пользователя о другом пользователе (method post_add_rating_user). \n
          - Удалить отзыв пользователя о другом пользователе (method delete_rating_user). \n
 
-         - Вывод информации о пользователе (method get_user). \n
+         - Вывод информации о пользователе, по user_id (method get_user). \n
+         - Вывод информации о пользователе, который отправляет запрос (method get_me). \n
          - Вывод списка "Мои друзья" (method get_my_friends). \n
          - Вывод списка "Заявки в друзья" (method get_request_to_friend). \n
          - Вывод списка "Поиск друзей" (method get_find_friends). \n
@@ -164,19 +165,58 @@ class UserView:
         return Response(data={}, status=status.HTTP_200_OK)
 
     def post_add_user_in_blacklist(self, request):
-        pass
+        user_id = self.requesting_user.id
+        banned_user_id = request.POST.get('banned_user_id')
+
+        banned_user = UserBlacklist.create_(user_id=user_id, banned_user_id=banned_user_id)
+        if banned_user.status == 'error':
+            return Response(data={'message': banned_user.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
     def delete_user_from_blacklist(self, request):
-        pass
+        user_id = self.requesting_user.id
+        banned_user_id = request.POST.get('banned_user_id')
+
+        banned_user = UserBlacklist.delete_(user_id=user_id, banned_user_id=banned_user_id)
+        if banned_user.status == 'error':
+            return Response(data={'message': banned_user.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
 
     def post_add_rating_user(self, request):
-        pass
+        user_id = self.requesting_user.id
+        appraiser_id = request.POST.get('appraiser_id')
+        estimation = request.POST.get('estimation')
+
+        rating = UserRating.create_(user_id=user_id, appraiser_id=appraiser_id, estimation=estimation)
+        if rating.status == 'error':
+            return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
     def delete_rating_user(self, request):
-        pass
+        user_id = self.requesting_user.id
+        appraiser_id = request.POST.get('appraiser_id')
 
-    def get_user(self, request):
-        pass
+        rating = UserRating.delete_(user_id=user_id, appraiser_id=appraiser_id)
+        if rating.status == 'error':
+            return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
+
+        return Response(data={}, status=status.HTTP_200_OK)
+
+    def get_user(self, request, user_id: int):
+        user_ = User.user(user_id=user_id)
+        if user_.status == 'error':
+            return Response(data={'message': user_.message}, status=status.HTTP_204_NO_CONTENT)
+        return Response(data={'user': user_}, status=status.HTTP_200_OK)
+
+    def get_me(self, request):
+        user_id = self.requesting_user.id
+        user_ = User.user(user_id=user_id)
+        if user_.status == 'error':
+            return Response(data={'message': user_.message}, status=status.HTTP_204_NO_CONTENT)
+        return Response(data={'user': user_}, status=status.HTTP_200_OK)
 
     def get_my_friends(self, request):
         pass
@@ -186,8 +226,6 @@ class UserView:
 
     def get_find_friends(self, request):
         pass
-
-
 
 
 class CommunitiesView:
