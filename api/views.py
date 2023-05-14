@@ -2,28 +2,22 @@
 #  если не зватает берутся остальные (по темам которые интересует пользователей).
 # todo Добавить фильтр: Если сообщество у него в черном списке оно не появляется в списке с сообществами.
 # todo Добавить проверки на роли: Если роль позволяет то пропускать иначе отбрасывать.
+from rest_framework.views import APIView
+from rest_framework_jwt.settings import api_settings
 
 from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework import status, generics, permissions
 from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating
-from .serializers import UserSerializer
-
-
-def user(request, user_id: int):
-    """
-    Возвращает информацию о пользователе с id = user_id.
-    """
-
-    requesting_user = User.objects.get(id=user_id)
-    return Response(data=requesting_user, status=status.HTTP_200_OK)
+from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer
 
 
 class UserView:
@@ -40,6 +34,9 @@ class UserView:
 
          - Создание дополнительной информации пользователя (method post_create_user_additional_information). \n
          - Редактирование дополнительной информации пользователя (method update_user_additional_information). \n
+
+         - Создание аватарки пользователя (method post_create_avatar). \n
+         - Редактирование аватарки пользователя (method update_avatar). \n
 
          - Добавить запрос пользователя в друзья (method post_add_request_in_friend). \n
          - Удалить запрос пользователя в друзья (method delete_request_in_friend). \n
@@ -571,22 +568,48 @@ def news(request):
 
 # TODO Система авторизации, регистрации, выход из системы
 
-class RegisterView(generics.CreateAPIView):
+
+jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+
+class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
-    permission_classes = (AllowAny,)
-    serializer_class = UserSerializer
+    serializer_class = UserRegistrationSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
-class LogoutView(generics.GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+class UserAuthenticationView(generics.GenericAPIView):
+    serializer_class = UserAuthenticationSerializer
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        return Response(status=status.HTTP_200_OK)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        refresh_token = RefreshToken.for_user(user)
+        access_token = str(refresh_token.access_token)
+
+        return Response({
+            'username': user.username,
+            'access_token': access_token,
+            'refresh_token': str(refresh_token)
+        })
 
 
-class TokenObtainPairWithUserInfoView(TokenObtainPairView):
-    serializer_class = TokenObtainPairSerializer
+class UserSignoutView(APIView):
+    permission_classes = (AllowAny,)
 
-
-class TokenRefreshWithUserInfoView(TokenRefreshView):
-    serializer_class = TokenObtainPairSerializer
+    def post(self, request):
+        try:
+            refresh_token = str(request.data.get('refresh_token'))
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return Response({'detail': 'User successfully signed out.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': 'Refresh token not provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response({'detail': 'An error occurred while signing out.'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)

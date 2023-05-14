@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     # 'web',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 AUTH_USER_MODEL = 'api.User'
@@ -143,11 +145,14 @@ REST_FRAMEWORK = {
     ],
 }
 
-
 # Настройки JWT
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
+JWT_AUTH = {
+    'JWT_SECRET_KEY': SECRET_KEY,
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=15),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=15),
 }
+JWT_ACCESS_TOKEN_EXPIRATION = datetime.timedelta(minutes=15)
+JWT_REFRESH_TOKEN_EXPIRATION = datetime.timedelta(days=30)

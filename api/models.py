@@ -13,11 +13,30 @@ from django.template.defaultfilters import slugify
 # При регистрации создается модель User, отправляется сигнал на создание UserSettings
 
 
-class User(AbstractUser):
-    """
-    Сигнал на создание настроек пользователя создан.
-    """
-    biography_small = models.CharField(max_length=255, blank=True)
+class CustomUserManager(BaseUserManager):
+    def create_user(self, username, password, **extra_fields):
+        if not username:
+            raise ValueError("The Email field must be set")
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    """Модель пользователя."""
+    username = models.CharField(max_length=150, unique=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'username'
+
+    objects = CustomUserManager()
 
     def __str__(self):
         return self.username
@@ -417,8 +436,8 @@ class UserBlacklist(models.Model):
     """
     Модель заблокированных пользователей.
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_blacklist')
-    banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_blacklist')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_blacklist_on_user')
+    banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_blacklist_on_banned_user')
 
     @classmethod
     def create_(cls, user_id: int, banned_user_id: int):

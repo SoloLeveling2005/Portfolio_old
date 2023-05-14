@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.http import require_http_methods
 
-from .views import LogoutView, RegisterView, \
-    TokenObtainPairWithUserInfoView, TokenRefreshWithUserInfoView
+from .views import UserRegistrationView, UserAuthenticationView, \
+    UserSignoutView
 
 urlpatterns = [
     # Добавляем обработчик несуществующего пути
@@ -19,8 +19,7 @@ urlpatterns = [
 
 
     # TODO Система авторизации, регистрации, выход из системы
-    path('api/register/', RegisterView.as_view(), name='register'),
-    path('api/logout/', LogoutView.as_view(), name='logout'),
-    path('api/token/', TokenObtainPairWithUserInfoView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshWithUserInfoView.as_view(), name='token_refresh'),
+    path('api/register/', UserRegistrationView.as_view(), name='user-registration'),
+    path('api/login/', UserAuthenticationView.as_view(), name='user-login'),
+    path('api/logout/', UserSignoutView.as_view(), name='user-logout'),
 ]
