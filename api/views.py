@@ -41,12 +41,21 @@ def check_user_exists(community_id):
     return user.first()
 
 
-def check_participant_exists(community_id):
+def check_participant_exists(community, participant):
     """Проверяем на существование сообщества."""
-    participant = CommunityParticipant.objects.filter(id=community_id)
+    participant = CommunityParticipant.objects.filter(community=community, user=participant)
     if participant.exists():
         return Response(data={}, status=status.HTTP_409_CONFLICT)
     return None
+
+
+def check_community_role_exists(community, community_role_title):
+    """Проверяем на существование сообщества."""
+    community_role = CommunityRole.objects.filter(community=community, title=community_role_title)
+    if not community_role.exists():
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+    return community_role.first()
+
 
 
 def check_community_exists_decorator(func):
@@ -59,6 +68,8 @@ def check_community_exists_decorator(func):
         return func(request, *args, **kwargs)
 
     return wrapper
+
+
 
 
 # views
@@ -444,15 +455,16 @@ def add_community_participant(request) -> Response:
     user = request.user
     participant_id = request.POST.get('participant_id')
     community_id = request.POST.get('community_id')
+    role_title = request.POST.get('role_title')
 
     # Проверяет на существование сообщества.
     community = check_community_exists(community_id)
     if isinstance(community, Response):
         return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
-    # todo Проверяет на существование роли в сообществе.
-    community = check_community_exists(community_id)
-    if isinstance(community, Response):
+    # Проверяет на существование роли в сообществе.
+    role = check_community_role_exists(community=community, community_role_title=role_title)
+    if isinstance(role, Response):
         return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
     # Проверяет на существование участника.
@@ -461,7 +473,7 @@ def add_community_participant(request) -> Response:
         return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
     # Проверяет на присутствие участника в сообществе.
-    check_participant = check_user_exists(participant_id)
+    check_participant = check_participant_exists(community=community,participant=participant)
     if isinstance(check_participant, Response):
         return Response(data={}, status=status.HTTP_409_CONFLICT)
 
@@ -485,31 +497,44 @@ def add_community_participant(request) -> Response:
     return Response(data={}, status=status.HTTP_201_CREATED)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def kick_out_community_participant(self, request) -> Response:
     """Удаляет пользователя с участников сообщества."""
+
+    # Получаем данные.
+    user = request.user
+    participant_id = request.POST.get('participant_id')
     community_id = request.POST.get('community_id')
-    target_user_id = request.POST.get('target_user_id')
 
-    # Проверка на существование сообщества.
-    community = Community.objects.filter(id=community_id)
-    if not community.exists():
-        return Response(data={'message': 'Community not found'}, status=status.HTTP_204_NO_CONTENT)
-    community = community.first()
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
-    # Проверка на существование пользователя.
-    user_ = User.objects.filter(id=target_user_id)
-    if not user_.exists():
-        return Response(data={'message': 'User not found'}, status=status.HTTP_204_NO_CONTENT)
-    user_ = user_.first()
+    # Проверяет на существование участника.
+    participant = check_user_exists(participant_id)
+    if isinstance(participant, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
-    # Проверка на существование этого пользователя в этом сообществе.
-    participant = CommunityParticipant.objects.filter(community=community, user=user_)
-    if not participant:
-        return Response(data={'message': 'Participant not found'}, status=status.HTTP_204_NO_CONTENT)
-    participant = participant.first()
+    # Проверяет на присутствие участника в сообществе.
+    check_participant = check_participant_exists(community=community, participant=participant)
+    if isinstance(check_participant, Response):
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
+
+    # Получаем информацию об участнике принимающий пользователя.
+    community_participant = CommunityParticipant.objects.filter(user=user)
+    community_participant_role = None
+    if community_participant.exists():
+        community_participant_role = community_participant.first().role
+
+    # Проверяем, если пользователь(который принимает участника user) не имеет прав то отклоняем.
+    if community.user != user and community_participant.exists() and community_participant_role is not None:
+        if community_participant_role.manage_participants is False:
+            return Response(data={}, status=status.HTTP_403_FORBIDDEN)
 
     # Удаляем пользователя из сообщества.
-    participant.delete()
+    CommunityParticipant.objects.get(community=community, user=participant).delete()
 
     return Response(data={}, status=status.HTTP_200_OK)
 
