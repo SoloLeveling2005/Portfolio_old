@@ -6,7 +6,7 @@ class ApiConfig(AppConfig):
     name = 'api'
 
     def ready(self):
-        import api.signals  # Добавьте эту строку
+        import api.models  # Добавьте эту строку
 
 
 

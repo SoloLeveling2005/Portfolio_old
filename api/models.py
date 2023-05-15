@@ -6,6 +6,8 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Permission
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 
 
@@ -22,10 +24,10 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(username, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -89,33 +91,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         }
 
 
+@receiver(post_save, sender=User)
+def create_user_settings(sender, instance, created, **kwargs):
+    if created:
+        UserSettings.objects.create(user=instance)
+
+
 class UserAvatar(models.Model):
-    """
-    Модель аватарка пользователя.
-    - user - ссылка на пользователя, который имеет данную аватарку.
-    - img - аватарка пользователя.
-    """
+    """Модель аватарка пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
     img = models.ImageField(null=False)
-
-    @classmethod
-    def create_avatar(cls, user_id: int, img):
-        """
-        Создает новую аватарку для пользователя в базе данных.
-        :param user_id: ID пользователя
-        :param img: Аватарка
-        """
-        user = User.objects.get(id=user_id)
-        cls.objects.create_(user=user, img=img)
-
-    @classmethod
-    def get_avatar(cls, user_id: int):
-        """
-        Возвращает модель картинки.
-        :param user_id: ID пользователя.
-        """
-        user = User.objects.get(id=user_id)
-        return UserAvatar.objects.get(user=user)
 
 
 class UserSettings(models.Model):
@@ -138,9 +123,7 @@ class UserSettings(models.Model):
 
 
 class UserProfile(models.Model):
-    """
-    Модель профиля пользователя.
-    """
+    """Модель профиля пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
     location = models.CharField(max_length=100, null=True)
     gender = models.BooleanField(null=True)  # man true, woman false
@@ -526,7 +509,8 @@ class Community(models.Model):
         :param title: Название сообщества.
         :param description: Описание сообщества.
         """
-        cls.objects.create_(title=title, description=description)
+        user = User.objects.get(id=user_id)
+        cls.objects.create(user=user, title=title, description=description)
 
 
 class CommunityRecommendation(models.Model):
@@ -623,8 +607,6 @@ class CommunityRole(models.Model):
     """
     title = models.CharField(max_length=100, unique=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_role')
-    administrator = models.BooleanField(default=False)
-    content_moderator = models.BooleanField(default=False)
     invite_participants = models.BooleanField(default=False)
     edit_community_information = models.BooleanField(default=False)
     manage_participants = models.BooleanField(default=False)
