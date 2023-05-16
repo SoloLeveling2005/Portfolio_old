@@ -399,13 +399,12 @@ def create_community_role(request) -> Response:
     if serializer.is_valid():
         # Создаем роль.
         community_role = CommunityRole()
-        community_role.title = request.POST.get('title', community.title)
-        community_role.invite_participants = request.POST.get('invite_participants', community.invite_participants)
-        community_role.edit_community_information = request.POST.get('edit_community_information',
-                                                                     community.edit_community_information)
-        community_role.manage_participants = request.POST.get('manage_participants', community.manage_participants)
-        community_role.publish_articles = request.POST.get('publish_articles', community.publish_articles)
-        community_role.publish_news = request.POST.get('publish_news', community.publish_news)
+        community_role.title = request.POST.get('title')
+        community_role.edit_community_information = request.POST.get('edit_community_information')
+        community_role.manage_participants = request.POST.get('manage_participants')
+        community_role.publish_articles = request.POST.get('publish_articles')
+        community_role.publish_news = request.POST.get('publish_news')
+        community_role.publish_ads = request.POST.get('publish_ads')
         community_role.save()
 
         # Возвращаем успешный ответ.
@@ -485,7 +484,7 @@ def add_community_participant(request) -> Response:
 
     # Проверяем, если пользователь(который принимает участника user) не имеет прав то отклоняем.
     if community.user != user and community_participant.exists() and community_participant_role is not None:
-        if community_participant_role.invite_participants is False:
+        if community_participant_role.manage_participants is False:
             return Response(data={}, status=status.HTTP_403_FORBIDDEN)
 
     community_participant = CommunityParticipant()
@@ -539,10 +538,10 @@ def kick_out_community_participant(self, request) -> Response:
     return Response(data={}, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def post_create_tag(self, request) -> Response:
-    """
-    Создает тег сообщества.
-    """
+    """Создает тег сообщества."""
     community_id = request.POST.get('community_id')
     tag = request.POST.get('tag')
 

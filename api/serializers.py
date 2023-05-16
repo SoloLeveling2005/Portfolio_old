@@ -14,8 +14,8 @@ UserAuthenticationSerializer = UserAuth.UserAuthenticationSerializer
 
 class SerializerCreateCommunityRole(serializers.Serializer):
     title = serializers.CharField()
-    invite_participants = serializers.BooleanField()
     edit_community_information = serializers.BooleanField()
     manage_participants = serializers.BooleanField()
     publish_articles = serializers.BooleanField()
     publish_news = serializers.BooleanField()
+    publish_ads = serializers.BooleanField()

@@ -604,14 +604,19 @@ class CommunityAvatar(models.Model):
 class CommunityRole(models.Model):
     """
     Модель роли в сообществе и его разрешения.
+     - edit_community_information - редактировать информацию о сообществе (название, теги, описание и т.д.).
+     - manage_participants - управление пользователями (добавление, удаление, бан и т.д.).
+     - publish_articles - публиковать статьи.
+     - publish_news - публиковать новости.
+     - publish_ads - публиковать рекламу.
     """
     title = models.CharField(max_length=100, unique=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_role')
-    invite_participants = models.BooleanField(default=False)
     edit_community_information = models.BooleanField(default=False)
     manage_participants = models.BooleanField(default=False)
-    publish_articles = models.BooleanField(default=False)
-    publish_news = models.BooleanField(default=False)
+    publish_articles = models.BooleanField(default=True)
+    publish_news = models.BooleanField(default=True)
+    publish_ads = models.BooleanField(default=False)
 
 
 class CommunityParticipant(models.Model):
