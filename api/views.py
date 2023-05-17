@@ -24,38 +24,61 @@ from .serializers import UserRegistrationSerializer, UserAuthenticationSerialize
 
 
 # Helpers
-
+# todo отредактировать комментарии хелперов.
 def check_community_exists(community_id):
     """Проверяем на существование сообщества."""
     community = Community.objects.filter(id=community_id)
     if not community.exists():
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+        return None
     return community.first()
 
 
 def check_user_exists(community_id):
-    """Проверяем на существование сообщества."""
+    """Проверяем на существование пользователя."""
     user = User.objects.filter(id=community_id)
     if not user.exists():
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+        return None
     return user.first()
 
 
 def check_participant_exists(community, participant):
-    """Проверяем на существование сообщества."""
+    """Проверяем на существование участника в сообществе."""
     participant = CommunityParticipant.objects.filter(community=community, user=participant)
-    if participant.exists():
-        return Response(data={}, status=status.HTTP_409_CONFLICT)
-    return None
+    if not participant.exists():
+        return None
+    return participant.first()
+
+
+def check_participant_request_exists(community, participant):
+    """Проверяем на существование запроса на вступление."""
+    participant = RequestCommunityParticipant.objects.filter(community=community, user=participant)
+    if not participant.exists():
+        return None
+    return participant.first()
 
 
 def check_community_role_exists(community, community_role_title):
-    """Проверяем на существование сообщества."""
+    """Проверяем на существование роли в сообществе."""
     community_role = CommunityRole.objects.filter(community=community, title=community_role_title)
     if not community_role.exists():
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+        return None
     return community_role.first()
 
+
+def check_community_tag_exists(community, community_tag_title):
+    """Проверяем на существование тега в сообществе."""
+    community_tag = CommunityTag.objects.filter(community=community, tag=community_tag_title)
+    if not community_tag.exists():
+        return None
+    return community_tag.first()
+
+
+def check_user_recommendation_community_exists(community, participant):
+    """Проверяем на существование рекомендации сообщества пользователем."""
+    community_recommendation = CommunityRecommendation.objects.filter(community=community, user=participant)
+    if not community_recommendation.exists():
+        return None
+    return None
 
 
 def check_community_exists_decorator(func):
@@ -68,8 +91,6 @@ def check_community_exists_decorator(func):
         return func(request, *args, **kwargs)
 
     return wrapper
-
-
 
 
 # views
@@ -357,10 +378,10 @@ def delete_community(request) -> Response:
     user = request.user
     community_id = request.POST.get('community_id')
 
-    # Проверяет на существование сообщества.
+    # Проверяет на существование сообщества. Проходим если сообщество есть.
     community = check_community_exists(community_id)
     if isinstance(community, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
 
     # Проверяем, если пользователь не админ то запрещаем удаление.
     if community.user != user:
@@ -445,6 +466,71 @@ def delete_community_role(request) -> Response:
     return Response(data={}, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_requests_to_join_participant(request, community_id):
+    """Вывод списка запросов на вход в сообщество."""
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
+    # Получаем список запросов на вступление в сообщество.
+    requests_participant = RequestCommunityParticipant.objects.filter(community=community)
+
+    # Вывод списка
+    return Response(data={'requests_participant': requests_participant}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_request_to_join_participant(request):
+    """Создать запрос для вступления в сообщество"""
+
+    # Получаем данные.
+    participant = request.user
+    community_id = request.POST.get('community_id')
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
+    # Проверяет на существование пользователя.
+    participant = check_user_exists(participant.id)
+    if not isinstance(participant, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
+    # Проверяет на присутствие участника в сообществе.
+    check_participant = check_participant_exists(community=community, participant=participant)
+    if not isinstance(check_participant, Response):
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
+
+    # Проверяет на присутствие запроса в участники в сообщество.
+    check_participant = check_participant_request_exists(community=community, participant=participant)
+    if isinstance(check_participant, Response):
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
+
+    RequestCommunityParticipant.objects.create(community=community, user=participant)
+
+    return Response(data={}, status=status.HTTP_201_CREATED)
+
+
+def delete_request_to_join_participant(request):
+    """
+    Удалить запрос для вступления в сообщество
+    """
+    community_id = request.POST.get('community_id')
+    participant_id = request.POST.get('participant_id')
+
+    participant = RequestCommunityParticipant.delete_(community_id=community_id, user_id=participant_id)
+    if participant.status == 'error':
+        return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
+
+    return Response(data={}, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_community_participant(request) -> Response:
@@ -466,13 +552,13 @@ def add_community_participant(request) -> Response:
     if isinstance(role, Response):
         return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
-    # Проверяет на существование участника.
+    # Проверяет на существование пользователя.
     participant = check_user_exists(participant_id)
     if isinstance(participant, Response):
         return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
     # Проверяет на присутствие участника в сообществе.
-    check_participant = check_participant_exists(community=community,participant=participant)
+    check_participant = check_participant_exists(community=community, participant=participant)
     if isinstance(check_participant, Response):
         return Response(data={}, status=status.HTTP_409_CONFLICT)
 
@@ -540,101 +626,112 @@ def kick_out_community_participant(self, request) -> Response:
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def post_create_tag(self, request) -> Response:
+def create_community_tag(self, request) -> Response:
     """Создает тег сообщества."""
+
+    # Получаем данные.
+    user = request.user
     community_id = request.POST.get('community_id')
-    tag = request.POST.get('tag')
+    tag_title = request.POST.get('tag_title')
 
-    # Вызываем метод модели, там есть проверка на существование сообщества и проверка на существование тега.
-    community_tag = CommunityTag.create(community_id=community_id, tag=tag)
-    if community_tag.status == 'error':
-        return Response(data={'message': community_tag.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
+    # Проверяет на существование тега в сообществе. Если его нет, то ок.
+    tag = check_community_tag_exists(community=community, community_tag_title=tag_title)
+    if isinstance(tag, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
+    # Проверяем, если пользователь не админ то запрещаем создание тега.
+    if community.user != user:
+        return Response(data={}, status=status.HTTP_403_FORBIDDEN)
+
+    # Создаем тег.
+    CommunityTag.objects.create(community=community, tag=tag_title)
+
+    # Возвращаем успешный ответ.
     return Response(data={}, status=status.HTTP_201_CREATED)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_tag(self, request) -> Response:
-    """
-    Удаляет тег сообщества.
-    """
+    """Удаляет тег сообщества."""
+
+    # Получаем данные.
+    user = request.user
     community_id = request.POST.get('community_id')
-    tag = request.POST.get('tag')
+    tag_title = request.POST.get('tag_title')
 
-    # Вызываем метод модели, там есть проверка на существование сообщества и проверка на существование тега.
-    community_tag = CommunityTag.create(community_id=community_id, tag=tag)
-    if community_tag.status == 'error':
-        return Response(data={'message': community_tag.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
+    # Проверяет на существование тега в сообществе. Если он есть, то ок.
+    tag = check_community_tag_exists(community=community, community_tag_title=tag_title)
+    if not isinstance(tag, Response):
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
+
+    # Проверяем, если пользователь не админ то запрещаем удаление тега.
+    if community.user != user:
+        return Response(data={}, status=status.HTTP_403_FORBIDDEN)
+
+    CommunityTag.objects.get(community=community, community_tag_title=tag_title).delete()
+
+    # Возвращаем успешный ответ.
     return Response(data={}, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def post_create_user_recommendation(self, request):
-    """
-    Добавить рекомендацию сообщества пользователем
-    """
+    """Добавить рекомендацию сообщества пользователем."""
+
+    # Получаем данные.
+    participant = request.user
     community_id = request.POST.get('community_id')
-    user_id = self.requesting_user.id
     score = request.POST.get('score')
 
-    score = score if 1 <= score <= 10 else 5
-    recommendation = CommunityRecommendation.create(community_id=community_id, user_id=user_id, score=score)
-    if recommendation.status == 'error':
-        return Response(data={'message': recommendation.message}, status=status.HTTP_204_NO_CONTENT)
+    score = score if score < 1 or score > 10 else 5
 
-    return Response(data={}, status=status.HTTP_200_OK)
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
 
+    # Проверяет на существование рекомендации пользователя. Если его нет, то ок.
+    recommendation = check_user_recommendation_community_exists(community=community, participant=participant)
+    if isinstance(recommendation, Response):
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
 
-def delete_user_recommendation(self, request):
-    """
-    Удалить рекомендацию сообщества пользователем
-    """
-    community_id = request.POST.get('community_id')
-    user_id = self.requesting_user.id
-
-    recommendation = CommunityRecommendation.delete_(community_id=community_id, user_id=user_id)
-    if recommendation.status == 'error':
-        return Response(data={'message': recommendation.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={}, status=status.HTTP_200_OK)
-
-
-def get_request_to_join_participant(self, request):
-    """
-    Вывод списка запросов на вход в сообщество.
-    """
-    community_id = request.POST.get('community_id')
-
-    requests_participant = RequestCommunityParticipant.list()
-    if requests_participant.status == 'error':
-        return Response(data={'message': requests_participant.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={'requests_participant': requests_participant}, status=status.HTTP_200_OK)
-
-
-def post_request_to_join_participant(self, request):
-    """
-    Создать запрос для вступления в сообщество
-    """
-    community_id = request.POST.get('community_id')
-    participant_id = request.POST.get('participant_id')
-
-    participant = RequestCommunityParticipant.create(community_id=community_id, user_id=participant_id)
-    if participant.status == 'error':
-        return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
+    CommunityRecommendation.objects.create(community=community, user=participant, score=score)
 
     return Response(data={}, status=status.HTTP_201_CREATED)
 
 
-def delete_request_to_join_participant(self, request):
-    """
-    Удалить запрос для вступления в сообщество
-    """
-    community_id = request.POST.get('community_id')
-    participant_id = request.POST.get('participant_id')
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_user_recommendation(self, request):
+    """Удалить рекомендацию сообщества пользователем"""
 
-    participant = RequestCommunityParticipant.delete_(community_id=community_id, user_id=participant_id)
-    if participant.status == 'error':
-        return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
+    # Получаем данные.
+    participant = request.user
+    community_id = request.POST.get('community_id')
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if isinstance(community, Response):
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
+    # Проверяет на существование тега в сообществе. Если он есть, то ок.
+    recommendation = check_user_recommendation_community_exists(community=community, participant=participant)
+    if not isinstance(recommendation, Response):
+        return Response(data={}, status=status.HTTP_409_CONFLICT)
+
+    CommunityRecommendation.objects.get(community=community, participant=participant).delete()
 
     return Response(data={}, status=status.HTTP_200_OK)
 
