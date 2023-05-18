@@ -9,8 +9,10 @@ import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import Comment from '../components/Comment';
 import Card from '../components/Card';
+import axios from 'axios';
 
 function Home() {
+    let user = Object;
 
     const [nav, switchNav] = useState('profile');
 
@@ -18,6 +20,16 @@ function Home() {
         const { value } = event.target;
         switchNav(sw => (value))
     }
+
+    axios.defaults.baseURL = "http://127.0.0.1:8000"
+    axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        .then(response => {
+            user = response.data
+            console.log(user)
+        })
+        .catch(error => {
+            console.log(error)
+        });
 
     return (
         <div className="Home text-white">
@@ -31,7 +43,7 @@ function Home() {
                             <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                 <div className="card-title">
                                     <img src="https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png" alt="" className='img-normal-50' />
-                                    <h4 className='pb-1 mb-0'>artem mikhailov</h4>
+                                    <h4 className='pb-1 mb-0'>{localStorage.getItem('username')}</h4>
                                     <p>Люблю данные и все что с ними связано</p>
                                     <div className='d-flex '>
                                        {nav == 'profile' ? (

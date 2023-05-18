@@ -9,8 +9,12 @@ import { Link } from 'react-router-dom';
 import SmartSearch from '../components/SmartSearch';
 
 function Home() {
-    const [articles, setArticle] = useState([{}]);
+
+
     
+
+
+    const [articles, setArticle] = useState([{}]);
     const [scrollPosition, setScrollPosition] = useState(0);
 
     // устанавливаем прокрутку после рендеринга компонента

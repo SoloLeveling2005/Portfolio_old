@@ -5,18 +5,18 @@ from . import views
 
 urlpatterns = [
     # Добавляем обработчик несуществующего пути
-    re_path('api/', include([
-        # Добавляем путь для авторизации + добавляем обработчик методов.
-        re_path(r'^post_create_community$', require_http_methods(['POST'])(views.create_community)),
-        re_path(r'^delete_community$', require_http_methods(['DELETE'])(views.delete_community)),
-    ])),
+    # re_path('api/', include([
+    #     # Добавляем путь для авторизации + добавляем обработчик методов.
+    #     re_path(r'^post_create_community$', require_http_methods(['POST'])(views.create_community)),
+    #     re_path(r'^delete_community$', require_http_methods(['DELETE'])(views.delete_community)),
+    # ])),
 
 
-
+    path('users/get_user/<int:user_id>', views.get_user, name='get_user'),
 
 
     # TODO Система авторизации, регистрации, выход из системы
-    path('api/signup/', views.UserRegistrationView.as_view(), name='signup'),
-    path('api/signin/', views.UserAuthenticationView.as_view(), name='signin'),
-    path('api/signout/', views.UserSignoutView.as_view(), name='signout'),
+    path('signup', views.UserRegistrationView.as_view(), name='signup'),
+    path('signin', views.UserAuthenticationView.as_view(), name='signin'),
+    path('signout', views.UserSignoutView.as_view(), name='signout'),
 ]

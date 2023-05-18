@@ -2,13 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   createBrowserRouter,
+  redirect,
   RouterProvider,
 } from "react-router-dom";
-import { Provider } from 'react-redux'
+import { Provider, useStore } from 'react-redux'
 
 import "./index.css";
+import { useSelector } from 'react-redux';
 
-import store from './store/store'
 import reportWebVitals from './reportWebVitals';
 import Home from './pages/Home';
 import User from './pages/User';
@@ -33,7 +34,6 @@ const router = createBrowserRouter([
   {
     path: "/auth",
     element: <AuthorizationRegistration/>,
-
   },
   {
     path: "/profile",
@@ -81,6 +81,12 @@ const router = createBrowserRouter([
   }
 ]);
 function App() {
+  let user = localStorage.getItem('username')
+  if (user === null) {
+    return (
+      <AuthorizationRegistration/>
+    )   
+  }
   return (
     <React.StrictMode>
       <RouterProvider router={router} />

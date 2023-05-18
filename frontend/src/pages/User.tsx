@@ -8,7 +8,9 @@ import { Link } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import Navbar from '../components/Navbar';
+import axios from 'axios';
 function User() {
+    
 
     const [nav, switchNav] = useState('profile');
 
@@ -16,6 +18,10 @@ function User() {
         const { value } = event.target;
         switchNav(sw => (value))
     }
+
+
+    
+
 
     return (
         <div className="Home text-white">

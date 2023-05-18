@@ -15,7 +15,8 @@ from .models import User, Community, CommunityRole, CommunityParticipant, Commun
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
     ArticleBookmarks
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
-    SerializerUserAdditionalInformation, SerializerUserProfile
+    SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
+    AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer
 
 
 # Helpers
@@ -386,6 +387,8 @@ def delete_friend_subscriptions(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_add_user_in_blacklist(request):
+    """Добавляет пользователя в черный список."""
+
     user = request.user
     user_id_for_ban = request.POST.get('user_id')
 
@@ -408,6 +411,8 @@ def post_add_user_in_blacklist(request):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_user_from_blacklist(request):
+    """Удаляет пользователя из черного списка."""
+
     user = request.user
     banned_user_id = request.POST.get('banned_user_id')
 
@@ -453,39 +458,51 @@ def delete_user_from_blacklist(request):
 #     return Response(data={}, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_user(request, user_id: int):
     # Проверяем на существование пользователя.
     user = check_user_exists(user_id=user_id)
     if not user:
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    return Response(data={'user': user}, status=status.HTTP_200_OK)
+    profile = ProfileSerializer(UserProfile.objects.get(user=user)).data
+    additional_information = AdditionalInformationSerializer(UserAdditionalInformation.objects.get(user=user)).data
+    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=user)).data if ArticleComment.objects.filter(user=user).exists() else []
+    articles = ArticleCommentSerializer(ArticleSerializer(Article.objects.filter(author=user))).data if Article.objects.filter(user=user).exists() else []
+    communities = ArticleCommentSerializer(CommunitySerializer(Community.objects.filter(user=user))).data if Community.objects.filter(user=user).exists() else []
 
-
-def get_me(request):
-    user = request.user
-    profile = UserProfile.objects.get(user=user)
-    additional_information = UserAdditionalInformation.objects.get(user=user)
-    comments = ArticleComment.objects.filter(user=user)
-    articles = Article.objects.filter(author=user)
-    communities = Community.objects.filter(user=user)
-
+    user = UserSerializer(user).data
     return Response(
         data={'user': user, 'profile': profile, 'additional_information': additional_information, 'comments': comments,
               'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_my_friends(request):
-    pass
+    """Возвращает друзей пользователя."""
+    user = request.user
 
 
-def get_request_to_friend(request):
-    pass
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_requests_to_friend(request):
+    user = request.user
+
+    requests_to_friend = RequestUserSubscriptions.objects.filter(subscriber=user)
+
+    return Response(data={'requests_to_friend': requests_to_friend}, status=status.HTTP_200_OK)
 
 
-
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def get_find_friends(request):
-    pass
+    username = request.POST.get('username')
+
+    users = User.objects.filter(Q(username__icontains=username))
+
+    return Response(data={'users': users}, status=status.HTTP_200_OK)
 
 
 class CommunitiesView(APIView):
@@ -1022,6 +1039,7 @@ class UserAuthenticationView(generics.GenericAPIView):
         access_token = str(refresh_token.access_token)
 
         return Response({
+            'user_id': user.id,
             'username': user.username,
             'access_token': access_token,
             'refresh_token': str(refresh_token)

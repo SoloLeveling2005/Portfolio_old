@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework_jwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from . import models
 from .serializers_classes import UserAuth
 
 # Регистрируем классы сереализаторы
@@ -34,3 +35,41 @@ class SerializerUserAdditionalInformation(serializers.Serializer):
     telegram_profile_link = serializers.CharField()
     telegram_profile_id = serializers.CharField()
     other_info = serializers.CharField()
+
+
+# JSON
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = '__all__'
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserProfile
+        fields = '__all__'
+
+
+class AdditionalInformationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserAdditionalInformation
+        fields = '__all__'
+
+
+class ArticleCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ArticleComment
+        fields = '__all__'
+
+
+class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Article
+        fields = '__all__'
+
+
+class CommunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Community
+        fields = '__all__'
