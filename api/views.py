@@ -93,6 +93,33 @@ def check_not_request_user_subscription_exists(user, subscriber_id):
     return None
 
 
+def check_on_new_friend_subscriptions_exists(user, subscriber):
+    """Проверяет друзья пользователи или нет + есть ли запрос на добавление в друзья. Возвращает None или object"""
+
+    # Проверяет на существование друга.
+    subscription = UserSubscriptions.objects.filter(user=user, subscriber=subscriber)
+    if subscription.exists():
+        return None
+
+    # Проверяет на существование запроса в друзья. Если он уже подал запрос в друзья, то успех.
+    subscription_request = RequestUserSubscriptions.objects.filter(user=subscriber, subscriber=user)
+    if subscription_request.exists():
+        return subscription_request.first()
+
+    return None
+
+
+def check_friend_subscription(user1, user2):
+    """Проверяет пользователи друзья или нет. Возвращает None или object"""
+
+    # Проверяет на существование друга.
+    subscription = UserSubscriptions.objects.filter(user=user1, subscriber=user2)
+    if subscription.exists():
+        return subscription.first()
+
+    return None
+
+
 def check_user_additional_information_exists(user):
     """Проверяем на существование доп.информации пользователя."""
     additional_information = UserAdditionalInformation.objects.filter(user=user)
@@ -271,6 +298,8 @@ def create_request_in_friend(request):
     return Response(status=status.HTTP_201_CREATED)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_request_in_friend(request):
     user = request.user
     subscriber_id = request.POST.get('subscriber_id')
@@ -285,35 +314,68 @@ def delete_request_in_friend(request):
     return Response(status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_new_friend_subscriptions(request):
     """
     Тут наоборот. Subscriber это пользователь, который нажмет подтверждение добавить в друзья. А user_id этот то кто
     отправил запрос в друзья.
     """
+
     subscriber = request.user
     user_id = request.POST.get('user_id')
 
-    user_subscriptions = UserSubscriptions.create(user_id=user_id, subscriber_id=subscriber_id)
-    if user_subscriptions.status == 'error':
-        return Response(data={'message': user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяем на существование пользователя.
+    user = check_user_exists(user_id=user_id)
+    if user is None:
+        return Response(status=status.HTTP_409_CONFLICT)
 
-    return Response(data={}, status=status.HTTP_201_CREATED)
+    # Проверяем на существование запроса в друзья.
+    users_subscription = check_on_new_friend_subscriptions_exists(user=user, subscriber=subscriber)
+    if users_subscription is None:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Создаем модели подписки
+    UserSubscriptions.objects.create(
+        user=user,
+        subscriber=subscriber
+    )
+    UserSubscriptions.objects.create(
+        user=subscriber,
+        subscriber=user
+    )
+
+    # Удаляем запрос
+    users_subscription.delete()
+
+    return Response(status=status.HTTP_201_CREATED)
 
 
-def delete_friend_subscriptions(self, request):
-    user_id = self.requesting_user.id
-    subscriber_id = request.POST.get('subscriber_id')
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_friend_subscriptions(request):
+    user = request.user  # тот кто хочет удалить связь
+    user2_id = request.POST.get('user_id')  # с тем с кем хотят удалить связь
 
-    user_subscriptions = UserSubscriptions.delete_(user_id=user_id, subscriber_id=subscriber_id)
-    if user_subscriptions.status == 'error':
-        return Response(data={'message': user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяем существует ли пользователь с id = user_id
+    subscriber = check_user_exists(user_id=user2_id)
+    if subscriber is None:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Проверяем существует ли связь (двух пользователей).
+    users_subscription = check_friend_subscription(user1=user, user2=subscriber)
+    if users_subscription is None:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    UserSubscriptions.objects.get(user=user, subscriber=users_subscription).delete()
+    UserSubscriptions.objects.get(user=users_subscription, subscriber=user).delete()
 
     return Response(data={}, status=status.HTTP_200_OK)
 
 
-def post_add_user_in_blacklist(self, request):
-    user_id = self.requesting_user.id
-    banned_user_id = request.POST.get('banned_user_id')
+def post_add_user_in_blacklist(request):
+    user = request.user
+    user_id_for_ban = request.POST.get('user_id')
 
     banned_user = UserBlacklist.create_(user_id=user_id, banned_user_id=banned_user_id)
     if banned_user.status == 'error':
@@ -322,8 +384,8 @@ def post_add_user_in_blacklist(self, request):
     return Response(data={}, status=status.HTTP_201_CREATED)
 
 
-def delete_user_from_blacklist(self, request):
-    user_id = self.requesting_user.id
+def delete_user_from_blacklist(request):
+    user = request.user
     banned_user_id = request.POST.get('banned_user_id')
 
     banned_user = UserBlacklist.delete_(user_id=user_id, banned_user_id=banned_user_id)
@@ -333,8 +395,8 @@ def delete_user_from_blacklist(self, request):
     return Response(data={}, status=status.HTTP_200_OK)
 
 
-def post_add_rating_user(self, request):
-    user_id = self.requesting_user.id
+def post_add_rating_user(request):
+    user = request.user
     appraiser_id = request.POST.get('appraiser_id')
     estimation = request.POST.get('estimation')
 
@@ -345,8 +407,8 @@ def post_add_rating_user(self, request):
     return Response(data={}, status=status.HTTP_201_CREATED)
 
 
-def delete_rating_user(self, request):
-    user_id = self.requesting_user.id
+def delete_rating_user(request):
+    user = request.user
     appraiser_id = request.POST.get('appraiser_id')
 
     rating = UserRating.delete_(user_id=user_id, appraiser_id=appraiser_id)
@@ -356,7 +418,7 @@ def delete_rating_user(self, request):
     return Response(data={}, status=status.HTTP_200_OK)
 
 
-def get_user(self, request, user_id: int):
+def get_user(request, user_id: int):
     user_ = User.user(user_id=user_id)
     if user_.status == 'error':
         return Response(data={'message': user_.message}, status=status.HTTP_204_NO_CONTENT)
@@ -364,7 +426,7 @@ def get_user(self, request, user_id: int):
 
 
 def get_me(self, request):
-    user_id = self.requesting_user.id
+    user = request.user
     user_ = User.user(user_id=user_id)
     if user_.status == 'error':
         return Response(data={'message': user_.message}, status=status.HTTP_204_NO_CONTENT)
