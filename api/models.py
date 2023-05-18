@@ -135,17 +135,11 @@ class UserProfile(models.Model):
 class UserAdditionalInformation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_additional_information')
     website = models.CharField(max_length=200, null=True)
+    vk_page = models.CharField(max_length=200, null=True)
+    instagram_page = models.CharField(max_length=200, null=True)
     telegram_profile_link = models.CharField(max_length=200, null=True)
     telegram_profile_id = models.CharField(max_length=100, null=True)
     other_info = models.TextField(null=True)
-
-
-class UserSubscriptions(models.Model):
-    """
-    Модель подписок на пользователей.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
-    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
 
 
 class RequestUserSubscriptions(models.Model):
@@ -155,6 +149,14 @@ class RequestUserSubscriptions(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_user_subscriptions_on_user')
     subscriber = models.ForeignKey(User, on_delete=models.CASCADE,
                                    related_name='request_user_subscriptions_on_subscriber')
+
+
+class UserSubscriptions(models.Model):
+    """
+    Модель подписок на пользователей.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
+    subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
 
 
 class UserRating(models.Model):
@@ -198,6 +200,14 @@ class ChatParticipant(models.Model):
     """
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="chat_participant")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_participant")
+
+
+class UserBannedChat(models.Model):
+    """
+    Модель заблокированных пользователями чатов.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='user_banned_chat')
 
 
 # todo END USERS   ---------------------------------------------------------------------
@@ -354,6 +364,14 @@ class ArticleAssessment(models.Model):
     status = models.BooleanField(null=False)
 
 
+class ArticleBookmarks(models.Model):
+    """
+    Модель закладок пользователя (статей).
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_bookmark')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='user_bookmark')
+
+
 # todo END ARTICLES   ---------------------------------------------------------------------
 # todo START  NEWS  ---------------------------------------------------------------------
 
@@ -377,21 +395,4 @@ class NewsTag(models.Model):
     news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='news_tag')
     tag = models.CharField(max_length=100)
 
-
 # todo END NEWS   ---------------------------------------------------------------------
-
-
-class ArticleBookmarks(models.Model):
-    """
-    Модель закладок пользователя (статей).
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_bookmark')
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='user_bookmark')
-
-
-class UserBannedChat(models.Model):
-    """
-    Модель заблокированных пользователями чатов.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='user_banned_chat')

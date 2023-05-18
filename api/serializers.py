@@ -19,3 +19,18 @@ class SerializerCreateCommunityRole(serializers.Serializer):
     publish_articles = serializers.BooleanField()
     publish_news = serializers.BooleanField()
     publish_ads = serializers.BooleanField()
+
+
+class SerializerUserProfile(serializers.Serializer):
+    location = serializers.CharField()
+    gender = serializers.BooleanField()
+    birthday = serializers.DateTimeField()
+
+
+class SerializerUserAdditionalInformation(serializers.Serializer):
+    website = serializers.CharField()
+    vk_page = serializers.CharField()
+    instagram_page = serializers.CharField()
+    telegram_profile_link = serializers.CharField()
+    telegram_profile_id = serializers.CharField()
+    other_info = serializers.CharField()

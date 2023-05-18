@@ -20,12 +20,14 @@ from rest_framework import status, generics, permissions
 from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating
-from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole
+from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
+    SerializerUserAdditionalInformation, SerializerUserProfile
 
 
 # Helpers
-# todo отредактировать комментарии хелперов.
-def check_community_exists(community_id):
+# Exists хелперы. Основная идея. Если данные есть, то возвращает их, иначе возвращает None.
+
+def check_community_exists(community_id: int):
     """Проверяем на существование сообщества."""
     community = Community.objects.filter(id=community_id)
     if not community.exists():
@@ -33,12 +35,70 @@ def check_community_exists(community_id):
     return community.first()
 
 
-def check_user_exists(community_id):
+def check_user_exists(user_id: int):
     """Проверяем на существование пользователя."""
-    user = User.objects.filter(id=community_id)
+    user = User.objects.filter(id=user_id)
     if not user.exists():
         return None
     return user.first()
+
+
+def check_profile_exists(user):
+    """Проверяем на существование профиля пользователя."""
+    profile = UserProfile.objects.filter(user=user)
+    if not profile.exists():
+        return None
+    return profile.first()
+
+
+def check_request_user_subscription_exists(user, subscriber_id):
+    """Возвращает None в случае ошибки или True в случае успеха"""
+
+    # Проверяет на существование пользователя subscriber.
+    subscriber = check_user_exists(user_id=subscriber_id)
+    if subscriber is None:
+        return None
+
+    # Проверяет на существование друга. Если он уже в друзьях, то вызываем ошибку.
+    subscription = UserSubscriptions.objects.filter(user=user, subscriber=subscriber)
+    if subscription.exists():
+        return None
+
+    # Проверяет на существование запроса в друзья. Если он уже подал запрос в друзья, то вызываем ошибку.
+    subscription_request = RequestUserSubscriptions.objects.filter(user=user, subscriber=subscriber)
+    if subscription_request.exists():
+        return None
+
+    return True
+
+
+def check_not_request_user_subscription_exists(user, subscriber_id):
+    """Возвращает None в случае ошибки или объект subscription_request в случае успеха"""
+
+    # Проверяет на существование пользователя subscriber.
+    subscriber = check_user_exists(user_id=subscriber_id)
+    if subscriber is None:
+        return None
+
+    # Проверяет на существование друга. Если он уже в друзьях, то вызываем ошибку.
+    subscription = UserSubscriptions.objects.filter(user=user, subscriber=subscriber)
+    if subscription.exists():
+        return None
+
+    # Проверяет на существование запроса в друзья. Если он уже подал запрос в друзья, то успех.
+    subscription_request = RequestUserSubscriptions.objects.filter(user=user, subscriber=subscriber)
+    if subscription_request.exists():
+        return subscription_request.first()
+
+    return None
+
+
+def check_user_additional_information_exists(user):
+    """Проверяем на существование доп.информации пользователя."""
+    additional_information = UserAdditionalInformation.objects.filter(user=user)
+    if not additional_information.exists():
+        return None
+    return additional_information.first()
 
 
 def check_participant_exists(community, participant):
@@ -136,99 +196,102 @@ class UserView:
         self.requesting_user = request.user
 
 
-@api_view(['GET'])
+@api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def post_create_user_profile(self, request):
-    location = request.POST.get('location')
-    gender = request.POST.get('gender')
-    birthday = request.POST.get('birthday')
-    user_id = request.user.id
+def update_user_profile(request):
+    user = request.user
 
-    profile = UserProfile.create(user_id=user_id, location=location, gender=gender, birthday=birthday)
-    if profile.status == 'error':
-        return Response(data={'message': profile.message}, status=status.HTTP_204_NO_CONTENT)
+    serializer = SerializerUserProfile(data=request.data)
+    if serializer.is_valid():
+        data = serializer.data
 
-    return Response(data={}, status=status.HTTP_201_CREATED)
+        # Проверяет на существование профиля.
+        profile = check_profile_exists(user=user)
+        if profile is None:
+            return Response(status=status.HTTP_409_CONFLICT)
+
+        # Редактируем (вносим изменения)
+        profile.location = data.location
+        profile.gender = data.gender
+        profile.birthday = data.birthday
+        profile.save()
+
+        # Возвращаем успешный ответ.
+        return Response(status=status.HTTP_200_OK)
+    else:
+        # Обнаружены ошибки валидации, можно вернуть ошибку.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def update_user_profile(self, request):
-    location = request.POST.get('location')
-    gender = request.POST.get('gender')
-    birthday = request.POST.get('birthday')
-    user_id = self.requesting_user.id
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_user_additional_information(request):
+    user = request.user
 
-    profile = UserProfile.update(user_id=user_id, location=location, gender=gender, birthday=birthday)
-    if profile.status == 'error':
-        return Response(data={'message': profile.message}, status=status.HTTP_204_NO_CONTENT)
+    serializer = SerializerUserAdditionalInformation(data=request.data)
+    if serializer.is_valid():
+        data = serializer.data
 
-    return Response(data={}, status=status.HTTP_200_OK)
+        # Проверяет на существование доп.информации.
+        additional_information = check_user_additional_information_exists(user=user)
+        if additional_information is None:
+            return Response(status=status.HTTP_409_CONFLICT)
+
+        # Редактируем (вносим изменения)
+        additional_information.website = data.website
+        additional_information.vk_page = data.vk_page
+        additional_information.instagram_page = data.instagram_page
+        additional_information.telegram_profile_link = data.telegram_profile_link
+        additional_information.telegram_profile_id = data.telegram_profile_id
+        additional_information.other_info = data.other_info
+        additional_information.save()
+
+        return Response(status=status.HTTP_200_OK)
+    else:
+        # Обнаружены ошибки валидации, можно вернуть ошибку.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def post_create_user_additional_information(self, request):
-    website = request.POST.get('website')
-    telegram_profile_link = request.POST.get('telegram_profile_link')
-    telegram_profile_id = request.POST.get('telegram_profile_id')
-    other_info = request.POST.get('other_info')
-    user_id = self.requesting_user.id
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_request_in_friend(request):
+    user = request.user
+    subscriber_id = request.POST.get('subscriber_id')
 
-    additional_information = UserAdditionalInformation.create(
-        user_id=user_id,
-        website=website,
-        telegram_profile_link=telegram_profile_link,
-        telegram_profile_id=telegram_profile_id,
-        other_info=other_info
+    # Проверяет на существование запроса в друзья или уже друга.
+    user_subscription = check_request_user_subscription_exists(user=user, subscriber_id=subscriber_id)
+    if user_subscription is None:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    RequestUserSubscriptions.objects.create(
+        user=user,
+        subscriber=User.objects.get(id=user.id)
     )
-    if additional_information.status == 'error':
-        return Response(data={'message': additional_information.message}, status=status.HTTP_204_NO_CONTENT)
 
-    return Response(data={}, status=status.HTTP_201_CREATED)
+    return Response(status=status.HTTP_201_CREATED)
 
 
-def update_user_additional_information(self, request):
-    website = request.POST.get('website')
-    telegram_profile_link = request.POST.get('telegram_profile_link')
-    telegram_profile_id = request.POST.get('telegram_profile_id')
-    other_info = request.POST.get('other_info')
-    user_id = self.requesting_user.id
-
-    additional_information = UserAdditionalInformation.update(
-        user_id=user_id,
-        website=website,
-        telegram_profile_link=telegram_profile_link,
-        telegram_profile_id=telegram_profile_id,
-        other_info=other_info
-    )
-    if additional_information.status == 'error':
-        return Response(data={'message': additional_information.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={}, status=status.HTTP_200_OK)
-
-
-def post_add_request_in_friend(self, request):
-    user_id = self.requesting_user.id
+def delete_request_in_friend(request):
+    user = request.user
     subscriber_id = request.POST.get('subscriber_id')
 
-    request_user_subscriptions = RequestUserSubscriptions.create(user_id=user_id, subscriber_id=subscriber_id)
-    if request_user_subscriptions.status == 'error':
-        return Response(data={'message': request_user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяет на существование запроса в друзья или уже друга.
+    user_subscription = check_not_request_user_subscription_exists(user=user, subscriber_id=subscriber_id)
+    if user_subscription is None:
+        return Response(status=status.HTTP_409_CONFLICT)
 
-    return Response(data={}, status=status.HTTP_201_CREATED)
+    user_subscription.delete()
 
-
-def delete_request_in_friend(self, request):
-    user_id = self.requesting_user.id
-    subscriber_id = request.POST.get('subscriber_id')
-
-    request_user_subscriptions = RequestUserSubscriptions.delete_(user_id=user_id, subscriber_id=subscriber_id)
-    if request_user_subscriptions.status == 'error':
-        return Response(data={'message': request_user_subscriptions.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={}, status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_200_OK)
 
 
-def post_add_new_friend_subscriptions(self, request):
-    user_id = self.requesting_user.id
-    subscriber_id = request.POST.get('subscriber_id')
+def create_new_friend_subscriptions(request):
+    """
+    Тут наоборот. Subscriber это пользователь, который нажмет подтверждение добавить в друзья. А user_id этот то кто
+    отправил запрос в друзья.
+    """
+    subscriber = request.user
+    user_id = request.POST.get('user_id')
 
     user_subscriptions = UserSubscriptions.create(user_id=user_id, subscriber_id=subscriber_id)
     if user_subscriptions.status == 'error':
