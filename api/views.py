@@ -1,25 +1,19 @@
-# todo Добавить фильтр: Если пользователь подписан на какие то сообщества, контент вначале берется оттуда а затем
-#  если не зватает берутся остальные (по темам которые интересует пользователей).
-# todo Добавить фильтр: Если сообщество у него в черном списке оно не появляется в списке с сообществами.
-# todo Добавить проверки на роли: Если роль позволяет то пропускать иначе отбрасывать.
 from functools import wraps
-
-from rest_framework.decorators import action, api_view, permission_classes
+from django.db.models import Q
+from rest_framework import status, generics, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+# from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
-
-from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from rest_framework import status, generics, permissions
-from .models import User, Article, News, Community, CommunityRole, CommunityParticipant, CommunityTag, \
+
+from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
-    RequestUserSubscriptions, UserBlacklist, UserRating
+    RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
+    ArticleBookmarks
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile
 
@@ -43,12 +37,28 @@ def check_user_exists(user_id: int):
     return user.first()
 
 
+def check_user_rating_exists(user):
+    """"""
+    profile = UserProfile.objects.filter(user=user)
+    if not profile.exists():
+        return None
+    return profile.first()
+
+
 def check_profile_exists(user):
     """Проверяем на существование профиля пользователя."""
     profile = UserProfile.objects.filter(user=user)
     if not profile.exists():
         return None
     return profile.first()
+
+
+def check_user_in_blacklist_exists(user, banned_user):
+    """Проверяем, пользователь уже в бане?"""
+    banned_user = UserBlacklist.objects.filter(user=user, banned_user=banned_user)
+    if not banned_user.exists():
+        return None
+    return banned_user.first()
 
 
 def check_request_user_subscription_exists(user, subscriber_id):
@@ -373,75 +383,108 @@ def delete_friend_subscriptions(request):
     return Response(data={}, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def post_add_user_in_blacklist(request):
     user = request.user
     user_id_for_ban = request.POST.get('user_id')
 
-    banned_user = UserBlacklist.create_(user_id=user_id, banned_user_id=banned_user_id)
-    if banned_user.status == 'error':
-        return Response(data={'message': banned_user.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяем существует ли пользователь с id = user_id
+    banned_user = check_user_exists(user_id=user_id_for_ban)
+    if banned_user is None:
+        return Response(status=status.HTTP_409_CONFLICT)
 
-    return Response(data={}, status=status.HTTP_201_CREATED)
+    # Проверяем есть ли пользователь уже в бане.
+    banned_user = check_user_in_blacklist_exists(user=user, banned_user=banned_user)
+    if banned_user:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Отправляем пользователя в бан.
+    UserBlacklist.objects.create(user=user, banned_user=banned_user)
+
+    return Response(status=status.HTTP_201_CREATED)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_user_from_blacklist(request):
     user = request.user
     banned_user_id = request.POST.get('banned_user_id')
 
-    banned_user = UserBlacklist.delete_(user_id=user_id, banned_user_id=banned_user_id)
-    if banned_user.status == 'error':
-        return Response(data={'message': banned_user.message}, status=status.HTTP_204_NO_CONTENT)
+    # Проверяем существует ли пользователь с id = user_id
+    banned_user = check_user_exists(user_id=banned_user_id)
+    if banned_user is None:
+        return Response(status=status.HTTP_409_CONFLICT)
 
-    return Response(data={}, status=status.HTTP_200_OK)
+    # Проверяем есть ли пользователь уже в бане.
+    banned_user = check_user_in_blacklist_exists(user=user, banned_user=banned_user)
+    if not banned_user:
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # Удаляем пользователя из бана.
+    banned_user.delete()
 
-def post_add_rating_user(request):
-    user = request.user
-    appraiser_id = request.POST.get('appraiser_id')
-    estimation = request.POST.get('estimation')
-
-    rating = UserRating.create_(user_id=user_id, appraiser_id=appraiser_id, estimation=estimation)
-    if rating.status == 'error':
-        return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={}, status=status.HTTP_201_CREATED)
+    return Response(status=status.HTTP_200_OK)
 
 
-def delete_rating_user(request):
-    user = request.user
-    appraiser_id = request.POST.get('appraiser_id')
-
-    rating = UserRating.delete_(user_id=user_id, appraiser_id=appraiser_id)
-    if rating.status == 'error':
-        return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={}, status=status.HTTP_200_OK)
+# Если будет время. Но пока не планируется.
+# def post_add_rating_user(request):
+#     user = request.user
+#     appraiser_id = request.POST.get('appraiser_id')
+#     estimation = request.POST.get('estimation')
+#
+#     check_user_rating_exists
+#
+#     rating = UserRating.create_(user_id=user_id, appraiser_id=appraiser_id, estimation=estimation)
+#     if rating.status == 'error':
+#         return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
+#
+#     return Response(data={}, status=status.HTTP_201_CREATED)
+#
+#
+# def delete_rating_user(request):
+#     user = request.user
+#     appraiser_id = request.POST.get('appraiser_id')
+#
+#     rating = UserRating.delete_(user_id=user_id, appraiser_id=appraiser_id)
+#     if rating.status == 'error':
+#         return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
+#
+#     return Response(data={}, status=status.HTTP_200_OK)
 
 
 def get_user(request, user_id: int):
-    user_ = User.user(user_id=user_id)
-    if user_.status == 'error':
-        return Response(data={'message': user_.message}, status=status.HTTP_204_NO_CONTENT)
-    return Response(data={'user': user_}, status=status.HTTP_200_OK)
+    # Проверяем на существование пользователя.
+    user = check_user_exists(user_id=user_id)
+    if not user:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    return Response(data={'user': user}, status=status.HTTP_200_OK)
 
 
-def get_me(self, request):
+def get_me(request):
     user = request.user
-    user_ = User.user(user_id=user_id)
-    if user_.status == 'error':
-        return Response(data={'message': user_.message}, status=status.HTTP_204_NO_CONTENT)
-    return Response(data={'user': user_}, status=status.HTTP_200_OK)
+    profile = UserProfile.objects.get(user=user)
+    additional_information = UserAdditionalInformation.objects.get(user=user)
+    comments = ArticleComment.objects.filter(user=user)
+    articles = Article.objects.filter(author=user)
+    communities = Community.objects.filter(user=user)
+
+    return Response(
+        data={'user': user, 'profile': profile, 'additional_information': additional_information, 'comments': comments,
+              'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
 
 
-def get_my_friends(self, request):
+def get_my_friends(request):
     pass
 
 
-def get_request_to_friend(self, request):
+def get_request_to_friend(request):
     pass
 
 
-def get_find_friends(self, request):
+
+def get_find_friends(request):
     pass
 
 

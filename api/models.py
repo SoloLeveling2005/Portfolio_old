@@ -43,64 +43,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.username
 
-    @classmethod
-    def user_communities(cls, user_id: int):
-        """
-        Возвращает список сообществ в которых состоит или которыми владеет пользователь.
-         - Проверяет на существование пользователя.
-        """
-        user_ = cls.objects.filter(id=user_id)
-        if not user_.exists():
-            return {'message': 'User not found', 'status': 'error'}
-        user_ = user_.first()
 
-        communities_ = CommunityParticipant.objects.filter(Q(user=user_))
-        my_communities = Community.objects.filter(Q(user=user_))
-        communities_ = communities_.union(my_communities)
-        return {'status': 'success'}
-
-    @classmethod
-    def user(cls, user_id: int):
-        user_ = cls.objects.filter(id=user_id)
-        if not user_.exists():
-            return {'message': 'User not found', 'status': 'error'}
-        user_ = user_.first()
-
-        user_avatar = UserAvatar.objects.filter(user=user_)
-        if not user_avatar.exists():
-            user_avatar = None
-
-        user_profile = UserProfile.objects.filter(user=user_)
-        if not user_profile.exists():
-            user_profile = None
-
-        user_additional_info = UserAdditionalInformation.objects.filter(id=user_id)
-        if not user_additional_info.exists():
-            user_additional_info = None
-
-        articles = Article.objects.filter(author=user_)
-        comments = ArticleComment.objects.filter(user=user_)
-
-        return {
-            'user_info': user_,
-            'user_avatar': user_avatar,
-            'user_profile': user_profile,
-            'user_additional_info': user_additional_info,
-            'articles': articles,
-            'comments': comments,
-        }
-
-
+# Сигнал после `создания` модели пользователя `User`.
 @receiver(post_save, sender=User)
-def create_user_settings(sender, instance, created, **kwargs):
+def create_user_data(sender, instance, created, **kwargs):
     if created:
         UserSettings.objects.create(user=instance)
+        UserProfile.objects.create(user=instance)
+        UserAdditionalInformation.objects.create(user=instance)
+        UserAvatar.objects.create(user=instance)
 
 
 class UserAvatar(models.Model):
     """Модель аватарка пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
-    img = models.ImageField(null=False)
+    img = models.ImageField(null=True)
 
 
 class UserSettings(models.Model):
@@ -165,7 +122,6 @@ class UserRating(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating_on_user')
     appraiser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_rating_on_appraiser')
-    estimation = models.IntegerField()  # 1 ... 10
 
 
 class UserBlacklist(models.Model):
