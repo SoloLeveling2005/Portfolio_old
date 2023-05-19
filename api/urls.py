@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.http import require_http_methods
 from . import views
-
+from rest_framework_simplejwt import views as jwt_views
 urlpatterns = [
     # Добавляем обработчик несуществующего пути
     # re_path('api/', include([
@@ -19,4 +19,5 @@ urlpatterns = [
     path('signup', views.UserRegistrationView.as_view(), name='signup'),
     path('signin', views.UserAuthenticationView.as_view(), name='signin'),
     path('signout', views.UserSignoutView.as_view(), name='signout'),
+    path('refresh_token', jwt_views.TokenRefreshView.as_view(), name='refresh_token'),
 ]

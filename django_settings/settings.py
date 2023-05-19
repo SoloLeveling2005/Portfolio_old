@@ -159,5 +159,3 @@ JWT_AUTH = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=15),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=15),
 }
-JWT_ACCESS_TOKEN_EXPIRATION = datetime.timedelta(days=3)
-JWT_REFRESH_TOKEN_EXPIRATION = datetime.timedelta(days=30)

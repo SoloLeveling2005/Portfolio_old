@@ -1,4 +1,6 @@
 from functools import wraps
+
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.db.models import Q
 from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -8,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
@@ -16,7 +18,8 @@ from .models import User, Community, CommunityRole, CommunityParticipant, Commun
     ArticleBookmarks
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
-    AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer
+    AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
+    UserSerializerModel
 
 
 # Helpers
@@ -465,12 +468,15 @@ def get_user(request, user_id: int):
     user = check_user_exists(user_id=user_id)
     if not user:
         return Response(status=status.HTTP_204_NO_CONTENT)
-
+    print(user.id)
     profile = ProfileSerializer(UserProfile.objects.get(user=user)).data
     additional_information = AdditionalInformationSerializer(UserAdditionalInformation.objects.get(user=user)).data
-    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=user)).data if ArticleComment.objects.filter(user=user).exists() else []
-    articles = ArticleCommentSerializer(ArticleSerializer(Article.objects.filter(author=user))).data if Article.objects.filter(user=user).exists() else []
-    communities = ArticleCommentSerializer(CommunitySerializer(Community.objects.filter(user=user))).data if Community.objects.filter(user=user).exists() else []
+    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=user)).data \
+        if ArticleComment.objects.filter(user=user).exists() else []
+    articles = ArticleSerializer(Article.objects.filter(author=user)).data \
+        if Article.objects.filter(author=user).exists() else []
+    communities = CommunitySerializer(Community.objects.filter(user=user)).data \
+        if Community.objects.filter(user=user).exists() else []
 
     user = UserSerializer(user).data
     return Response(
@@ -1062,3 +1068,29 @@ class UserSignoutView(APIView):
             print(e)
             return Response({'detail': 'An error occurred while signing out.'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UserTokenRestoreView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        token = request.data.get('token')
+        user_id = request.data.get('user_id')
+
+        if token and user_id:
+            user = User.objects.get(id=user_id)
+            refresh_token = RefreshToken.for_user(user)
+            print(Token.for_user(user=user))
+            print(refresh_token)
+            print(token)
+            access_token = str(refresh_token.access_token)
+            return Response({
+                'user_id': user.id,
+                'username': user.username,
+                'access_token': access_token,
+                'refresh_token': str(token)
+            }, status=status.HTTP_200_OK)
+        # except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        #     return Response({'detail': 'Invalid token or user_id.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'detail': 'Token and user_id are required.'}, status=status.HTTP_400_BAD_REQUEST)

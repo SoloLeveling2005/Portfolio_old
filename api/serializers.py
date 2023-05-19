@@ -6,12 +6,23 @@ from rest_framework_jwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import models
+from .models import User
 from .serializers_classes import UserAuth
 
 # Регистрируем классы сереализаторы
 UserRegistrationSerializer = UserAuth.UserRegistrationSerializer
 UserAuthenticationSerializer = UserAuth.UserAuthenticationSerializer
 
+
+class UserSerializerModel(serializers.ModelSerializer):
+    # Добавьте это поле, чтобы получить объект пользователя вместо строки "username"
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password', 'is_active', 'is_staff']  # Укажите нужные поля вашей модели пользователя
 
 class SerializerCreateCommunityRole(serializers.Serializer):
     title = serializers.CharField()
