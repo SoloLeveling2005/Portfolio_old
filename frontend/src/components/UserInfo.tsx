@@ -16,23 +16,53 @@ function UserInfo(props:{'country':string, 'registered':string, 'last_login':str
 
             <div className="row py-2">
               <div className="col fw-bold">Откуда</div>
-              <div className="col">{country}</div>
+              <div className="col">
+                {country == null || country == '' ? (
+                  <p className='p-0 m-0'>Не указано</p>
+                ):(
+                  <p className='p-0 m-0'>{country}</p>
+                )}
+              </div>
             </div>
             <div className="row py-2">
               <div className="col fw-bold">Пол</div>
-              <div className="col">{gender}</div>
+              <div className="col">
+                {gender == null || gender == '' ? (
+                  <p className='p-0 m-0'>Не указан</p>
+                ):(
+                  <p className='p-0 m-0'>{gender}</p>
+                )}
+              </div>
             </div>
             <div className="row py-2">
               <div className="col fw-bold">Возраст</div>
-              <div className="col">{age}</div>
+              <div className="col">
+                {age == null || age == '' ? (
+                  <p className='p-0 m-0'>Не указан</p>
+                ):(
+                  <p className='p-0 m-0'>{age}</p>
+                )}
+              </div>
             </div>
             <div className="row py-2">
               <div className="col fw-bold">Зарегистрирован</div>
-              <div className="col">{registered}</div>
+              <div className="col">
+                {registered == null || registered == '' ? (
+                  <p className='p-0 m-0'>Не указано</p>
+                ):(
+                  <p className='p-0 m-0'>{registered}</p>
+                )}
+              </div>
             </div>
             <div className="row py-2">
               <div className="col fw-bold">Активность</div>
-              <div className="col">{last_login}</div>
+              <div className="col">
+                {last_login == null || last_login == '' ? (
+                  <p className='p-0 m-0'>Не указано</p>
+                ):(
+                  <p className='p-0 m-0'>{last_login}</p>
+                )}
+              </div>
             </div>
           </div>
       </div>
