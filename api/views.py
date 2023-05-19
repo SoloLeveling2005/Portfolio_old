@@ -475,10 +475,20 @@ def get_user(request, user_id: int):
         if ArticleComment.objects.filter(user=user).exists() else []
     articles = ArticleSerializer(Article.objects.filter(author=user)).data \
         if Article.objects.filter(author=user).exists() else []
-    communities = CommunitySerializer(Community.objects.filter(user=user)).data \
+
+    # Получаем сообщества пользователя
+    user_communities = CommunitySerializer(Community.objects.filter(user=user)).data \
         if Community.objects.filter(user=user).exists() else []
 
+    # Получаем сообщества, связанные с пользователем через CommunityParticipant
+    participant_communities = CommunitySerializer(Community.objects.filter(community_participant_by_community__user=user), many=True).data \
+        if Community.objects.filter(community_participant_by_community__user=user).exists() else []
+
+    # Объединяем оба QuerySet community
+    communities = user_communities + participant_communities
+
     user = UserSerializer(user).data
+
     return Response(
         data={'user': user, 'profile': profile, 'additional_information': additional_information, 'comments': comments,
               'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)

@@ -84,6 +84,7 @@ class UserSettings(models.Model):
 class UserProfile(models.Model):
     """Модель профиля пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
+    short_info = models.CharField(max_length=255,null=True)
     location = models.CharField(max_length=100, null=True)
     gender = models.BooleanField(null=True)  # man true, woman false
     birthday = models.DateTimeField(null=True)
