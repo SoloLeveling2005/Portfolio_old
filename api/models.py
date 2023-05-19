@@ -176,7 +176,10 @@ class Community(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community')
     title = models.CharField(max_length=100, null=False)
+    short_info = models.CharField(max_length=100, null=False)
     description = models.CharField(max_length=255, null=False)
+    website = models.CharField(max_length=255, null=False)
+    location = models.CharField(max_length=200, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

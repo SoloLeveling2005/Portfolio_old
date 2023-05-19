@@ -15,7 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks
+    ArticleBookmarks, CommunityAvatar
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
@@ -481,7 +481,8 @@ def get_user(request, user_id: int):
         if Community.objects.filter(user=user).exists() else []
 
     # Получаем сообщества, связанные с пользователем через CommunityParticipant
-    participant_communities = CommunitySerializer(Community.objects.filter(community_participant_by_community__user=user), many=True).data \
+    participant_communities = CommunitySerializer(
+        Community.objects.filter(community_participant_by_community__user=user), many=True).data \
         if Community.objects.filter(community_participant_by_community__user=user).exists() else []
 
     # Объединяем оба QuerySet community
@@ -564,10 +565,25 @@ def create_community(request) -> Response:
 
     user = request.user
     title = request.POST.get('title')
-    description = request.POST.get('description')
+    short_info = request.POST.get('short_info')
+    image_file = request.FILES.get('image')
+    tag1 = request.POST.get('tagFirst')
+    tag2 = request.POST.get('tagSecond')
+    tag3 = request.POST.get('tagThird')
 
-    Community.new_community(user_id=user.id, title=title, description=description)
-    return Response(data={'status': 'success'}, status=status.HTTP_201_CREATED)
+    community = Community.objects.create(user=user, title=title, short_info=short_info)
+
+    CommunityTag.objects.create(community=community, tag=tag1)
+    CommunityTag.objects.create(community=community, tag=tag2)
+    CommunityTag.objects.create(community=community, tag=tag3)
+
+    # Создание экземпляра CommunityAvatar и сохранение изображения
+    community_avatar = CommunityAvatar()
+    community_avatar.community = community
+    community_avatar.img.save(image_file.name, image_file)
+    community_avatar.save()
+
+    return Response(data={'status': 'success', 'community_id': community.id}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['DELETE'])

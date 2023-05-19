@@ -13,6 +13,7 @@ urlpatterns = [
 
 
     path('users/get_user/<int:user_id>', views.get_user, name='get_user'),
+    path('community/create_community', views.create_community, name="create_community"),
 
 
     # TODO Система авторизации, регистрации, выход из системы
