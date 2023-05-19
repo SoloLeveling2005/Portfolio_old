@@ -57,7 +57,7 @@ def create_user_data(sender, instance, created, **kwargs):
 class UserAvatar(models.Model):
     """Модель аватарка пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
-    img = models.ImageField(null=True)
+    img = models.ImageField(null=False, upload_to='userAvatar/')
 
 
 class UserSettings(models.Model):
@@ -177,8 +177,8 @@ class Community(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community')
     title = models.CharField(max_length=100, null=False)
     short_info = models.CharField(max_length=100, null=False)
-    description = models.CharField(max_length=255, null=False)
-    website = models.CharField(max_length=255, null=False)
+    description = models.CharField(max_length=255, null=True)
+    website = models.CharField(max_length=255, null=True)
     location = models.CharField(max_length=200, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

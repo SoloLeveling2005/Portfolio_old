@@ -1,6 +1,9 @@
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.http import require_http_methods
+
+from django_settings import settings
 from . import views
 from rest_framework_simplejwt import views as jwt_views
 urlpatterns = [
@@ -21,4 +24,4 @@ urlpatterns = [
     path('signin', views.UserAuthenticationView.as_view(), name='signin'),
     path('signout', views.UserSignoutView.as_view(), name='signout'),
     path('refresh_token', jwt_views.TokenRefreshView.as_view(), name='refresh_token'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

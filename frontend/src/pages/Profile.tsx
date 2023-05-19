@@ -5,10 +5,8 @@ import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
-import Smart_search from '../components/SmartSearch';
 import { Link, useNavigate } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
-import ActivityUser from '../components/ActivityUser';
 import Comment from '../components/Comment';
 import Card from '../components/Card';
 import axios from 'axios';
@@ -16,7 +14,30 @@ import axios from 'axios';
 function Home() {
     const navigate = useNavigate();
 
-    let data = {
+    // let data = {
+    //     additional_information: {
+    //         id: '',
+    //         instagram_page: '',
+    //         other_info: '',
+    //         telegram_profile_id: '',
+    //         telegram_profile_link: '',
+    //         vk_page: '',
+    //         website: ''
+    //     },
+    //     articles: [],
+    //     comments: [],
+    //     communities: [{},{}],
+    //     profile: {
+    //         location: '',
+    //         birthday: '',
+    //         gender: '',
+    //         last_login: '',
+    //         registered: '',
+    //         short_info:''
+    //     },
+    //     user:{}
+    // };
+    const [data, setData] = useState({
         additional_information: {
             id: '',
             instagram_page: '',
@@ -28,7 +49,14 @@ function Home() {
         },
         articles: [],
         comments: [],
-        communities: [],
+        communities: [{
+            id:0,
+            title: '',
+            short_info: '',
+            location: '',
+            description: '',
+            created_at: ''
+        }],
         profile: {
             location: '',
             birthday: '',
@@ -38,6 +66,17 @@ function Home() {
             short_info:''
         },
         user:{}
+    });
+
+    // Пример обновления значения поля location в profile
+    const updateLocation = () => {
+        setData(prevData => ({
+        ...prevData,
+        profile: {
+            ...prevData.profile,
+            location: 'New Location'
+        }
+        }));
     };
 
     const [nav, switchNav] = useState('profile');
@@ -54,10 +93,11 @@ function Home() {
         axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
             .then(response => {
                 console.log(response.data)
-                data = response.data
+                setData(response.data)
+                console.log(data)
             })
             .catch(error => {
-                if (error.request.status == 401) {
+                if (error.request.status === 401) {
                     // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
                     axios.post('api/refresh_token', {
                         'refresh': localStorage.getItem('refresh_token'),
@@ -70,10 +110,11 @@ function Home() {
                         axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
                         .then(response => {
                             console.log(response.data)
-                            data = response.data
+                            setData(response.data)
+                            console.log(data)
                         })
                         .catch(error => {
-                            if (error.response.status == 401) {
+                            if (error.response.status === 401) {
                                 navigate('/auth');
                             }
                         });
@@ -98,24 +139,24 @@ function Home() {
                                 <div className="card-title">
                                     <img src="https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png" alt="" className='img-normal-50' />
                                     <h4 className='pb-1 mb-0'>{localStorage.getItem('username')}</h4>
-                                    {data.profile.short_info == '' || data.profile.short_info == null ? (
+                                    {data.profile.short_info === '' || data.profile.short_info === null ? (
                                         null  
                                     ): (
                                         <p>{data.profile.short_info}</p>    
                                     )}
                                     
                                     <div className='d-flex '>
-                                       {nav == 'profile' ? (
+                                       {nav === 'profile' ? (
                                             <button className='btn btn-primary me-2 ' value='profile' onClick={switchNavF}>Профиль</button>
                                         ):(
                                             <button className='btn me-2' value='profile' onClick={switchNavF}>Профиль</button>
                                         )}
-                                        {nav == 'articles' ? (
+                                        {nav === 'articles' ? (
                                             <button className='btn btn-primary me-2' value='articles' onClick={switchNavF}>Публикации</button>
                                         ):(
                                             <button className='btn me-2' value='articles' onClick={switchNavF}>Публикации</button>
                                         )}
-                                        {nav == 'comments' ? (
+                                        {nav === 'comments' ? (
                                             <button className='btn btn-primary me-2' value='comments' onClick={switchNavF}>Комментарии</button>
                                         ):(
                                             <button className='btn me-2' value='comments' onClick={switchNavF}>Комментарии</button>
@@ -123,7 +164,7 @@ function Home() {
                                     </div>
                                 </div>
                             </div>
-                            {nav == 'profile' && 
+                            {nav === 'profile' && 
                                 <div className="card m-0 p-0 bg-white mb-3 w-100 ">
                                     <div className="card-body">
                                         <h5 className='mb-4'>Профиль</h5>
@@ -132,7 +173,7 @@ function Home() {
                                             <h6 className='mb-0'>О себе</h6>
                                             <div className='d-flex'>
                                                 <p>
-                                                    {data.profile.short_info == null || data.profile.short_info == '' ? (
+                                                    {data.profile.short_info === null || data.profile.short_info === '' ? (
                                                         <div>
                                                             Не заполнено
                                                         </div>
@@ -147,19 +188,21 @@ function Home() {
                                         </div>
                                         <div className='mb-3 pb-1'>
                                             <h6 className='mb-1'>Состоит в сообществах</h6>
-                                            {data.communities.length == 0 ? (
+                                            {data.communities.length === 0 ? (
                                                 <div className='m-0 p-0'>
                                                     Не состоит в сообществах
                                                 </div>
                                             ): (
                                                 <div className='d-flex w-100 flex-wrap'>
                                                     {data.communities.map((item, index) => (
-                                                        <Link to={`/community/1`} className='btn btn-secondary me-1 px-4 mb-1'>VK</Link>                                                           
+                                                        <div>
+                                                            <Link to={`/community/${item.id}`} className='btn btn-secondary me-1 px-4 mb-1'>{item.title}</Link>    
+                                                        </div>
+                                                                                                                 
                                                     ))}
 
                                                 </div>  
                                             )}
-                                            
                                         </div>
                                         
 
@@ -170,7 +213,7 @@ function Home() {
                                                     Сайт
                                                 </div>
                                                 <div className="col">
-                                                    {data.additional_information.website == null || data.additional_information.website == '' ? (
+                                                    {data.additional_information.website === null || data.additional_information.website === '' ? (
                                                         <div className='p-0 m-0 py-1'>
                                                             Нет
                                                         </div>
@@ -186,7 +229,7 @@ function Home() {
                                                     ВК
                                                 </div>
                                                 <div className="col">
-                                                    {data.additional_information.vk_page == null || data.additional_information.vk_page == '' ? (
+                                                    {data.additional_information.vk_page === null || data.additional_information.vk_page === '' ? (
                                                         <div className='p-0 m-0 py-1'>
                                                             Нет 
                                                         </div>
@@ -202,7 +245,7 @@ function Home() {
                                                     Телеграмм
                                                 </div>
                                                 <div className="col">
-                                                    {data.additional_information.telegram_profile_link == null || data.additional_information.vk_page == '' ? (
+                                                    {data.additional_information.telegram_profile_link === null || data.additional_information.vk_page === '' ? (
                                                         <div className='p-0 m-0 py-1'>
                                                             Нет 
                                                         </div>
@@ -218,9 +261,9 @@ function Home() {
                                 </div>
 
                             }   
-                            {nav == 'articles' && 
+                            {nav === 'articles' && 
                                 <div className="p-0 m-0">
-                                    {data.articles.length == 0 ? (
+                                    {data.articles.length === 0 ? (
                                         <div className="card m-0 p-0 bg-white mb-3 w-100 ">
                                             <div className="card-body">
                                                 <h6 className='p-0 m-0 fs-6'>Пользователь не создавал статей</h6>
@@ -247,9 +290,9 @@ function Home() {
                                     ' articale_id='1' who='Company' count_likes="12" bookmark_active={false} /> */}
                                 </div>
                             }     
-                            {nav == 'comments' && 
+                            {nav === 'comments' && 
                                 <div className="p-0 m-0">
-                                    {data.comments.length == 0 ? (
+                                    {data.comments.length === 0 ? (
                                         <div className="card m-0 p-0 bg-white mb-3 w-100 ">
                                             <div className="card-body">
                                                 <h6 className='p-0 m-0 fs-6'>Пользователь не оставлял комментриев</h6>

@@ -63,29 +63,24 @@ function NewCommunity() {
             alert("Заполните все поля")
             return
         }
-
+        
         // Формируем заголовок запроса
-        const header = {
-            headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') },
+        const body = {
             title: inputTitle,
             short_info: inputShortInfo,
-            image_file:file,
-            tag1: inputTag1,
-            tag2: inputTag2,
-            tag3: inputTag3,
+            image:file,
+            tagFirst: inputTag1,
+            tagSecond: inputTag2,
+            tagThird: inputTag3,
         }
         
         // Делаем запрос на создание сообщества
         axios.defaults.baseURL = "http://127.0.0.1:8000/api"
-        axios.post('community/create_community', {
-            title: inputTitle,
-            short_info: inputShortInfo,
-            image_file:file,
-            tag1: inputTag1,
-            tag2: inputTag2,
-            tag3: inputTag3,
-        }, {
-            headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') },
+        axios.post('community/create_community', body, {
+            headers: {
+                'Authorization': "Bearer " + localStorage.getItem('access_token'),
+                'Content-Type': 'multipart/form-data',
+            },
         })
         .then(response => {
             // Удачное создание.
@@ -105,19 +100,9 @@ function NewCommunity() {
                     
                     // Устаналиваем новый access токен.
                     localStorage.setItem('access_token', response.data.access)
-
-                    // Перезаписываем токен в заголовок.
-                    header.headers = { 'Authorization': "Bearer " + response.data.access }
                     
                     // Делаем запрос.
-                    axios.post('community/create_community', {
-                        title: inputTitle,
-                        short_info: inputShortInfo,
-                        image_file:file,
-                        tag1: inputTag1,
-                        tag2: inputTag2,
-                        tag3: inputTag3,
-                    }, {
+                    axios.post('community/create_community', body, {
                         headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') },
                     })
                     .then(response => {

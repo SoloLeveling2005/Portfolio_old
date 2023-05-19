@@ -15,7 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks, CommunityAvatar
+    ArticleBookmarks, CommunityAvatar, UserAvatar
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
@@ -477,7 +477,7 @@ def get_user(request, user_id: int):
         if Article.objects.filter(author=user).exists() else []
 
     # Получаем сообщества пользователя
-    user_communities = CommunitySerializer(Community.objects.filter(user=user)).data \
+    user_communities = CommunitySerializer(Community.objects.filter(user=user), many=True).data \
         if Community.objects.filter(user=user).exists() else []
 
     # Получаем сообщества, связанные с пользователем через CommunityParticipant
@@ -488,10 +488,17 @@ def get_user(request, user_id: int):
     # Объединяем оба QuerySet community
     communities = user_communities + participant_communities
 
+    # Получаем аватарку
+    avatar = UserAvatar.objects.get(user=user)
+    image_url = None
+    if avatar.img:
+        image_url = avatar.img.url
+
+    # Сереализуем пользователя
     user = UserSerializer(user).data
 
     return Response(
-        data={'user': user, 'profile': profile, 'additional_information': additional_information, 'comments': comments,
+        data={'user': user, 'userAvatarUrl': image_url, 'profile': profile, 'additional_information': additional_information, 'comments': comments,
               'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
 
 
@@ -571,11 +578,13 @@ def create_community(request) -> Response:
     tag2 = request.POST.get('tagSecond')
     tag3 = request.POST.get('tagThird')
 
+    print(title)
     community = Community.objects.create(user=user, title=title, short_info=short_info)
-
+    print('Сообщество создано')
     CommunityTag.objects.create(community=community, tag=tag1)
     CommunityTag.objects.create(community=community, tag=tag2)
     CommunityTag.objects.create(community=community, tag=tag3)
+    print('Теги созданы')
 
     # Создание экземпляра CommunityAvatar и сохранение изображения
     community_avatar = CommunityAvatar()
