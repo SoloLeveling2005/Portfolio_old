@@ -4,18 +4,25 @@ import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import Smart_search from '../components/SmartSearch';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
+import axios from 'axios';
 
 function Settings() {
-
+    const navigate = useNavigate();
+    
     // navbar 
     const [nav, switchNav] = useState('profile');
     function switchNavF (event:any) {
         const { value } = event.target;
         switchNav(sw => (value))
     }
+
+
+
+    
+
 
     return (
         <div className="Home ">
@@ -63,8 +70,8 @@ function Settings() {
                                     <h5 className="card-title mb-3" >Основной</h5>
                                     <form>
                                         <div className="mb-3">
-                                            <label htmlFor="exampleInputEmail1" className="form-label ">Никнейм</label>
-                                            <input type="email" className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"></input>
+                                            <label htmlFor="usernameInput" className="form-label ">Никнейм</label>
+                                            <input type="text" className="form-control" id="usernameInput" aria-describedby="emailHelp"></input>
                                             <div id="emailHelp" className="form-text">Укажите ваш никнейм, чтобы другие пользователи смогли узнать вас</div>
                                         </div>
                                         <div className="mb-3">
@@ -184,8 +191,8 @@ function Settings() {
                                             
                                         </div>
                                         <div className="mb-3 mt-4">
-                                            <label htmlFor="formFileReadonly" className="form-label">Выберите аватарку</label>
-                                            <input className="form-control btn" type="file" id="formFileReadonly" readOnly></input>
+                                            <label htmlFor="file-input" className="form-label">Выберите аватарку</label>
+                                            <input className="form-control btn" type="file" accept="image/*" id="file-input" readOnly></input>
                                         </div>
 
                                     
