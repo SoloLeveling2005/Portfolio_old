@@ -24,6 +24,7 @@ class UserSerializerModel(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'password', 'is_active', 'is_staff']  # Укажите нужные поля вашей модели пользователя
 
+
 class SerializerCreateCommunityRole(serializers.Serializer):
     title = serializers.CharField()
     edit_community_information = serializers.BooleanField()
@@ -34,9 +35,11 @@ class SerializerCreateCommunityRole(serializers.Serializer):
 
 
 class SerializerUserProfile(serializers.Serializer):
+    short_info = serializers.CharField()
     location = serializers.CharField()
     gender = serializers.BooleanField()
-    birthday = serializers.DateTimeField()
+    birthday = serializers.CharField()
+
 
 
 class SerializerUserAdditionalInformation(serializers.Serializer):

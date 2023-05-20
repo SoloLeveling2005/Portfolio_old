@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
@@ -11,8 +11,80 @@ import axios from 'axios';
 
 function Settings() {
     const navigate = useNavigate();
-    
-    // navbar 
+
+    const [data, setData] = useState({
+        additional_information: {
+            id: '',
+            instagram_page: '',
+            other_info: '',
+            telegram_profile_id: '',
+            telegram_profile_link: '',
+            vk_page: '',
+            website: ''
+        },
+        articles: [],
+        comments: [],
+        communities: [{
+            id:0,
+            title: '',
+            short_info: '',
+            location: '',
+            description: '',
+            created_at: ''
+        }],
+        profile: {
+            location: '',
+            birthday: '',
+            gender: '',
+            last_login: '',
+            registered: '',
+            short_info:''
+        },
+        user: {},
+        userAvatarUrl: ''
+    });
+
+    // Реактивный select Location
+    const [selectedLocation, setSelectedLocation] = useState('');
+
+    const handleSelectChangeLocation = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        setSelectedLocation(value);
+    };
+
+    // Реактивный select Gender
+    const [selectedGender, setSelectedGender] = useState('');
+
+    const handleSelectChangeselectedGender = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        setSelectedGender(value);
+    };
+
+    // Реактивный select Day
+    const [selectedDay, setSelectedDay] = useState('');
+
+    const handleSelectChangeDay = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        setSelectedDay(value);
+    };
+
+    // Реактивный select Mounth
+    const [selectedMounth, setSelectedMounth] = useState('');
+
+    const handleSelectChangeMounth = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        setSelectedMounth(value);
+    };
+
+    // Реактивный select Year
+    const [selectedYear, setSelectedYear] = useState('');
+
+    const handleSelectChangeYear = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        setSelectedYear(value);
+    };
+
+    // navbar
     const [nav, switchNav] = useState('profile');
     function switchNavF (event:any) {
         const { value } = event.target;
@@ -20,8 +92,45 @@ function Settings() {
     }
 
 
+    // Вызываем один раз.
+    useEffect(() => {
+        // Получаем информацию о пользователе
+        axios.defaults.baseURL = "http://127.0.0.1:8000"
+        axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        .then(response => {
+            console.log(response.data)
+            setData(response.data)
+            console.log(data)
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                axios.post('api/refresh_token', {
+                    'refresh': localStorage.getItem('refresh_token'),
+                })
+                .then(response => {
+                    // 
+                    localStorage.setItem('access_token', response.data.access)
 
-    
+                    // Запрашиваем данные снова
+                    axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+                    .then(response => {
+                        console.log(response.data)
+                        setData(response.data)
+                        console.log(data)
+                    })
+                    .catch(error => {
+                        if (error.response.status === 401) {
+                            navigate('/auth');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.log(error)
+                });
+            }
+        });
+    }, []);
 
 
     return (
@@ -81,10 +190,9 @@ function Settings() {
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label">Страна проживания</label>
-                                            <select className="form-select" aria-label="Default select example" id="exampleInputPassword1">
+                                            <select className="form-select" aria-label="Default select example" id="exampleInputPassword1" value={selectedLocation} onChange={handleSelectChangeLocation}>
                                                 <option selected>Не указан</option>
                                                 <option value="1">Казахстан</option>
-
                                                 <option value="2">Россия</option>
                                                 <option value="3">США</option>
                                                 <option value="4">Китай</option>

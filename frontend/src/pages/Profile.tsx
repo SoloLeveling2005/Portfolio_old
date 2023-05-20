@@ -65,19 +65,11 @@ function Home() {
             registered: '',
             short_info:''
         },
-        user:{}
+        user: {},
+        userAvatarUrl: ''
     });
 
-    // Пример обновления значения поля location в profile
-    const updateLocation = () => {
-        setData(prevData => ({
-        ...prevData,
-        profile: {
-            ...prevData.profile,
-            location: 'New Location'
-        }
-        }));
-    };
+    // Переключатель
 
     const [nav, switchNav] = useState('profile');
 
