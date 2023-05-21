@@ -5,7 +5,7 @@ import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import Comment from '../components/Comment';
 import Card from '../components/Card';
@@ -15,6 +15,13 @@ import API_BASE_URL from '../config.jsx'
 function Home() {
     const navigate = useNavigate();
 
+    var { id } = useParams();
+    const [userId, switchUserId] = useState(`${id}`);
+    
+    function switchUserIdF (id:string) {
+        switchUserId(sw => (id))
+    }
+
     // Проверку на авторизацию 
     let user = localStorage.getItem('username')
     if (user === null) {
@@ -22,7 +29,7 @@ function Home() {
         navigate('/auth')
     }
 
-    
+
     const gender: boolean | undefined = undefined;
     // let data = {
     //     additional_information: {
@@ -75,9 +82,17 @@ function Home() {
             registered: '',
             short_info:''
         },
-        user: {},
+        is_own_data: true,
+        user: {
+            id:0,
+            username:''
+        },
         userAvatarUrl: ''
     });
+    const [friend, setfriend] = useState(Boolean);
+    const [request_to_friend, setrequest_to_friend] = useState(Boolean);
+    const [blacklist, setblacklist] = useState(Boolean);
+
 
     // Переключатель
 
@@ -88,14 +103,59 @@ function Home() {
         switchNav(sw => (value))
     }
 
-    // Вызываем один раз.
-    useEffect(() => {
+    let countAbout = 0
+    function about() {
+        if (countAbout == 2) {
+            alert('Ошибка поиска')
+            countAbout = 0
+            return
+        }
+        countAbout += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`users/user_about/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+            .then(response => {
+                console.log(response.data)
+                setfriend(response.data.friend)
+                setrequest_to_friend(response.data.request_to_friend)
+                setblacklist(response.data.blacklist)
+
+            })
+            .catch(error => {
+                if (error.request.status === 401) {
+                    axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                    .then(response => {
+                        localStorage.setItem('access_token', response.data.access)
+
+                        // Запрашиваем данные снова
+                        about()
+                    })
+                    .catch(error => { console.log(error); navigate('/auth'); });
+                }
+            });
+    }
+
+    let countGetUserInfo = 0
+    function getUserInfo() {
+        if (countGetUserInfo == 2) {
+            alert('Ошибка поиска')
+            countGetUserInfo = 0
+            return
+        }
+        countGetUserInfo += 1
+
+
         // Получаем информацию о пользователе
         axios.defaults.baseURL = API_BASE_URL
-        axios.get(`users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        axios.get(`users/get_user/${id}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
         .then(response => {
             console.log(response.data)
+            countGetUserInfo = 0
             setData(response.data)
+            if (!response.data.is_own_data) {
+                about()
+            }
         })
         .catch(error => {
             if (error.request.status === 401) {
@@ -108,17 +168,7 @@ function Home() {
                     localStorage.setItem('access_token', response.data.access)
 
                     // Запрашиваем данные снова
-                    axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
-                    .then(response => {
-                        console.log(response.data)
-                        setData(response.data)
-                        console.log(data)
-                    })
-                    .catch(error => {
-                        if (error.response.status === 401) {
-                            navigate('/auth');
-                        }
-                    });
+                    getUserInfo()
                 })
                 .catch(error => {
                     console.log(error)
@@ -126,21 +176,41 @@ function Home() {
                 });
             }
         });
-    }, []);
+    }
+
+
+    // Вызываем один раз.
+    useEffect(() => {
+        getUserInfo()
+    }, [id]);
 
     return (
         <div className="Home text-white">
             <div className=''>
                 <Header page='profile'/>
             </div>
+            <p className='text-dark'>{id}</p>
             <div className="w-100 h-100">
                 <div className='table container'>
                     <div className="row">
                         <div className='col py-3'>
                             <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                 <div className="card-title">
-                                    <img src={data.userAvatarUrl == '' || data.userAvatarUrl == null ? 'https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png' : API_BASE_URL+ data.userAvatarUrl} alt="" className='img-normal-50' />
-                                    <h4 className='pb-1 mb-0'>{localStorage.getItem('username')}</h4>
+                                    
+                                    
+                                    <div className="d-flex align-items-center justify-content-between">
+                                        <img src={data.userAvatarUrl == '' || data.userAvatarUrl == null ? 'https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png' : API_BASE_URL+ data.userAvatarUrl} alt="" className='img-normal-50' />
+                                        <div className="d-flex align-items-center">
+                                            {!data.is_own_data &&
+                                                <button className='btn btn-primary py-1 px-3 me-2 '><small>Написать</small></button>
+                                            }
+                                            {!data.is_own_data && friend == false &&
+                                                <button className='btn btn-success py-1 px-3 me-2 '><small>В друзья</small></button>                                            
+                                            }
+                                        </div>
+                                    </div>
+                                    
+                                    <h4 className='pb-1 mb-0'>{data.user.username}</h4>
                                     {data.profile.short_info === '' || data.profile.short_info === null ? (
                                         null  
                                     ): (

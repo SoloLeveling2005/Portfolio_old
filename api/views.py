@@ -250,41 +250,49 @@ class UserView:
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user(request, user_id: int):
+    receiving_user = request.user
+    is_own_data = True
+
     # Проверяем на существование пользователя.
-    user = check_user_exists(user_id=user_id)
-    if not user:
+    requesting_user = check_user_exists(user_id=user_id)
+    if not requesting_user:
         return Response(status=status.HTTP_204_NO_CONTENT)
-    print(user.id)
-    profile = ProfileSerializer(UserProfile.objects.get(user=user)).data
-    additional_information = AdditionalInformationSerializer(UserAdditionalInformation.objects.get(user=user)).data
-    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=user)).data \
-        if ArticleComment.objects.filter(user=user).exists() else []
-    articles = ArticleSerializer(Article.objects.filter(author=user)).data \
-        if Article.objects.filter(author=user).exists() else []
+    print(requesting_user.id)
+
+    if receiving_user != requesting_user:
+        is_own_data = False
+
+    profile = ProfileSerializer(UserProfile.objects.get(user=requesting_user)).data
+    additional_information = AdditionalInformationSerializer(
+        UserAdditionalInformation.objects.get(user=requesting_user)).data
+    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=requesting_user)).data \
+        if ArticleComment.objects.filter(user=requesting_user).exists() else []
+    articles = ArticleSerializer(Article.objects.filter(author=requesting_user)).data \
+        if Article.objects.filter(author=requesting_user).exists() else []
 
     # Получаем сообщества пользователя
-    user_communities = CommunitySerializer(Community.objects.filter(user=user), many=True).data \
-        if Community.objects.filter(user=user).exists() else []
+    user_communities = CommunitySerializer(Community.objects.filter(user=requesting_user), many=True).data \
+        if Community.objects.filter(user=requesting_user).exists() else []
 
     # Получаем сообщества, связанные с пользователем через CommunityParticipant
     participant_communities = CommunitySerializer(
-        Community.objects.filter(community_participant_by_community__user=user), many=True).data \
-        if Community.objects.filter(community_participant_by_community__user=user).exists() else []
+        Community.objects.filter(community_participant_by_community__user=requesting_user), many=True).data \
+        if Community.objects.filter(community_participant_by_community__user=requesting_user).exists() else []
 
     # Объединяем оба QuerySet community
     communities = user_communities + participant_communities
 
     # Получаем аватарку
-    avatar = UserAvatar.objects.get(user=user)
+    avatar = UserAvatar.objects.get(user=requesting_user)
     image_url = None
     if avatar.img:
         image_url = avatar.img.url
 
     # Сереализуем пользователя
-    user = UserSerializer(user).data
+    requesting_user = UserSerializer(requesting_user).data
 
     return Response(
-        data={'user': user, 'userAvatarUrl': image_url, 'profile': profile,
+        data={'is_own_data': is_own_data, 'user': requesting_user, 'userAvatarUrl': image_url, 'profile': profile,
               'additional_information': additional_information, 'comments': comments,
               'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
 
@@ -304,7 +312,9 @@ def user_about(request, user_id: int):
     blacklist = UserBlacklist.objects.filter(Q(user=user) and Q(banned_user=subscriber))
 
     return Response(
-        data={'friend': True if friend.exists() else False, 'request_to_friend': True if request_to_friend.exists() else False, 'blacklist': True if blacklist.exists() else False},
+        data={'friend': True if friend.exists() else False,
+              'request_to_friend': True if request_to_friend.exists() else False,
+              'blacklist': True if blacklist.exists() else False},
         status=status.HTTP_200_OK
     )
 
@@ -468,7 +478,6 @@ def delete_request_in_friend(request, subscriber_id):
     return Response(status=status.HTTP_200_OK)
 
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_requests_to_friend(request):
@@ -485,7 +494,6 @@ def get_requests_to_friend(request):
         serialized_data.append(serialized_request)
 
     return Response(data={'requests_to_friend': serialized_data}, status=status.HTTP_200_OK)
-
 
 
 @api_view(['POST'])
@@ -548,12 +556,6 @@ def delete_friend_subscriptions(request, user_id):
     return Response(data={}, status=status.HTTP_200_OK)
 
 
-
-
-
-
-
-
 # todo Реализованные выше
 
 
@@ -579,16 +581,6 @@ def post_add_user_in_blacklist(request):
     UserBlacklist.objects.create(user=user, banned_user=banned_user)
 
     return Response(status=status.HTTP_201_CREATED)
-
-
-
-
-
-
-
-
-
-
 
 
 @api_view(['DELETE'])
@@ -639,8 +631,6 @@ def delete_user_from_blacklist(request):
 #         return Response(data={'message': rating.message}, status=status.HTTP_204_NO_CONTENT)
 #
 #     return Response(data={}, status=status.HTTP_200_OK)
-
-
 
 
 class CommunitiesView(APIView):

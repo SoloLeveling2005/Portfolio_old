@@ -16,7 +16,7 @@ function Navbar(props:{'page':string}) {
                     <Link to={`/communities`} className='text-black me-4'>Сообщества</Link>                    
                     <Link to={`/settings`} className='text-black me-4'>Настройки</Link>
                 </div>
-                <Link to={`/profile`} className='d-flex'>
+                <Link to={`/user/${localStorage.getItem('user_id')}`} className='d-flex'>
                     <img src="/img/user3.png" alt="Профиль" title='Профиль' className='img-small-24 cursor-pointer ms-4' />
                 </Link>
             </div>
