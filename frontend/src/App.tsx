@@ -85,20 +85,7 @@ const router = createBrowserRouter([
   }
 ]);
 function App() {
-  let user = localStorage.getItem('username')
-  if (user === null) {
-    return (
-      // <Router>
-      //   <Routes>
-      //     <Route path="/" element={<AuthorizationRegistration />} />
-      //   </Routes>
-      // </Router>
-      // <React.StrictMode>
-      <Routes>
-          <Route path="/" element={<AuthorizationRegistration />} />
-      </Routes>
-    )   
-  }
+  
   return (
     <RouterProvider router={router} />
   );

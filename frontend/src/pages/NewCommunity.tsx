@@ -13,6 +13,13 @@ import API_BASE_URL from '../config';
 function NewCommunity() {
     const navigate = useNavigate();
 
+    // Проверку на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        console.log(user)
+        navigate('/auth')
+    }
+
     
 
     // title

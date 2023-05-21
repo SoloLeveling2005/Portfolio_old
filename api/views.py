@@ -69,21 +69,28 @@ def check_user_in_blacklist_exists(user, banned_user):
 
 def check_request_user_subscription_exists(user, subscriber_id):
     """Возвращает None в случае ошибки или True в случае успеха"""
+    print("Начинем проверку")
 
     # Проверяет на существование пользователя subscriber.
     subscriber = check_user_exists(user_id=subscriber_id)
     if subscriber is None:
         return None
 
+    print("Пользователь существует")
+
     # Проверяет на существование друга. Если он уже в друзьях, то вызываем ошибку.
     subscription = UserSubscriptions.objects.filter(user=user, subscriber=subscriber)
     if subscription.exists():
         return None
 
+    print("Пользователь не в друзьях")
+
     # Проверяет на существование запроса в друзья. Если он уже подал запрос в друзья, то вызываем ошибку.
     subscription_request = RequestUserSubscriptions.objects.filter(user=user, subscriber=subscriber)
     if subscription_request.exists():
         return None
+
+    print("Пользователь не в запросе в друзья")
 
     return True
 
@@ -282,6 +289,26 @@ def get_user(request, user_id: int):
               'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
 
 
+# todo Получить информацию о пользователе по отношению к нам по id.
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_about(request, user_id: int):
+    user = request.user
+    # Проверяем на существование пользователя.
+    subscriber = check_user_exists(user_id=user_id)
+    if not subscriber:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    friend = UserSubscriptions.objects.filter(Q(user=user) and Q(subscriber=subscriber))
+    request_to_friend = RequestUserSubscriptions.objects.filter(Q(user=user) and Q(subscriber=subscriber))
+    blacklist = UserBlacklist.objects.filter(Q(user=user) and Q(banned_user=subscriber))
+
+    return Response(
+        data={'friend': True if friend.exists() else False, 'request_to_friend': True if request_to_friend.exists() else False, 'blacklist': True if blacklist.exists() else False},
+        status=status.HTTP_200_OK
+    )
+
+
 # todo Обновить аватарку пользователя.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -389,9 +416,11 @@ def get_find_friends(request):
     username = request.data['username']
 
     if username != "":
-        users = User.objects.filter(Q(username__icontains=username) and ~Q(username__icontains=user.username))
+        users = User.objects.filter(
+            Q(username__icontains=username) & ~Q(username__icontains=user.username) & Q(is_superuser=False))
     else:
-        users = User.objects.filter(~Q(username__icontains=user.username))
+        print('username is none')
+        users = User.objects.filter(~Q(username__icontains=user.username) & Q(is_superuser=False))
 
     users = UserSerializer(users, many=True).data
     return Response(data={'users': users}, status=status.HTTP_200_OK)
@@ -401,7 +430,7 @@ def get_find_friends(request):
 @permission_classes([IsAuthenticated])
 def create_request_in_friend(request):
     user = request.user
-    subscriber_id = request.POST.get('subscriber_id')
+    subscriber_id = request.data['subscriber_id']
 
     # Проверяет на существование запроса в друзья или уже друга.
     user_subscription = check_request_user_subscription_exists(user=user, subscriber_id=subscriber_id)
@@ -410,7 +439,7 @@ def create_request_in_friend(request):
 
     RequestUserSubscriptions.objects.create(
         user=user,
-        subscriber=User.objects.get(id=user.id)
+        subscriber=User.objects.get(id=subscriber_id)
     )
 
     return Response(status=status.HTTP_201_CREATED)
@@ -418,9 +447,8 @@ def create_request_in_friend(request):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_request_in_friend(request):
+def delete_request_in_friend(request, subscriber_id):
     user = request.user
-    subscriber_id = request.POST.get('subscriber_id')
 
     # Проверяет на существование запроса в друзья или уже друга.
     user_subscription = check_not_request_user_subscription_exists(user=user, subscriber_id=subscriber_id)
@@ -430,6 +458,18 @@ def delete_request_in_friend(request):
     user_subscription.delete()
 
     return Response(status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_requests_to_friend(request):
+    user = request.user
+
+    requests_to_friend = RequestUserSubscriptions.objects.filter(subscriber=user)
+
+    return Response(data={'requests_to_friend': requests_to_friend}, status=status.HTTP_200_OK)
+
 
 
 @api_view(['POST'])
@@ -471,12 +511,11 @@ def create_new_friend_subscriptions(request):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_friend_subscriptions(request):
+def delete_friend_subscriptions(request, user_id):
     user = request.user  # тот кто хочет удалить связь
-    user2_id = request.POST.get('user_id')  # с тем с кем хотят удалить связь
 
     # Проверяем существует ли пользователь с id = user_id
-    subscriber = check_user_exists(user_id=user2_id)
+    subscriber = check_user_exists(user_id=user_id)
     if subscriber is None:
         return Response(status=status.HTTP_409_CONFLICT)
 
@@ -491,13 +530,22 @@ def delete_friend_subscriptions(request):
     return Response(data={}, status=status.HTTP_200_OK)
 
 
+
+
+
+
+
+
+# todo Реализованные выше
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_add_user_in_blacklist(request):
     """Добавляет пользователя в черный список."""
 
     user = request.user
-    user_id_for_ban = request.POST.get('user_id')
+    user_id_for_ban = request.data['user_id']
 
     # Проверяем существует ли пользователь с id = user_id
     banned_user = check_user_exists(user_id=user_id_for_ban)
@@ -513,6 +561,16 @@ def post_add_user_in_blacklist(request):
     UserBlacklist.objects.create(user=user, banned_user=banned_user)
 
     return Response(status=status.HTTP_201_CREATED)
+
+
+
+
+
+
+
+
+
+
 
 
 @api_view(['DELETE'])
@@ -565,14 +623,6 @@ def delete_user_from_blacklist(request):
 #     return Response(data={}, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_requests_to_friend(request):
-    user = request.user
-
-    requests_to_friend = RequestUserSubscriptions.objects.filter(subscriber=user)
-
-    return Response(data={'requests_to_friend': requests_to_friend}, status=status.HTTP_200_OK)
 
 
 class CommunitiesView(APIView):

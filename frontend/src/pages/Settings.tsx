@@ -14,6 +14,14 @@ import API_BASE_URL from '../config';
 function Settings() {
     const navigate = useNavigate();
 
+    // Проверку на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        navigate('/auth')
+    }
+
+
+
     axios.defaults.baseURL = API_BASE_URL
 
     const [data, setData] = useState({

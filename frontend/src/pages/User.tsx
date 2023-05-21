@@ -4,12 +4,20 @@ import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import Smart_search from '../components/SmartSearch';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import Navbar from '../components/Navbar';
 import axios from 'axios';
 function User() {
+    const navigate = useNavigate();
+
+    // Проверку на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        console.log(user)
+        navigate('/auth')
+    }
     
 
     const [nav, switchNav] = useState('profile');

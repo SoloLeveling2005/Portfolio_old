@@ -14,6 +14,15 @@ import API_BASE_URL from '../config.jsx'
 
 function Home() {
     const navigate = useNavigate();
+
+    // Проверку на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        console.log(user)
+        navigate('/auth')
+    }
+
+    
     const gender: boolean | undefined = undefined;
     // let data = {
     //     additional_information: {

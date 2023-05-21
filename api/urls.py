@@ -18,6 +18,8 @@ urlpatterns = [
     # Работа с пользователем
 
     path('users/get_user/<int:user_id>', views.get_user, name='get_user'),
+    path('users/user_about/<int:user_id>', views.user_about, name='user_about'),
+
     path('users/update_user_avatar', views.update_user_avatar, name='update_user_avatar'),
     path('users/update_user_profile', views.update_user_profile, name="update_user_profile"),
     path('users/update_user_additional_information', views.update_user_additional_information,
@@ -26,6 +28,17 @@ urlpatterns = [
     # Получить всех пользователей, получить друзей, получить запросы в друзья, отправить запрос в друзья, принять запрос в друзья, поиск друзей
     path('users/get_my_friends', views.get_my_friends, name="get_my_friends"),
     path('users/get_find_friends', views.get_find_friends, name="get_find_friends"),
+    path('users/create_request_in_friend', views.create_request_in_friend, name="create_request_in_friend"),
+    path('users/delete_request_in_friend/<int:subscriber_id>', views.delete_request_in_friend, name="delete_request_in_friend"),
+    path('users/get_requests_to_friend', views.get_requests_to_friend, name="get_requests_to_friend"),
+    path('users/create_new_friend_subscriptions', views.create_new_friend_subscriptions, name="create_new_friend_subscriptions"),
+    path('users/delete_friend_subscriptions/<int:subscriber_id>', views.delete_friend_subscriptions, name="delete_friend_subscriptions"),
+    path('users/post_add_user_in_blacklist', views.post_add_user_in_blacklist, name="post_add_user_in_blacklist"),
+
+
+
+
+
 
 
     # Работа с сообществом
