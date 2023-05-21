@@ -1,9 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import {
+  BrowserRouter,
   createBrowserRouter,
   redirect,
+  Route,
+  Router,
   RouterProvider,
+  Routes,
 } from "react-router-dom";
 import { Provider, useStore } from 'react-redux'
 
@@ -84,11 +88,19 @@ function App() {
   let user = localStorage.getItem('username')
   if (user === null) {
     return (
-      <AuthorizationRegistration/>
+      // <Router>
+      //   <Routes>
+      //     <Route path="/" element={<AuthorizationRegistration />} />
+      //   </Routes>
+      // </Router>
+      // <React.StrictMode>
+      <Routes>
+          <Route path="/" element={<AuthorizationRegistration />} />
+      </Routes>
     )   
   }
   return (
-      <RouterProvider router={router} />
+    <RouterProvider router={router} />
   );
 }
 

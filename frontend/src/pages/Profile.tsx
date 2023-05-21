@@ -13,7 +13,7 @@ import axios from 'axios';
 
 function Home() {
     const navigate = useNavigate();
-
+    const gender: boolean | undefined = undefined;
     // let data = {
     //     additional_information: {
     //         id: '',
@@ -60,7 +60,7 @@ function Home() {
         profile: {
             location: '',
             birthday: '',
-            gender: '',
+            gender: gender,
             last_login: '',
             registered: '',
             short_info:''
@@ -83,40 +83,40 @@ function Home() {
         // Получаем информацию о пользователе
         axios.defaults.baseURL = "http://127.0.0.1:8000"
         axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
-            .then(response => {
-                console.log(response.data)
-                setData(response.data)
-                console.log(data)
-            })
-            .catch(error => {
-                if (error.request.status === 401) {
-                    // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
-                    axios.post('api/refresh_token', {
-                        'refresh': localStorage.getItem('refresh_token'),
-                    })
-                    .then(response => {
-                        // 
-                        localStorage.setItem('access_token', response.data.access)
+        .then(response => {
+            console.log(response.data)
+            setData(response.data)
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                axios.post('api/refresh_token', {
+                    'refresh': localStorage.getItem('refresh_token'),
+                })
+                .then(response => {
+                    // 
+                    localStorage.setItem('access_token', response.data.access)
 
-                        // Запрашиваем данные снова
-                        axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
-                        .then(response => {
-                            console.log(response.data)
-                            setData(response.data)
-                            console.log(data)
-                        })
-                        .catch(error => {
-                            if (error.response.status === 401) {
-                                navigate('/auth');
-                            }
-                        });
+                    // Запрашиваем данные снова
+                    axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+                    .then(response => {
+                        console.log(response.data)
+                        setData(response.data)
+                        console.log(data)
                     })
                     .catch(error => {
-                        console.log(error)
+                        if (error.response.status === 401) {
+                            navigate('/auth');
+                        }
                     });
-                }
-            });
-        }, []);
+                })
+                .catch(error => {
+                    console.log(error)
+                    navigate('/auth');
+                });
+            }
+        });
+    }, []);
 
     return (
         <div className="Home text-white">
@@ -165,13 +165,13 @@ function Home() {
                                             <h6 className='mb-0'>О себе</h6>
                                             <div className='d-flex'>
                                                 <p>
-                                                    {data.profile.short_info === null || data.profile.short_info === '' ? (
+                                                    {data.additional_information.other_info === null || data.additional_information.other_info === '' ? (
                                                         <div>
                                                             Не заполнено
                                                         </div>
                                                     ): (
                                                         <div>
-                                                            {data.profile.short_info}
+                                                            {data.additional_information.other_info}
                                                         </div>        
                                                     )}
                                                     
@@ -314,7 +314,7 @@ function Home() {
                             <div className='padding-top-20-px position-sticky top-0'>
                                 <UserInfo
                                     country={data.profile.location}
-                                    gender={data.profile.gender}
+                                    gender={data.profile.gender == true ? "Мужской" : "Женский" }
                                     age={data.profile.birthday}
                                     registered={data.profile.registered}
                                     last_login={data.profile.last_login} // 'сегодня в 01:11'

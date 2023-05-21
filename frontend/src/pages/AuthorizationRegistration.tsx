@@ -12,12 +12,16 @@ import CommunityComment from '../components/Communities/CommunityComment';
 import { useNavigate  } from 'react-router-dom';
 
 function Home() {
+    // Очищаем все данные пользователя
+    localStorage.clear()
+
+
     const navigate = useNavigate();
     
 
     const [auth, authSwitch] = useState(true);
     function authSwitchF(){
-        if (auth == false) {
+        if (auth === false) {
             authSwitch(true)
         } else {
             authSwitch(false)
@@ -31,12 +35,13 @@ function Home() {
     };
 
     const [inputPassword, setInputPassword] = useState('');
-
+    
     const handleChangePassword = (event: any) => {
         setInputPassword(event.target.value);
     };
 
     function SignIn(event: any) {
+        console.log('SignIn')
         try {
             event.preventDefault();
         } catch (e) {
@@ -49,16 +54,16 @@ function Home() {
             "username": username,
             "password":password
         }).then(response => {
-            
+            console.log(response.data)
             localStorage.setItem('user_id', response.data.user_id)
             localStorage.setItem('username', response.data.username)
             localStorage.setItem('access_token', response.data.access_token)
             localStorage.setItem('refresh_token', response.data.refresh_token)
-
+            
             navigate('/');
         })
         .catch(error => {
-            if (error.response.status == 400) {
+            if (error.response.status === 400) {
                 alert("Неправильный пользователь или пароль.")
             }
             console.log(error)
@@ -80,7 +85,7 @@ function Home() {
             SignIn({})
         }).catch(error => {
             console.log(error)
-            if (error.response.status == 400) {
+            if (error.response.status === 400) {
                 alert("Неправильный пользователь или пароль.")
             }
             console.log(error)
@@ -89,7 +94,7 @@ function Home() {
 
     return (
         <div className="Home text-black d-flex align-items-center justify-content-center">
-            {auth==true?(
+            {auth===true?(
                 <div className="p-0 m-0 card bg-white w-25">
                     <form className="card-body">
                         <div className="mb-3">

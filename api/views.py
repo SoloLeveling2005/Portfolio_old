@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import wraps
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -239,22 +240,48 @@ class UserView:
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
+def update_user_avatar(request):
+    user = request.user
+
+    avatar = request.FILES.get('avatar')
+
+    # Если аватарка была передана успешно
+    if avatar:
+        # Обновляем аватарку
+        avatar_model = UserAvatar.objects.get(user=user)
+        avatar_model.img.save(avatar.name, avatar)
+        avatar.save()
+
+        # Возвращаем успешный ответ.
+        return Response(status=status.HTTP_200_OK)
+    else:
+        # Обнаружены ошибки валидации, можно вернуть ошибку.
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def update_user_profile(request):
     user = request.user
 
     serializer = SerializerUserProfile(data=request.data)
     if serializer.is_valid():
-        data = serializer.data
+        data = request.data
 
         # Проверяет на существование профиля.
         profile = check_profile_exists(user=user)
         if profile is None:
             return Response(status=status.HTTP_409_CONFLICT)
+        print(data)
+        print(data['location'])
+        # Превращаем дату строку в дату
+        date = datetime.strptime(data['birthday'], "%Y-%m-%d").date()
 
         # Редактируем (вносим изменения)
-        profile.location = data.location
-        profile.gender = data.gender
-        profile.birthday = data.birthday
+        profile.location = data['location']
+        profile.gender = data['gender']
+        profile.short_info = data['short_info']
+        profile.birthday = date
         profile.save()
 
         # Возвращаем успешный ответ.
@@ -271,7 +298,7 @@ def update_user_additional_information(request):
 
     serializer = SerializerUserAdditionalInformation(data=request.data)
     if serializer.is_valid():
-        data = serializer.data
+        data = request.data
 
         # Проверяет на существование доп.информации.
         additional_information = check_user_additional_information_exists(user=user)

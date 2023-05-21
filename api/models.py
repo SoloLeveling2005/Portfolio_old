@@ -57,7 +57,7 @@ def create_user_data(sender, instance, created, **kwargs):
 class UserAvatar(models.Model):
     """Модель аватарка пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_avatar')
-    img = models.ImageField(null=False, upload_to='userAvatar/')
+    img = models.ImageField(null=False)
 
 
 class UserSettings(models.Model):
