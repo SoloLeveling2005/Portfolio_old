@@ -3,10 +3,12 @@ import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
-import { Link, ScrollRestoration, useParams } from "react-router-dom";
+import { Link, ScrollRestoration, useNavigate, useParams } from "react-router-dom";
 import Card from '../components/Card';
 import News from '../components/News';
 import Advertisement from '../components/Advertisement';
+import axios from 'axios';
+import API_BASE_URL from '../config';
 
 
 
@@ -15,27 +17,134 @@ interface Option {
     label: string;
   }
 
-function Community (props: any) { 
-    const { id } = useParams(); 
-    const [nav, switchNav] = useState('profile');
+function Community(props: any) { 
+    const navigate = useNavigate();
 
+    // Проверку на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        console.log(user)
+        navigate('/auth')
+    }
+
+    
+    const { id } = useParams(); 
+    
+
+    // Переключатели 
+
+    const [nav, switchNav] = useState('profile');
     function switchNavF (event:any) {
         const { value } = event.target;
         switchNav(sw => (value))
     }
 
     const [createRole, createRoleChange] = useState(false);
-
     function createRoleF () {
         createRole == false ? createRoleChange(sw => (true)) : createRoleChange(sw => (false))
     }
 
 
     const [createNews, createNewsChange] = useState(false);
-
     function createNewsF () {
         createNews == false ? createNewsChange(sw => (true)) : createNewsChange(sw => (false))
     }
+
+
+    // Данные сообщества
+
+    const [data, setData] = useState({
+        admin: Boolean,
+        signed: Boolean,
+        subscribers_count: 1,
+        articles: [],
+        articles_comments:[],
+        community: {
+            id: 0,
+            location: '',
+            description: '',
+            created_at: '',
+            title: '',
+            website: '',
+            short_info: ''
+        },
+        community_avatar: {
+            img: ''
+        },
+        roles: [],
+        admin_data: {
+            username:''
+        }
+    });
+    
+
+    let countGetCommunity = 0
+    function getCommunity() {
+        if (countGetCommunity == 3) {
+            alert('Ошибка поиска')
+            countGetCommunity = 0
+            return
+        }
+        countGetCommunity += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`community/get_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        .then(response => {
+            console.log(response.data)
+            setData(response.data)
+            countGetCommunity = 0
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Запрашиваем данные снова
+                    getCommunity()
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+
+    let countCreateRole = 0
+    function FCreateRole() {
+        if (countCreateRole == 3) {
+            alert('Ошибка создания')
+            countCreateRole = 0
+            return
+        }
+        countCreateRole += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`community/get_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        .then(response => {
+            console.log(response.data)
+            alert('Роль успешно создана')
+            countCreateRole = 0
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Пробуем еще раз 
+                    FCreateRole()
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+    
+    useEffect(() => {
+        getCommunity()
+    }, []);
+
+
 
 
     return (
@@ -53,9 +162,9 @@ function Community (props: any) {
                             <div className='col py-3'>
                                 <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                     <div className="card-title">
-                                        <img src="https://hsto.org/getpro/habr/company/9ed/c74/6b4/9edc746b484c805ecad1f941b5f7068a.png" alt="" className='img-normal-50' />
-                                        <h4 className='pb-1 mb-0 mt-1'>VK</h4>
-                                        <p>Технологии, которые объединяют</p>
+                                        <img src={data.community_avatar.img == '' || data.community_avatar.img == null ? 'https://hsto.org/getpro/habr/company/9ed/c74/6b4/9edc746b484c805ecad1f941b5f7068a.png' : API_BASE_URL+ data.community_avatar.img} alt="" className='img-normal-50' />
+                                        <h4 className='pb-1 mb-0 mt-1'>{ data.community.title }</h4>
+                                        <p>{ data.community.short_info }</p>
                                         <div className='d-flex flex-wrap'>
                                             {nav == 'profile' ? (
                                                 <button className='btn btn-primary me-1 px-2 ' value='profile' onClick={switchNavF}>Профиль</button>
@@ -102,14 +211,22 @@ function Community (props: any) {
                                             <div>
                                                 <h6 className='mb-0'>Отрасли</h6>
                                                 <div className='d-flex'>
-                                                    <p className=''>Мобильные технологии</p>,<p className='ms-1'>Веб-сервисы</p>,<p className='ms-1'>Игры и развлечения</p>
+                                                    {/* {data.community.description == null || data.community.description == '' ? (
+                                                        <span className='p-0 m-0'>Не указано</span>
+                                                    ): (
+                                                        <span className='p-0 m-0'>{data.community.description}</span>
+                                                    )} */}
+                                                    <p>Не указано</p>
+                                                    {/* <p className=''>Мобильные технологии</p>,<p className='ms-1'>Веб-сервисы</p>,<p className='ms-1'>Игры и развлечения</p> */}
                                                 </div>
                                                 <h6 className='mb-0'>О сообществе</h6>
                                                 <div className='d-flex'>
                                                     <p>
-                                                        Строим сервисы, используя силу социальных сетей.
-                                                        <br />
-                                                        Помогаем людям и компаниям объединяться вокруг того, что действительно важно.
+                                                        {data.community.description == null || data.community.description == '' ? (
+                                                            <span className='p-0 m-0'>Не указано</span>
+                                                        ): (
+                                                            <span className='p-0 m-0'>{data.community.description}</span>
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <h6 className='mb-0'>Информация</h6>
@@ -119,7 +236,11 @@ function Community (props: any) {
                                                             Сайт
                                                         </div>
                                                         <div className="col">
-                                                            vk.com
+                                                            {data.community.website == null || data.community.website == '' ? (
+                                                                <span className='p-0 m-0'>Не указан</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.community.website}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -127,7 +248,11 @@ function Community (props: any) {
                                                             Дата регистрации
                                                         </div>
                                                         <div className="col">
-                                                            9 августа 2008
+                                                            {data.community.created_at == null || data.community.created_at == '' ? (
+                                                                <span className='p-0 m-0'>Не указан</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.community.created_at.substring(0,10)}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -143,7 +268,11 @@ function Community (props: any) {
                                                             Местоположение
                                                         </div>
                                                         <div className="col">
-                                                            Россия
+                                                            {data.community.location == null || data.community.location == '' ? (
+                                                                <span className='p-0 m-0'>Не указано</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.community.location}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -151,7 +280,11 @@ function Community (props: any) {
                                                             Представитель
                                                         </div>
                                                         <div className="col">
-                                                            Анастасия Гутор
+                                                            {data.admin_data.username == null || data.admin_data.username == '' ? (
+                                                                <span className='p-0 m-0'>Не указан</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.admin_data.username}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -511,12 +644,16 @@ function Community (props: any) {
                                                 <div className="card-body">
                                                         <h6 className='mb-0'>Информация</h6>
                                                         <div className='table pt-1'>
-                                                            <div className="row my-1">
+                                                             <div className="row my-1">
                                                                 <div className="col">
                                                                     Сайт
                                                                 </div>
                                                                 <div className="col">
-                                                                    vk.com
+                                                                    {data.community.website == null || data.community.website == '' ? (
+                                                                        <span className='p-0 m-0'>Не указан</span>
+                                                                    ): (
+                                                                        <span className='p-0 m-0'>{data.community.website}</span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="row my-1">
@@ -524,7 +661,11 @@ function Community (props: any) {
                                                                     Дата регистрации
                                                                 </div>
                                                                 <div className="col">
-                                                                    9 августа 2008
+                                                                    {data.community.created_at == null || data.community.created_at == '' ? (
+                                                                        <span className='p-0 m-0'>Не указан</span>
+                                                                    ): (
+                                                                        <span className='p-0 m-0'>{data.community.created_at.substring(0,10)}</span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="row my-1">
@@ -540,7 +681,11 @@ function Community (props: any) {
                                                                     Местоположение
                                                                 </div>
                                                                 <div className="col">
-                                                                    Россия
+                                                                    {data.community.location == null || data.community.location == '' ? (
+                                                                        <span className='p-0 m-0'>Не указано</span>
+                                                                    ): (
+                                                                        <span className='p-0 m-0'>{data.community.location}</span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="row my-1">
@@ -548,7 +693,11 @@ function Community (props: any) {
                                                                     Представитель
                                                                 </div>
                                                                 <div className="col">
-                                                                    Анастасия Гутор
+                                                                    {data.admin_data.username == null || data.admin_data.username == '' ? (
+                                                                        <span className='p-0 m-0'>Не указан</span>
+                                                                    ): (
+                                                                        <span className='p-0 m-0'>{data.admin_data.username}</span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>

@@ -21,7 +21,8 @@ from .models import User, Community, CommunityRole, CommunityParticipant, Commun
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
-    UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer
+    UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
+    CommunityAvatarSereilizer
 
 
 # Helpers
@@ -405,9 +406,6 @@ def update_user_additional_information(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# todo Получить всех пользователей, получить друзей, получить запросы в друзья, отправить запрос в друзья, принять запрос в друзья, поиск друзей
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_my_friends(request):
@@ -556,7 +554,118 @@ def delete_friend_subscriptions(request, user_id):
     return Response(data={}, status=status.HTTP_200_OK)
 
 
-# todo Реализованные выше
+# Сообщества
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_community(request, community_id: int):
+    user = request.user
+    community = check_community_exists(community_id=community_id)
+    if community is None:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    signed = True
+    admin = False
+    request_to_sign = True
+
+    if check_participant_exists(community=community, participant=user) is None:
+        signed = False
+
+    if check_participant_request_exists(community=community, participant=user) is None:
+        request_to_sign = False
+
+    if community.user == user:
+        signed = True
+        admin = True
+
+    subscribers = CommunityParticipant.objects.filter(community=community)
+    subscribers_count = len(subscribers) + 1
+
+    community_avatar = CommunityAvatar.objects.get(community=community)
+
+    articles = Article.objects.filter(community=community)
+    articles_comments = []
+    for article in articles:
+        comments = ArticleComment.objects.filter(article=article)
+        articles_comments += comments
+
+    roles = CommunityRole.objects.filter(community=community)
+
+    community_avatar = CommunityAvatarSereilizer(community_avatar).data
+    articles = ArticleSerializer(articles, many=True).data
+    articles_comments = ArticleCommentSerializer(articles_comments, many=True).data
+    roles = CommunityRolesSereilizer(roles, many=True).data
+    admin_data = UserSerializer(community.user).data
+    community = CommunitySerializer(community).data
+
+    return Response(data={'admin_data':admin_data,'community':community, 'signed': signed, 'admin': admin, 'request_to_sign': request_to_sign,
+                          'subscribers_count': subscribers_count, 'community_avatar': community_avatar,
+                          'articles': articles, 'articles_comments': articles_comments, 'roles': roles})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_communities(request):
+    """
+    Вывод списка "Мои сообщества"
+    """
+    user = request.user
+
+    user_communities = Community.objects.filter(user=user)
+    user_communities = CommunitySerializer(user_communities, many=True).data
+
+    return Response(data={'communities': user_communities}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_find_communities(request):
+    """
+    Вывод списка "Поиск сообществ"
+    """
+    find_text = request.data['find_text']
+    if find_text == '':
+        data = Community.objects.all()
+    else:
+        data = Community.objects.filter(Q(title__icontains=find_text) or Q(description__icontains=find_text))
+    communities = CommunitySerializer(data, many=True).data
+
+    return Response(data={'communities': communities}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_about_community(request, community_id: int):
+    user = request.user
+
+    community = check_community_exists(community_id=community_id)
+    if community is None:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    signed = True
+    admin = False
+    request_to_sign = True
+
+    if check_participant_exists(community=community, participant=user) is None:
+        signed = False
+
+    if check_participant_request_exists(community=community, participant=user) is None:
+        request_to_sign = False
+
+    if community.user == user:
+        signed = True
+        admin = True
+
+    subscribers = CommunityParticipant.objects.filter(community=community)
+    subscribers_count = len(subscribers) + 1
+
+    return Response(data={'signed': signed, 'admin': admin, 'request_to_sign': request_to_sign,
+                          'subscribers_count': subscribers_count},
+                    status=status.HTTP_200_OK)
+
+
+# todo Рабочие методы выше
 
 
 @api_view(['POST'])
@@ -954,6 +1063,8 @@ def kick_out_community_participant(self, request) -> Response:
     return Response(data={}, status=status.HTTP_200_OK)
 
 
+# todo Отрезаем остальные методы
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_community_tag(self, request) -> Response:
@@ -1064,23 +1175,6 @@ def delete_user_recommendation(self, request):
     CommunityRecommendation.objects.get(community=community, participant=participant).delete()
 
     return Response(data={}, status=status.HTTP_200_OK)
-
-
-def get_user_communities(self, request):
-    """
-    Вывод списка "Мои сообщества"
-    """
-    user_communities = User.user_communities(user_id=self.requesting_user.id)
-    return Response(data={'communities': user_communities}, status=status.HTTP_200_OK)
-
-
-def get_find_communities(self, request):
-    """
-    Вывод списка "Поиск сообществ"
-    """
-    find_text = request.GET.get('find_text')
-    data = Community.objects.filter(Q(title=rf"{find_text}") or Q(description=rf"{find_text}"))
-    return Response(data=data, status=status.HTTP_200_OK)
 
 
 # Остались методы

@@ -5,11 +5,17 @@ import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import Card from '../components/Card';
 import News from '../components/News';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SmartSearch from '../components/SmartSearch';
 
 function Home() {
-
+    const navigate = useNavigate();
+    // Проверка на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        console.log(user)
+        navigate('/auth')
+    }
 
     
 

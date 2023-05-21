@@ -42,9 +42,11 @@ urlpatterns = [
 
 
     # Работа с сообществом
+    path('community/get_community/<int:community_id>', views.get_community, name="get_community"),
     path('community/create_community', views.create_community, name="create_community"),
-    path('community/create_community', views.create_community, name="create_community"),
-    path('community/create_community', views.create_community, name="create_community"),
+    path('community/get_user_communities', views.get_user_communities, name="get_user_communities"),
+    path('community/get_find_communities', views.get_find_communities, name="get_find_communities"),
+    path('community/get_about_community/<int:community_id>', views.get_about_community, name="get_about_community"),
 
 
 

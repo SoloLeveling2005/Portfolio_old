@@ -275,7 +275,7 @@ function Comrades () {
                                             </div>
                                             <div className="card-body d-flex align-items-center justify-content-between p-2">
                                                 <input type="text" className="form-control" value={inputFindFriendByUsername} onChange={handleChangeFindFriendByUsername} />
-                                                <button className='btn btn-primary ms-2'>Поиск</button>
+                                                <button className='btn btn-primary ms-2' onClick={findFriends} >Поиск</button>
                                             </div>
                                         </div>
                                         

@@ -189,7 +189,6 @@ function Home() {
             <div className=''>
                 <Header page='profile'/>
             </div>
-            <p className='text-dark'>{id}</p>
             <div className="w-100 h-100">
                 <div className='table container'>
                     <div className="row">
