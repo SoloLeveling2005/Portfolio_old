@@ -32,6 +32,24 @@ function Comrades () {
     };
 
 
+    // Данные о пользователях которе отправляли запрос в друзья
+
+    const [dataUsersRequests, setDataUsersRequests] = useState([{subscriber:{id:0,username:''}, user:{id:0,username:''}}]);
+
+    const handleChangeDataUsersRequests = (data:any) => {
+        setDataUsersRequests(data);
+    };
+
+    // Данные о пользователях которе отправляли запрос в друзья
+
+    const [dataUserFriends, setDataUserFriends] = useState([{subscriber:{id:0,username:''}, user:{id:0,username:''}}]);
+
+    const handleChangeDataUserFriends = (data:any) => {
+        setDataUserFriends(data);
+    };
+
+
+
     
     // Поле поиска друзей по именин
     const [inputFindFriendByUsername, setInputFindFriendByUsername] = useState('');
@@ -63,8 +81,14 @@ function Comrades () {
         axios.defaults.baseURL = API_BASE_URL
         axios.get(`users/get_my_friends`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
         .then(response => {
-            console.log(response.data)
+            console.log('response.data')
+            console.log(response.data.subscription)
+            handleChangeDataUserFriends(response.data.subscription)
 
+            
+            setTimeout(() => {
+                console.log(dataUserFriends)
+            }, 300)
             // Обнуляем значение
             countGetUserFriends = 0
         })
@@ -90,6 +114,8 @@ function Comrades () {
 
     }
 
+
+    // Функция получающая запросы в друзья
     let countGetRequestsToFriend = 0
     function getRequestsToFriend() {
         if (countGetRequestsToFriend == 3) {
@@ -104,6 +130,11 @@ function Comrades () {
         .then(response => {
             console.log(response.data)
 
+            handleChangeDataUsersRequests(response.data.requests_to_friend)
+
+            setTimeout(() => {
+                console.log(dataUsersRequests)
+            }, 300)
             // Обнуляем значение
             countGetRequestsToFriend = 0
         })
@@ -118,7 +149,7 @@ function Comrades () {
                     localStorage.setItem('access_token', response.data.access)
 
                     // Запрашиваем данные снова
-                    getUserFriends()
+                    getRequestsToFriend()
                 })
                 .catch(error => {
                     console.log(error)
@@ -178,6 +209,7 @@ function Comrades () {
 
         getUserFriends()
         findFriends()
+        getRequestsToFriend()
     }, []);
 
 
@@ -202,10 +234,13 @@ function Comrades () {
                                                 <button className='btn btn-primary ms-2'>Поиск</button>
                                             </div>
                                         </div>
-                                        <MyFriend id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
-                                        <MyFriend id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
-                                        <MyFriend id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
-
+                                        {dataUserFriends.map((item, index) => (                                            
+                                            <MyFriend key={index} id={item.subscriber.id.toString()} username={item.subscriber.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
+                                        ))}
+                                        
+                                        {/* <MyFriend id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
+                                        {/* <MyFriend id='2' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
+                                        {/* <MyFriend id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
                                     </div>
                                 }
                                 {nav === 'requestsToFriend' &&
@@ -215,11 +250,21 @@ function Comrades () {
                                                 Запросы в друзья
                                             </div>
                                         </div>
-                                        <FriendRequest id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
-                                        <FriendRequest id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
-                                        <FriendRequest id='4' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
-                                        <FriendRequest id='5' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' />
+                                        {dataUsersRequests.length == 0 && 
+                                            <div className="card bg-white p-0 m-0 border-1 mb-2 ">
+                                                <div className="card-header py-4 fs-6">
+                                                    Нет запросов в друзья
+                                                </div>
+                                            </div>
+                                        }
+                                        {dataUsersRequests.map((item, index) => (
+                                            <FriendRequest parentgetRequestsToFriend={getRequestsToFriend} key={index} id={item.user.id.toString()} username={item.user.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
+                                        ))}
+                                        
     
+                                        {/* <FriendRequest id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
+                                        {/* <FriendRequest id='3' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
+                                        {/* <FriendRequest id='4' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
                                     </div>
                                 }
                                 {nav === 'findFriends' &&

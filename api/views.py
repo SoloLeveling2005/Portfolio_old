@@ -21,7 +21,7 @@ from .models import User, Community, CommunityRole, CommunityParticipant, Commun
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
-    UserSerializerModel
+    UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer
 
 
 # Helpers
@@ -118,17 +118,17 @@ def check_not_request_user_subscription_exists(user, subscriber_id):
 
 def check_on_new_friend_subscriptions_exists(user, subscriber):
     """Проверяет друзья пользователи или нет + есть ли запрос на добавление в друзья. Возвращает None или object"""
-
+    print("начинаем проверку на подписку и друга")
     # Проверяет на существование друга.
     subscription = UserSubscriptions.objects.filter(user=user, subscriber=subscriber)
     if subscription.exists():
         return None
-
+    print("Подписки на друзья проверено, нет подписки")
     # Проверяет на существование запроса в друзья. Если он уже подал запрос в друзья, то успех.
-    subscription_request = RequestUserSubscriptions.objects.filter(user=subscriber, subscriber=user)
+    subscription_request = RequestUserSubscriptions.objects.filter(user=user, subscriber=subscriber)
     if subscription_request.exists():
         return subscription_request.first()
-
+    print("Запрос на подписки на друзья проверено, нет подписки")
     return None
 
 
@@ -406,7 +406,15 @@ def get_my_friends(request):
 
     subscription = UserSubscriptions.objects.filter(user=user)
 
-    return Response(data={'subscription': subscription}, status=status.HTTP_200_OK)
+    serialized_data = []
+    for request in subscription:
+        serialized_request = {
+            'subscriber': UserSerializer(request.subscriber).data,
+            'user': UserSerializer(request.user).data,
+        }
+        serialized_data.append(serialized_request)
+    print(serialized_data[0])
+    return Response(data={'subscription': serialized_data}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -468,7 +476,15 @@ def get_requests_to_friend(request):
 
     requests_to_friend = RequestUserSubscriptions.objects.filter(subscriber=user)
 
-    return Response(data={'requests_to_friend': requests_to_friend}, status=status.HTTP_200_OK)
+    serialized_data = []
+    for request in requests_to_friend:
+        serialized_request = {
+            'subscriber': UserSerializer(request.subscriber).data,
+            'user': UserSerializer(request.user).data,
+        }
+        serialized_data.append(serialized_request)
+
+    return Response(data={'requests_to_friend': serialized_data}, status=status.HTTP_200_OK)
 
 
 
@@ -481,7 +497,9 @@ def create_new_friend_subscriptions(request):
     """
 
     subscriber = request.user
-    user_id = request.POST.get('user_id')
+    user_id = request.data['user_id']
+
+    print(user_id)
 
     # Проверяем на существование пользователя.
     user = check_user_exists(user_id=user_id)

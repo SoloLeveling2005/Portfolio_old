@@ -22,7 +22,8 @@ class UserSerializerModel(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'is_active', 'is_staff']  # Укажите нужные поля вашей модели пользователя
+        fields = ['id', 'username', 'password', 'is_active',
+                  'is_staff']  # Укажите нужные поля вашей модели пользователя
 
 
 class SerializerCreateCommunityRole(serializers.Serializer):
@@ -39,7 +40,6 @@ class SerializerUserProfile(serializers.Serializer):
     location = serializers.CharField()
     gender = serializers.BooleanField()
     birthday = serializers.CharField()
-
 
 
 class SerializerUserAdditionalInformation(serializers.Serializer):
@@ -86,4 +86,16 @@ class ArticleSerializer(serializers.ModelSerializer):
 class CommunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Community
+        fields = '__all__'
+
+
+class RequestUserSubscriptionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.RequestUserSubscriptions
+        fields = '__all__'
+
+
+class UserSubscriptionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserSubscriptions
         fields = '__all__'

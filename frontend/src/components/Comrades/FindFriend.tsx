@@ -182,14 +182,13 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
                             }
                         </Link>
                         <div className='d-flex align-items-center'>
-                            {request_to_friend == true ? (
+                            {request_to_friend == true && friend == false && 
                                 <button onClick={deleteriendRequest} className="btn btn-warning text-white py-1 px-3 me-2"><small>Удалить запрос в друзья</small></button>
-                            ): (
-                                <button onClick={createFriendRequest} className="btn btn-success py-1 px-3 me-2"><small>В друзья</small></button> 
-                            )
-                                
                             }
-                            
+                            {request_to_friend == false && friend == false && 
+                                <button onClick={createFriendRequest} className="btn btn-success py-1 px-3 me-2"><small>В друзья</small></button> 
+                            }
+                                
                             {/* <button onClick={addToBlacklist} className="btn btn-danger py-1 px-3"><small>В ЧС</small></button> */}
                         </div>
                     </div>
