@@ -9,9 +9,12 @@ import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import axios from 'axios';
 import { profile } from 'console';
+import API_BASE_URL from '../config';
 
 function Settings() {
     const navigate = useNavigate();
+
+    axios.defaults.baseURL = API_BASE_URL
 
     const [data, setData] = useState({
         additional_information: {
@@ -123,8 +126,7 @@ function Settings() {
 
     function get_user_data() {
         // Получаем информацию о пользователе
-        axios.defaults.baseURL = "http://127.0.0.1:8000"
-        axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        axios.get(`users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
         .then(response => {
             console.log(response.data)
             handleChangeData(response.data)
@@ -132,13 +134,13 @@ function Settings() {
             setInputShortInfo(response.data.profile.short_info)
             setInputLocation(response.data.profile.location)
             setInputBirthday(response.data.profile.birthday)
-            setSelectedGender(response.data.profile.gender == true ? 'true' : 'false')
+            setSelectedGender(response.data.profile.gender == null ? '' : response.data.profile.gender == true ? 'true' : 'false')
             setTimeout(()=>{console.log(data)}, 1000)
         })
         .catch(error => {
             if (error.request.status === 401) {
                 // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
-                axios.post('api/refresh_token', {
+                axios.post('refresh_token', {
                     'refresh': localStorage.getItem('refresh_token'),
                 })
                 .then(response => {
@@ -146,7 +148,7 @@ function Settings() {
                     localStorage.setItem('access_token', response.data.access)
 
                     // Запрашиваем данные снова
-                    axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+                    axios.get(`users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
                     .then(response => {
                         console.log(response.data)
                         handleChangeData(response.data)
@@ -193,7 +195,6 @@ function Settings() {
             return
         }
 
-        axios.defaults.baseURL = 'http://127.0.0.1:8000/api'
         axios.patch('users/update_user_profile', {
             "short_info": inputShortInfo,
             "location": inputLocation,
@@ -256,12 +257,10 @@ function Settings() {
             avatar:file
         }
 
-        axios.defaults.baseURL = 'http://127.0.0.1:8000/api'
         axios.patch('users/update_user_avatar', body, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token'),'Content-Type': 'multipart/form-data',} }).then(response => {
 
             countUpdateUserAvatar = 0
             alert('Данные успешно обновлены')
-            updateUserAvatar();
         })
         .catch(error => {
             console.log(error)
@@ -296,7 +295,7 @@ function Settings() {
         // Обновляем счетчик 
         countSignOut += 1
 
-        axios.defaults.baseURL = 'http://127.0.0.1:8000/api'
+        
         axios.post('signout', {'refresh_token':localStorage.getItem('refresh_token')},{ headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')} }).then(response => {
             countSignOut = 0
             navigate('/auth');
@@ -401,6 +400,7 @@ function Settings() {
                                                             <option value="true">Мужской</option>
                                                             <option value="false">Женский</option>
                                                         </select>
+                                                        {selectedGender}
                                                     </div>
                                                     {/* <div className="col d-flex flex-column justify-content-end">
                                                         <label htmlFor="exampleInputPassword1" className="form-label mb-0">Дата рождения</label>

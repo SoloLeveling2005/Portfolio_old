@@ -10,6 +10,7 @@ import UserInfo from '../components/UserInfo';
 import Comment from '../components/Comment';
 import Card from '../components/Card';
 import axios from 'axios';
+import API_BASE_URL from '../config.jsx'
 
 function Home() {
     const navigate = useNavigate();
@@ -81,8 +82,8 @@ function Home() {
     // Вызываем один раз.
     useEffect(() => {
         // Получаем информацию о пользователе
-        axios.defaults.baseURL = "http://127.0.0.1:8000"
-        axios.get(`api/users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`users/get_user/${localStorage.getItem('user_id')}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
         .then(response => {
             console.log(response.data)
             setData(response.data)
@@ -129,7 +130,7 @@ function Home() {
                         <div className='col py-3'>
                             <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                 <div className="card-title">
-                                    <img src="https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png" alt="" className='img-normal-50' />
+                                    <img src={data.userAvatarUrl == '' || data.userAvatarUrl == null ? 'https://hsto.org/getpro/habr/avatars/252/fee/ec9/252feeec93d4d2f2d8b57ac5e52fbdda.png' : API_BASE_URL+ data.userAvatarUrl} alt="" className='img-normal-50' />
                                     <h4 className='pb-1 mb-0'>{localStorage.getItem('username')}</h4>
                                     {data.profile.short_info === '' || data.profile.short_info === null ? (
                                         null  
@@ -314,7 +315,7 @@ function Home() {
                             <div className='padding-top-20-px position-sticky top-0'>
                                 <UserInfo
                                     country={data.profile.location}
-                                    gender={data.profile.gender == true ? "Мужской" : "Женский" }
+                                    gender={data.profile.gender == null ? null : data.profile.gender == true ? "Мужской" : "Женский" }
                                     age={data.profile.birthday}
                                     registered={data.profile.registered}
                                     last_login={data.profile.last_login} // 'сегодня в 01:11'

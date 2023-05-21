@@ -2,6 +2,7 @@ from datetime import datetime
 from functools import wraps
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.files.storage import default_storage
 from django.db.models import Q
 from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -244,13 +245,14 @@ def update_user_avatar(request):
     user = request.user
 
     avatar = request.FILES.get('avatar')
-
+    file_path = default_storage.save(avatar.name, avatar)
+    print(file_path)
     # Если аватарка была передана успешно
     if avatar:
         # Обновляем аватарку
         avatar_model = UserAvatar.objects.get(user=user)
-        avatar_model.img.save(avatar.name, avatar)
-        avatar.save()
+        avatar_model.img.save(name=avatar.name, content=avatar, save=True)
+        avatar_model.save()
 
         # Возвращаем успешный ответ.
         return Response(status=status.HTTP_200_OK)

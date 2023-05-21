@@ -9,7 +9,8 @@ import SmartSearch from '../components/SmartSearch';
 import RelatedArticles from '../components/RelatedArticles';
 import Comment from '../components/Comment';
 import CommunityComment from '../components/Communities/CommunityComment';
-import { useNavigate  } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config.jsx'
 
 function Home() {
     // Очищаем все данные пользователя
@@ -49,8 +50,8 @@ function Home() {
         }
         const username = inputUsername
         const password = inputPassword
-        axios.defaults.baseURL = 'http://127.0.0.1:8000'
-        axios.post('/api/signin', {
+        axios.defaults.baseURL = API_BASE_URL
+        axios.post('signin', {
             "username": username,
             "password":password
         }).then(response => {
@@ -74,8 +75,8 @@ function Home() {
         event.preventDefault();
         const username = inputUsername
         const password = inputPassword
-        axios.defaults.baseURL = 'http://127.0.0.1:8000'
-        axios.post('/api/signup', {
+        axios.defaults.baseURL = API_BASE_URL
+        axios.post('signup', {
             "username": username,
             "password": password,
             headers: {

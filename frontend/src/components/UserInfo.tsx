@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../App.css';
 import { Link } from 'react-router-dom';
 
-function UserInfo(props:{'country':string, 'registered':string, 'last_login':string, 'gender':string, 'age':string}) {
+function UserInfo(props:{'country':string, 'registered':string, 'last_login':string, 'gender':string|null, 'age':string}) {
   let country = props.country;
   let registered = props.registered;
   let last_login = props.last_login;

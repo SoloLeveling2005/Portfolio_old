@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 function NewCommunity() {
     const navigate = useNavigate();
@@ -75,7 +76,7 @@ function NewCommunity() {
         }
         
         // Делаем запрос на создание сообщества
-        axios.defaults.baseURL = "http://127.0.0.1:8000/api"
+        axios.defaults.baseURL = API_BASE_URL
         axios.post('community/create_community', body, {
             headers: {
                 'Authorization': "Bearer " + localStorage.getItem('access_token'),
@@ -86,7 +87,7 @@ function NewCommunity() {
             // Удачное создание.
             
             // Переходим в сообщество.
-            navigate(`/community/${response.data.community_id}`)
+            navigate(`community/${response.data.community_id}`)
         })
         .catch(error => {
             // Ошибка создания
