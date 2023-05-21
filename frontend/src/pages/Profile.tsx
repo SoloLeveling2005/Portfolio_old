@@ -91,7 +91,7 @@ function Home() {
         .catch(error => {
             if (error.request.status === 401) {
                 // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
-                axios.post('api/refresh_token', {
+                axios.post('refresh_token', {
                     'refresh': localStorage.getItem('refresh_token'),
                 })
                 .then(response => {

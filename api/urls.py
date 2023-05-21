@@ -23,8 +23,17 @@ urlpatterns = [
     path('users/update_user_additional_information', views.update_user_additional_information,
          name="update_user_additional_information"),
 
+    # Получить всех пользователей, получить друзей, получить запросы в друзья, отправить запрос в друзья, принять запрос в друзья, поиск друзей
+    path('users/get_my_friends', views.get_my_friends, name="get_my_friends"),
+    path('users/get_find_friends', views.get_find_friends, name="get_find_friends"),
+
+
     # Работа с сообществом
     path('community/create_community', views.create_community, name="create_community"),
+    path('community/create_community', views.create_community, name="create_community"),
+    path('community/create_community', views.create_community, name="create_community"),
+
+
 
     # TODO Система авторизации, регистрации, выход из системы
     path('signup', views.UserRegistrationView.as_view(), name='signup'),

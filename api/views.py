@@ -239,6 +239,50 @@ class UserView:
         self.requesting_user = request.user
 
 
+# todo Получить пользователя по id.
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user(request, user_id: int):
+    # Проверяем на существование пользователя.
+    user = check_user_exists(user_id=user_id)
+    if not user:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    print(user.id)
+    profile = ProfileSerializer(UserProfile.objects.get(user=user)).data
+    additional_information = AdditionalInformationSerializer(UserAdditionalInformation.objects.get(user=user)).data
+    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=user)).data \
+        if ArticleComment.objects.filter(user=user).exists() else []
+    articles = ArticleSerializer(Article.objects.filter(author=user)).data \
+        if Article.objects.filter(author=user).exists() else []
+
+    # Получаем сообщества пользователя
+    user_communities = CommunitySerializer(Community.objects.filter(user=user), many=True).data \
+        if Community.objects.filter(user=user).exists() else []
+
+    # Получаем сообщества, связанные с пользователем через CommunityParticipant
+    participant_communities = CommunitySerializer(
+        Community.objects.filter(community_participant_by_community__user=user), many=True).data \
+        if Community.objects.filter(community_participant_by_community__user=user).exists() else []
+
+    # Объединяем оба QuerySet community
+    communities = user_communities + participant_communities
+
+    # Получаем аватарку
+    avatar = UserAvatar.objects.get(user=user)
+    image_url = None
+    if avatar.img:
+        image_url = avatar.img.url
+
+    # Сереализуем пользователя
+    user = UserSerializer(user).data
+
+    return Response(
+        data={'user': user, 'userAvatarUrl': image_url, 'profile': profile,
+              'additional_information': additional_information, 'comments': comments,
+              'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
+
+
+# todo Обновить аватарку пользователя.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_avatar(request):
@@ -261,6 +305,7 @@ def update_user_avatar(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+# todo обновить профиль пользователя.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
@@ -293,6 +338,7 @@ def update_user_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# todo обновить дополнительную информацию о пользователе.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_additional_information(request):
@@ -320,6 +366,35 @@ def update_user_additional_information(request):
     else:
         # Обнаружены ошибки валидации, можно вернуть ошибку.
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# todo Получить всех пользователей, получить друзей, получить запросы в друзья, отправить запрос в друзья, принять запрос в друзья, поиск друзей
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_friends(request):
+    """Возвращает друзей пользователя."""
+    user = request.user
+
+    subscription = UserSubscriptions.objects.filter(user=user)
+
+    return Response(data={'subscription': subscription}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_find_friends(request):
+    user = request.user
+    username = request.data['username']
+
+    if username != "":
+        users = User.objects.filter(Q(username__icontains=username) and ~Q(username__icontains=user.username))
+    else:
+        users = User.objects.filter(~Q(username__icontains=user.username))
+
+    users = UserSerializer(users, many=True).data
+    return Response(data={'users': users}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -492,70 +567,12 @@ def delete_user_from_blacklist(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_user(request, user_id: int):
-    # Проверяем на существование пользователя.
-    user = check_user_exists(user_id=user_id)
-    if not user:
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    print(user.id)
-    profile = ProfileSerializer(UserProfile.objects.get(user=user)).data
-    additional_information = AdditionalInformationSerializer(UserAdditionalInformation.objects.get(user=user)).data
-    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=user)).data \
-        if ArticleComment.objects.filter(user=user).exists() else []
-    articles = ArticleSerializer(Article.objects.filter(author=user)).data \
-        if Article.objects.filter(author=user).exists() else []
-
-    # Получаем сообщества пользователя
-    user_communities = CommunitySerializer(Community.objects.filter(user=user), many=True).data \
-        if Community.objects.filter(user=user).exists() else []
-
-    # Получаем сообщества, связанные с пользователем через CommunityParticipant
-    participant_communities = CommunitySerializer(
-        Community.objects.filter(community_participant_by_community__user=user), many=True).data \
-        if Community.objects.filter(community_participant_by_community__user=user).exists() else []
-
-    # Объединяем оба QuerySet community
-    communities = user_communities + participant_communities
-
-    # Получаем аватарку
-    avatar = UserAvatar.objects.get(user=user)
-    image_url = None
-    if avatar.img:
-        image_url = avatar.img.url
-
-    # Сереализуем пользователя
-    user = UserSerializer(user).data
-
-    return Response(
-        data={'user': user, 'userAvatarUrl': image_url, 'profile': profile, 'additional_information': additional_information, 'comments': comments,
-              'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_my_friends(request):
-    """Возвращает друзей пользователя."""
-    user = request.user
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def get_requests_to_friend(request):
     user = request.user
 
     requests_to_friend = RequestUserSubscriptions.objects.filter(subscriber=user)
 
     return Response(data={'requests_to_friend': requests_to_friend}, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def get_find_friends(request):
-    username = request.POST.get('username')
-
-    users = User.objects.filter(Q(username__icontains=username))
-
-    return Response(data={'users': users}, status=status.HTTP_200_OK)
 
 
 class CommunitiesView(APIView):

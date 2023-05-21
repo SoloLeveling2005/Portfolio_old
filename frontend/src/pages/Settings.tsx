@@ -155,7 +155,7 @@ function Settings() {
                         setInputShortInfo(response.data.profile.short_info)
                         setInputLocation(response.data.profile.location)
                         setInputBirthday(response.data.profile.birthday)
-                        setSelectedGender(response.data.profile.gender == true ? 'true' : 'false')
+                        setSelectedGender(response.data.profile.gender == null ? '' : response.data.profile.gender == true ? 'true' : 'false')
                     })
                     .catch(error => {
                         if (error.response.status === 401) {
@@ -210,7 +210,7 @@ function Settings() {
             console.log(error)
             if (error.request.status === 401) {
                 // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
-                axios.post('api/refresh_token', {
+                axios.post('refresh_token', {
                     'refresh': localStorage.getItem('refresh_token'),
                 })
                 .then(response => {
