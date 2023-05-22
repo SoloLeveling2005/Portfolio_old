@@ -101,6 +101,11 @@ urlpatterns = [
     path('community/get_about_community/<int:community_id>', views.get_about_community, name="get_about_community"),
     path('community/create_community_role', views.create_community_role, name="create_community_role"),
     path('community/delete_community_role/<int:community_id>/<str:role_title>', views.delete_community_role, name="delete_community_role"),
+    path('community/post_request_to_join_participant', views.post_request_to_join_participant, name="post_request_to_join_participant"),
+    path('community/add_community_participant', views.add_community_participant, name="add_community_participant"),
+    path('community/kick_out_community_participant/<int:participant_id>/<int:community_id>', views.kick_out_community_participant, name="kick_out_community_participant"),
+
+
 
 
 

@@ -100,6 +100,13 @@ class UserSubscriptionsSerializer(serializers.ModelSerializer):
         model = models.UserSubscriptions
         fields = '__all__'
 
+class CommunityParticipantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.CommunityParticipant
+        fields = '__all__'
+
+
+
 
 class CommunityAvatarSereilizer(serializers.ModelSerializer):
     class Meta:

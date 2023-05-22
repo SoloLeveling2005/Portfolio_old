@@ -9,6 +9,7 @@ import News from '../components/News';
 import Advertisement from '../components/Advertisement';
 import axios from 'axios';
 import API_BASE_URL from '../config';
+import { spawn } from 'child_process';
 
 
 
@@ -91,12 +92,13 @@ function Community(props: any) {
     const [admin, create_admin] = useState(null);
     const [signed, create_signed] = useState(null);
     const [edit_community_information, create_edit_community_information] = useState(null);
-    const [manage_participants, create_manage_participants] = useState(null);
+    const [manage_participants, create_manage_participants] = useState(Boolean||null);
     const [publish_ads, create_publish_ads] = useState(null);
     const [publish_articles, create_publish_articles] = useState(null);
     const [publish_news, create_publish_news] = useState(null);
     const [request_to_sign, create_request_to_sign] = useState(null);
     const [subscribers_count, create_subscribers_count] = useState(0);
+    const [participant_requests, changeParticipantRequests] = useState([{username:'', id:0}])
     
 
     const [data, setData] = useState({
@@ -131,8 +133,15 @@ function Community(props: any) {
         },
         subscribers: [
             {
-                id: 1,
-                username: ''
+                user: {
+                    id: 1,
+                    username: ''    
+                },
+                role: {
+                    id: 0,
+                    title:''
+                }
+                
             }
         ]
     });
@@ -195,6 +204,7 @@ function Community(props: any) {
             create_publish_news(response.data.publish_news)
             create_request_to_sign(response.data.request_to_sign)
             create_subscribers_count(response.data.subscribers_count)
+            changeParticipantRequests(response.data.participant_requests)    
         })
         .catch(error => {
             if (error.request.status === 401) {
@@ -290,6 +300,43 @@ function Community(props: any) {
         });
     }
 
+    let countAddParticipant = 0
+    function addParticipant(roleTitle:string, userId:string) {
+        if (countAddParticipant == 3) {
+            alert('Ошибка создания')
+            countAddParticipant = 0
+            return
+        }
+        countAddParticipant += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.post(`community/add_community_participant`, {
+            'participant_id': userId,
+            'community_id': id,
+            'role_title':roleTitle
+        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        .then(response => {
+            console.log(response.data)
+            alert(`Вы приняли пользователя на роль ${roleTitle}`)
+            countAddParticipant = 0
+            getCommunity()
+            aboutCommunity()
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Пробуем еще раз 
+                    addParticipant(roleTitle, userId)
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+
 
 
     
@@ -345,11 +392,11 @@ function Community(props: any) {
                                             ):(
                                                 <button className='btn me-1 px-2' value='participants' onClick={switchNavF}>Участники</button>
                                             )}
-                                            {nav == 'chats' ? (
+                                            {/* {nav == 'chats' ? (
                                                 <button className='btn btn-primary me-1 px-2' value='chats' onClick={switchNavF}>Чаты</button>
                                             ):(
                                                 <button className='btn me-1 px-2' value='chats' onClick={switchNavF}>Чаты</button>
-                                            )}
+                                            )} */}
                                             {nav == 'settings' ? (
                                                 <button className='btn btn-primary me-1 px-2' value='settings' onClick={switchNavF}>Настройки</button>
                                             ):(
@@ -530,87 +577,161 @@ function Community(props: any) {
                                 }     
                                 {nav == 'participants' && 
                                 <div className='p-0 m-0'>
-                                    <div className='card bg-white mb-2'>
-                                        <div className="card-body">
-                                            
-                                            {createRole==false?(
-                                                <button className='btn btn-primary w-100' onClick={createRoleF}>Добавить роль</button>
-                                            ):(
-                                                <div className='p-0 m-0'>
-                                                    <button className='btn btn-primary w-100 mb-3' onClick={createRoleF}>Скрыть создание ролей</button>
-                                                    <h5>Существующие роли</h5>
-                                                    <table className="table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th className='col'>Роль</th>
-                                                                <th className='col'>Модератор</th>
-                                                                <th className='col'>Управляющий</th>
-                                                                <th className='col'>Создание статей</th>
-                                                                <th className='col'>Создание новостей</th>
-                                                                <th className='col'>Создание рекламы</th>
-                                                                <th className='col'>Действие</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td className='fw-bold'>admin</td>
-                                                                <td>Да</td>
-                                                                <td>Да</td>
-                                                                <td>Да</td>
-                                                                <td>Да</td>
-                                                                <td>Да</td>
-                                                                <td>Нет</td>
-                                                            </tr>
-                                                            {data.roles.map((item, index) => (
-                                                                <tr key={index}>
-                                                                    <td className='fw-bold'>{ item.title }</td>
-                                                                    <td>{ item.manage_participants == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
-                                                                    <td>{ item.edit_community_information == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
-                                                                    <td>{ item.publish_articles == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
-                                                                    <td>{ item.publish_news == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
-                                                                    <td>{ item.publish_ads == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
-                                                                    <td><button className='btn btn-warning text-white' onClick={()=>{FDeleteRole(item.title.toString())}}>Удалить</button></td>
-                                                                </tr>  
-                                                            ))}        
-                                                        </tbody>
-                                                    </table>
-                                                    <h5 className='mt-3'>Создание роли (Основные параметры)</h5>
-                                                    <h6>Название роли:</h6>
-                                                    <input type="text" placeholder='name' className='form-control w-100 mb-2' value={InputRoleName} onChange={handleChangeInputRoleName}/>
-                                                    <h5>Разрешения</h5>
-                                                    <h6 title='Может редактировать информацию о сообществе (название, роли, описание и т.д.)' className='cursor-help'>Модератор <small>(Наведите чтобы узнать больше)</small></h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectManageParticipants} onChange={handleChangeSelectManageParticipants}>
-                                                        <option value="true">Да</option>
-                                                        <option value="false" selected>Нет</option>
-                                                    </select>
-                                                    <h6 title='Может управление пользователями (добавление, удаление, бан и т.д.).' className='cursor-help'>Управляющий <small>(Наведите чтобы узнать больше)</small></h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectEditCommunityInformation} onChange={handleChangeSelectEditCommunityInformation}>
-                                                        <option value="true">Да</option>
-                                                        <option value="false" selected>Нет</option>
-                                                    </select>
-                                                    <h6>Создание статей</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishArticles} onChange={handleChangeSelectPublishArticles}>
-                                                        <option value="true" selected>Да</option>
-                                                        <option value="false">Нет</option>
-                                                    </select>
-                                                    <h6>Создание новостей</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishNews} onChange={handleChangeSelectPublishNews}>
-                                                        <option value="true">Да</option>
-                                                        <option value="false" selected>Нет</option>
-                                                    </select>
-                                                    <h6>Создание рекламы</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishAds} onChange={handleChangeSelectPublishAds}>
-                                                        <option value="true">Да</option>
-                                                        <option value="false" selected>Нет</option>
-                                                    </select>
+                                    {manage_participants == true &&
+                                        <div className='card bg-white mb-2'>
+                                            <div className="card-body">
+                                                
+                                                
+                                                {createRole == false ? (
+                                                
+                                                    <button className='btn btn-primary w-100' onClick={createRoleF}>Добавить роль</button>
+                                                ):(
+                                                    <div className='p-0 m-0'>
+                                                        <button className='btn btn-primary w-100 mb-3' onClick={createRoleF}>Скрыть создание ролей</button>
+                                                        <h5>Существующие роли</h5>
+                                                        <table className="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className='col'>Роль</th>
+                                                                    <th className='col'>Модератор</th>
+                                                                    <th className='col'>Управляющий</th>
+                                                                    <th className='col'>Создание статей</th>
+                                                                    <th className='col'>Создание новостей</th>
+                                                                    <th className='col'>Создание рекламы</th>
+                                                                    <th className='col'>Действие</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td className='fw-bold'>admin</td>
+                                                                    <td>Да</td>
+                                                                    <td>Да</td>
+                                                                    <td>Да</td>
+                                                                    <td>Да</td>
+                                                                    <td>Да</td>
+                                                                    <td>Нет</td>
+                                                                </tr>
+                                                                {data.roles.map((item, index) => (
+                                                                    <tr key={index}>
+                                                                        <td className='fw-bold'>{ item.title }</td>
+                                                                        <td>{ item.manage_participants == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                        <td>{ item.edit_community_information == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                        <td>{ item.publish_articles == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                        <td>{ item.publish_news == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                        <td>{ item.publish_ads == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                        <td><button className='btn btn-warning text-white' onClick={()=>{FDeleteRole(item.title.toString())}}>Удалить</button></td>
+                                                                    </tr>  
+                                                                ))}        
+                                                            </tbody>
+                                                        </table>
+                                                        <h5 className='mt-3'>Создание роли (Основные параметры)</h5>
+                                                        <h6>Название роли:</h6>
+                                                        <input type="text" placeholder='name' className='form-control w-100 mb-2' value={InputRoleName} onChange={handleChangeInputRoleName}/>
+                                                        <h5>Разрешения</h5>
+                                                        <h6 title='Может редактировать информацию о сообществе (название, роли, описание и т.д.)' className='cursor-help'>Модератор <small>(Наведите чтобы узнать больше)</small></h6>
+                                                        <select className="form-select mb-2" aria-label="Default select example" value={SelectManageParticipants} onChange={handleChangeSelectManageParticipants}>
+                                                            <option value="true">Да</option>
+                                                            <option value="false" selected>Нет</option>
+                                                        </select>
+                                                        <h6 title='Может управление пользователями (добавление, удаление, бан и т.д.).' className='cursor-help'>Управляющий <small>(Наведите чтобы узнать больше)</small></h6>
+                                                        <select className="form-select mb-2" aria-label="Default select example" value={SelectEditCommunityInformation} onChange={handleChangeSelectEditCommunityInformation}>
+                                                            <option value="true">Да</option>
+                                                            <option value="false" selected>Нет</option>
+                                                        </select>
+                                                        <h6>Создание статей</h6>
+                                                        <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishArticles} onChange={handleChangeSelectPublishArticles}>
+                                                            <option value="true" selected>Да</option>
+                                                            <option value="false">Нет</option>
+                                                        </select>
+                                                        <h6>Создание новостей</h6>
+                                                        <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishNews} onChange={handleChangeSelectPublishNews}>
+                                                            <option value="true">Да</option>
+                                                            <option value="false" selected>Нет</option>
+                                                        </select>
+                                                        <h6>Создание рекламы</h6>
+                                                        <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishAds} onChange={handleChangeSelectPublishAds}>
+                                                            <option value="true">Да</option>
+                                                            <option value="false" selected>Нет</option>
+                                                        </select>
+                                                        <button className='btn btn-primary w-100' onClick={FCreateRole}>Добавить роль</button>
+                                                        
+                                                    </div>
+                                                    
+                                                
+                                                )}
+                                                
+                                                
 
-                                                    <button className='btn btn-primary w-100' onClick={FCreateRole}>Добавить роль</button>
-                                                </div>
-                                            )}
-                                            
-
+                                            </div>
                                         </div>
-                                    </div>
+                                    }  
+                                    {participant_requests.length != 0 &&
+                                        <div className="card bg-white mb-2">
+                                            <div className="card-body">
+                                                <h5>Заявки</h5>    
+                                                <table className="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className='col'>
+                                                                Пользователь
+                                                            </th>
+                                                            <th className='col-2'>
+                                                                Роль
+                                                            </th>
+                                                        </tr>
+                                                    </thead> 
+                                                    <tbody>
+                                                        {participant_requests.map((item, index) => (
+                                                            <tr>
+                                                                <td>
+                                                                    <Link to={`/user/${item.id}`}>{ item.username }</Link>
+                                                                </td>
+                                                                <td>
+                                                                    <select className="form-select" aria-label="Default select example" onChange={(event) => addParticipant(event.target.value, item.id.toString())}>
+                                                                        <option value="none"selected>нет</option>
+                                                                        {data.roles.map((itemRole, indexRole) => (
+                                                                            <option value={itemRole.title} >{itemRole.title}</option>
+                                                                        ))}
+                                                                    </select>   
+                                                                </td>
+                                                            </tr> 
+                                                        ))}    
+                                                        
+                                                        {data.subscribers.map((item, index) => (
+                                                            <tr>
+                                                                <td>
+                                                                    <Link to={`/user/${item.user.id}`}>{ item.user.username }</Link>
+                                                                </td>
+                                                                <td>
+                                                                    {manage_participants == true ? (
+                                                                        <select className="form-select" aria-label="Default select example">
+                                                                            <option value="admin">admin</option>
+                                                                            <option value="user" selected>user</option>
+                                                                        </select>
+                                                                    ): (
+                                                                        <p>Роль</p>      
+                                                                    )}
+                                                                </td>
+                                                                <td>
+                                                                    {manage_participants == true &&
+                                                                        <select className="form-select" aria-label="Default select example">
+                                                                            <option value="nobody" selected>Ничего</option>
+                                                                            <option value="ban" className='bg-danger text-white'>Забанить</option>
+                                                                            <option value="unban" className='bg-success text-white'>Разбанить</option>
+                                                                        </select>
+                                                                    }
+                                                                </td>
+                                                            </tr> 
+                                                        ))}
+                                                        
+                                                        
+                                                    </tbody>   
+                                                </table>               
+                                            </div>
+                                                                    
+                                        </div>
+                                    }
+                                    
                                     <div className="card bg-white">
                                         <div className="card-body">
                                             <table className="table">
@@ -637,24 +758,30 @@ function Community(props: any) {
                                                         <td>
                                                             <p>Админ</p>
                                                         </td>
-                                                        <td>
-                                                            Нет действий
-                                                        </td>
+                                                        {manage_participants == true &&
+                                                            <td>
+                                                                Нет действий
+                                                            </td>
+                                                        }
                                                     </tr> 
                                                     {data.subscribers.map((item, index) => (
                                                         <tr>
                                                             <td>
-                                                                <Link to={`/user/${item.id}`}>{ item.username }</Link>
+                                                                <Link to={`/user/${item.user.id}`}>{ item.user.username }</Link>
                                                             </td>
                                                             <td>
-                                                                {manage_participants == true ? (
+                                                                { manage_participants == true ? (
                                                                     <select className="form-select" aria-label="Default select example">
-                                                                        <option value="admin">admin</option>
-                                                                        <option value="user" selected>user</option>
-                                                                    </select>
-                                                                ): (
-                                                                    <p>Роль</p>      
+                                                                        {data.roles.map((itemRole, indexRole) => (
+                                                                            
+                                                                                <option value={itemRole.title} >{itemRole.title}</option>
+                                                                             
+                                                                        ))}
+                                                                    </select> 
+                                                                ) : (
+                                                                    <span>{item.role.title}</span>
                                                                 )}
+                                                                
                                                             </td>
                                                             <td>
                                                                 {manage_participants == true &&
@@ -678,7 +805,7 @@ function Community(props: any) {
                                     
                                     
                                 }        
-                                {nav == 'chats' && 
+                                {/* {nav == 'chats' && 
                                     <div className="p-0 m-0">
                                         
                                         
@@ -698,7 +825,7 @@ function Community(props: any) {
                                             </div>
                                         </div>
                                     </div>
-                                }   
+                                }    */}
                                 {nav == 'settings' && 
                                     <div className='p-0 m-0'>
                                         <div className="card m-0 p-3 bg-white my-3 text-decoration-none text-black">

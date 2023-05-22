@@ -56,6 +56,47 @@ function Community(props:{'logo_url':string, 'id':string, 'title':string, 'descr
             });
     }
 
+    let countCreateRequestToJoin = 0
+    function createRequestToJoin() {
+        if (countCreateRequestToJoin == 2) {
+            alert("Ошибка поиска")
+            countCreateRequestToJoin = 0
+            return
+        }
+        countCreateRequestToJoin += 1
+        
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.post(`community/post_request_to_join_participant`, { 'community_id':id } ,{ headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        .then(response => {
+            console.log(response.data)
+            alert("Запрос на вступление отправлен, ожидайте")
+            // Обнуляем значение count
+            countCreateRequestToJoin = 0
+        })
+        .catch(error => {
+            console.log(error)
+            if (error.request.status === 401) {
+                // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                axios.post('refresh_token', {
+                    'refresh': localStorage.getItem('refresh_token'),
+                })
+                .then(response => {
+                    // 
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Запрашиваем данные снова
+                    createRequestToJoin()
+                })
+                .catch(error => {
+                    console.log(error)
+                    navigate('/auth');
+                });
+            }
+            
+        });
+    }
+
     useEffect(() => {
         about()
     }, []);
@@ -79,12 +120,9 @@ function Community(props:{'logo_url':string, 'id':string, 'title':string, 'descr
                         {/* <p className="card-text m-0 mb-1"><small className="text-muted">Подписчики: {subscribers}</small></p> */}
                         <div>
                             {signed==false ? (
-                                <a href="#" className="btn btn-primary py-1 px-3"><small>Вступить в сообщество</small></a>
+                                <button onClick={createRequestToJoin} className="btn btn-primary py-1 px-3"><small>Вступить в сообщество</small></button>
                             ):(
-                                <div>
-                                    {admin == false &&
-                                        <a href="#" className="btn btn-danger py-1 px-3 me-2"><small>Покинуть сообщество</small></a>                                    
-                                    }    
+                                <div> 
                                     {/* {recommended==false ? (
                                         <a href="#" className="btn btn-primary py-1 px-3"><small>Рекомендовать сообщество</small></a>
                                     ):(

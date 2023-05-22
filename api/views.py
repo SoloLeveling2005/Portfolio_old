@@ -22,7 +22,7 @@ from .serializers import UserRegistrationSerializer, UserAuthenticationSerialize
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
     UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
-    CommunityAvatarSereilizer, RequestCommunityParticipantSerializer
+    CommunityAvatarSereilizer, RequestCommunityParticipantSerializer, CommunityParticipantSerializer
 
 
 # todo Удаление старых фото при загрузке новых.
@@ -429,7 +429,7 @@ def get_my_friends(request):
             'user': UserSerializer(request.user).data,
         }
         serialized_data.append(serialized_request)
-    print(serialized_data[0])
+    # print(serialized_data[0])
     return Response(data={'subscription': serialized_data}, status=status.HTTP_200_OK)
 
 
@@ -606,7 +606,20 @@ def get_community(request, community_id: int):
     roles = CommunityRolesSereilizer(roles, many=True).data
     admin_data = UserSerializer(community.user).data
     community = CommunitySerializer(community).data
-    subscribers = UserSubscriptionsSerializer(subscribers, many=True).data
+
+    print(subscribers)
+    if subscribers:
+        serialized_data = []
+        for request_subscriber in subscribers:
+            print(request_subscriber)
+            serialized_request = {
+                'user': UserSerializer(request_subscriber.user).data,
+                'role': CommunityRolesSereilizer(CommunityParticipant.objects.get(user=request_subscriber.user).role).data
+            }
+            serialized_data.append(serialized_request)
+        subscribers = serialized_data
+    else:
+        subscribers = []
 
     return Response(data={'admin_data': admin_data, 'community': community,
                           'request_to_sign': request_to_sign, 'subscribers': subscribers,
@@ -689,13 +702,19 @@ def get_about_community(request, community_id: int):
     subscribers_count = len(subscribers) + 1
 
     participant_requests = RequestCommunityParticipant.objects.filter(community=community)
-    participant_requests = RequestCommunityParticipantSerializer(participant_requests, many=True).data
+    serialized_data = []
+    for request in participant_requests:
+        serialized_request = UserSerializer(request.user).data
+        serialized_data.append(serialized_request)
+
+    participant_requests = serialized_data
 
     return Response(data={'signed': signed, 'admin': admin, 'request_to_sign': request_to_sign,
                           'subscribers_count': subscribers_count,
                           'edit_community_information': edit_community_information,
                           'manage_participants': manage_participants, 'publish_articles': publish_articles,
-                          'publish_news': publish_news, 'publish_ads': publish_ads, 'participant_requests':participant_requests
+                          'publish_news': publish_news, 'publish_ads': publish_ads,
+                          'participant_requests': participant_requests
                           },
                     status=status.HTTP_200_OK)
 
@@ -822,6 +841,149 @@ def delete_community_role(request, community_id: int, role_title: str) -> Respon
     role.delete()
 
     # Возвращаем успешный ответ.
+    return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_request_to_join_participant(request):
+    """Создать запрос для вступления в сообщество"""
+
+    # Получаем данные.
+    participant = request.user
+    community_id = request.data['community_id']
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if community is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    # Проверяет на существование пользователя.
+    participant = check_user_exists(participant.id)
+    if participant is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    # Проверяет на присутствие участника в сообществе.
+    check_participant = check_participant_exists(community=community, participant=participant)
+    if check_participant:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Проверяет на присутствие запроса в участники в сообщество.
+    check_participant = check_participant_request_exists(community=community, participant=participant)
+    if check_participant:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    RequestCommunityParticipant.objects.create(community=community, user=participant)
+
+    return Response(status=status.HTTP_201_CREATED)
+
+
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def delete_request_to_join_participant(request, community_id: int, participant_id: int):
+#     """
+#     Удалить запрос для вступления в сообщество
+#     """
+#     community_id = request.POST.get('')
+#     participant_id = request.POST.get('')
+#
+#     participant = RequestCommunityParticipant.delete_(community_id=community_id, user_id=participant_id)
+#     if participant.status == 'error':
+#         return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
+#
+#     return Response(data={}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_community_participant(request) -> Response:
+    """Добавляет пользователя в участники сообщества."""
+
+    # Получаем данные.
+    user = request.user
+    participant_id = request.data['participant_id']
+    community_id = request.data['community_id']
+    role_title = request.data['role_title']
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if community is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Проверяет на существование роли в сообществе.
+    role = check_community_role_exists(community=community, community_role_title=role_title)
+    if role is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Проверяет на существование пользователя.
+    participant = check_user_exists(participant_id)
+    if participant is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Проверяет на присутствие участника в сообществе.
+    check_participant = check_participant_exists(community=community, participant=participant)
+    if check_participant:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Получаем информацию об участнике принимающий пользователя.
+    community_participant = CommunityParticipant.objects.filter(user=user)
+    community_participant_role = None
+    if community_participant.exists():
+        community_participant_role = community_participant.first().role
+
+    # Проверяем, если пользователь(который принимает участника user) не имеет прав то отклоняем.
+    if community.user != user and community_participant.exists() and community_participant_role is not None:
+        if community_participant_role.manage_participants is False:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    community_participant = CommunityParticipant()
+    community_participant.user = participant
+    community_participant.community = community
+    community_participant.role = role
+    community_participant.save()
+
+    RequestCommunityParticipant.objects.get(community=community, user=participant).delete()
+
+    return Response(status=status.HTTP_201_CREATED)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def kick_out_community_participant(request, participant_id: int, community_id: int) -> Response:
+    """Удаляет пользователя с участников сообщества."""
+
+    # Получаем данные.
+    user = request.user
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if community is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Проверяет на существование участника.
+    participant = check_user_exists(participant_id)
+    if participant is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Проверяет на присутствие участника в сообществе.
+    check_participant = check_participant_exists(community=community, participant=participant)
+    if check_participant is None:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Получаем информацию об участнике принимающий пользователя.
+    community_participant = CommunityParticipant.objects.filter(user=user)
+    community_participant_role = None
+    if community_participant.exists():
+        community_participant_role = community_participant.first().role
+
+    # Проверяем, если пользователь(который принимает участника user) не имеет прав то отклоняем.
+    if community.user != user and community_participant.exists() and community_participant_role is not None:
+        if community_participant_role.manage_participants is False:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Удаляем пользователя из сообщества.
+    CommunityParticipant.objects.get(community=community, user=participant).delete()
+
     return Response(status=status.HTTP_200_OK)
 
 
@@ -977,147 +1139,6 @@ def get_requests_to_join_participant(request, community_id):
 
     # Вывод списка
     return Response(data={'requests_participant': requests_participant}, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def post_request_to_join_participant(request):
-    """Создать запрос для вступления в сообщество"""
-
-    # Получаем данные.
-    participant = request.user
-    community_id = request.POST.get('community_id')
-
-    # Проверяет на существование сообщества.
-    community = check_community_exists(community_id)
-    if isinstance(community, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на существование пользователя.
-    participant = check_user_exists(participant.id)
-    if not isinstance(participant, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на присутствие участника в сообществе.
-    check_participant = check_participant_exists(community=community, participant=participant)
-    if not isinstance(check_participant, Response):
-        return Response(data={}, status=status.HTTP_409_CONFLICT)
-
-    # Проверяет на присутствие запроса в участники в сообщество.
-    check_participant = check_participant_request_exists(community=community, participant=participant)
-    if isinstance(check_participant, Response):
-        return Response(data={}, status=status.HTTP_409_CONFLICT)
-
-    RequestCommunityParticipant.objects.create(community=community, user=participant)
-
-    return Response(data={}, status=status.HTTP_201_CREATED)
-
-
-def delete_request_to_join_participant(request):
-    """
-    Удалить запрос для вступления в сообщество
-    """
-    community_id = request.POST.get('community_id')
-    participant_id = request.POST.get('participant_id')
-
-    participant = RequestCommunityParticipant.delete_(community_id=community_id, user_id=participant_id)
-    if participant.status == 'error':
-        return Response(data={'message': participant.message}, status=status.HTTP_204_NO_CONTENT)
-
-    return Response(data={}, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def add_community_participant(request) -> Response:
-    """Добавляет пользователя в участники сообщества."""
-
-    # Получаем данные.
-    user = request.user
-    participant_id = request.POST.get('participant_id')
-    community_id = request.POST.get('community_id')
-    role_title = request.POST.get('role_title')
-
-    # Проверяет на существование сообщества.
-    community = check_community_exists(community_id)
-    if isinstance(community, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на существование роли в сообществе.
-    role = check_community_role_exists(community=community, community_role_title=role_title)
-    if isinstance(role, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на существование пользователя.
-    participant = check_user_exists(participant_id)
-    if isinstance(participant, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на присутствие участника в сообществе.
-    check_participant = check_participant_exists(community=community, participant=participant)
-    if isinstance(check_participant, Response):
-        return Response(data={}, status=status.HTTP_409_CONFLICT)
-
-    # Получаем информацию об участнике принимающий пользователя.
-    community_participant = CommunityParticipant.objects.filter(user=user)
-    community_participant_role = None
-    if community_participant.exists():
-        community_participant_role = community_participant.first().role
-
-    # Проверяем, если пользователь(который принимает участника user) не имеет прав то отклоняем.
-    if community.user != user and community_participant.exists() and community_participant_role is not None:
-        if community_participant_role.manage_participants is False:
-            return Response(data={}, status=status.HTTP_403_FORBIDDEN)
-
-    community_participant = CommunityParticipant()
-    community_participant.user = participant
-    community_participant.community = community
-    community_participant.role = role
-    community_participant.save()
-
-    return Response(data={}, status=status.HTTP_201_CREATED)
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def kick_out_community_participant(self, request) -> Response:
-    """Удаляет пользователя с участников сообщества."""
-
-    # Получаем данные.
-    user = request.user
-    participant_id = request.POST.get('participant_id')
-    community_id = request.POST.get('community_id')
-
-    # Проверяет на существование сообщества.
-    community = check_community_exists(community_id)
-    if isinstance(community, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на существование участника.
-    participant = check_user_exists(participant_id)
-    if isinstance(participant, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяет на присутствие участника в сообществе.
-    check_participant = check_participant_exists(community=community, participant=participant)
-    if isinstance(check_participant, Response):
-        return Response(data={}, status=status.HTTP_409_CONFLICT)
-
-    # Получаем информацию об участнике принимающий пользователя.
-    community_participant = CommunityParticipant.objects.filter(user=user)
-    community_participant_role = None
-    if community_participant.exists():
-        community_participant_role = community_participant.first().role
-
-    # Проверяем, если пользователь(который принимает участника user) не имеет прав то отклоняем.
-    if community.user != user and community_participant.exists() and community_participant_role is not None:
-        if community_participant_role.manage_participants is False:
-            return Response(data={}, status=status.HTTP_403_FORBIDDEN)
-
-    # Удаляем пользователя из сообщества.
-    CommunityParticipant.objects.get(community=community, user=participant).delete()
-
-    return Response(data={}, status=status.HTTP_200_OK)
 
 
 # todo Отрезаем остальные методы

@@ -132,9 +132,7 @@ function Comrades () {
 
             handleChangeDataUsersRequests(response.data.requests_to_friend)
 
-            setTimeout(() => {
-                console.log(dataUsersRequests)
-            }, 300)
+            
             // Обнуляем значение
             countGetRequestsToFriend = 0
         })
@@ -178,6 +176,7 @@ function Comrades () {
         .then(response => {
             console.log(response.data)
             handleChangeDataFilterFriends(response.data.users)
+            
             // Обнуляем значение
             countFindFriends = 0
         })
