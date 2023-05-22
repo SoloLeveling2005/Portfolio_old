@@ -137,8 +137,11 @@ class Chat(models.Model):
     """
     Модель чата между двумя пользователями.
     """
-    title = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+
+    class Meta:
+        ordering = ('name',)
 
 
 class ChatMessage(models.Model):

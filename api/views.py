@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks, CommunityAvatar, UserAvatar
+    ArticleBookmarks, CommunityAvatar, UserAvatar, Chat, ChatMessage
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
@@ -245,6 +245,17 @@ class UserView:
 
         """
         self.requesting_user = request.user
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_room(request, room_id: int):
+    rooms = Chat.objects.all()
+    if not Chat.objects.filter(slug=room_id).exists():
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    room = Chat.objects.get(slug=room_id)
+    messages = ChatMessage.objects.filter(room=room)
+    return Response(data={'rooms': rooms, 'room': room, 'messages': messages}, status=status.HTTP_200_OK)
 
 
 # todo Получить пользователя по id.
@@ -599,7 +610,8 @@ def get_community(request, community_id: int):
     admin_data = UserSerializer(community.user).data
     community = CommunitySerializer(community).data
 
-    return Response(data={'admin_data':admin_data,'community':community, 'signed': signed, 'admin': admin, 'request_to_sign': request_to_sign,
+    return Response(data={'admin_data': admin_data, 'community': community, 'signed': signed, 'admin': admin,
+                          'request_to_sign': request_to_sign,
                           'subscribers_count': subscribers_count, 'community_avatar': community_avatar,
                           'articles': articles, 'articles_comments': articles_comments, 'roles': roles})
 

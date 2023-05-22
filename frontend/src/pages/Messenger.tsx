@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
@@ -14,9 +14,85 @@ function Messenger() {
     var {messenger_id} = useParams();
     const [chat, switchChat] = useState(`${messenger_id}`);
     
-    function switchChatF (id:string) {
-        switchChat(sw => (id))
+    function switchChatF(id = '0') {
+        switchChat(id)
+        roomConnect()
     }
+
+
+    // Текст нового сообщесния
+    const [inputUserMessage, setInputUserMessage] = useState('');
+
+    const handleChangeUserMessage = (event:any) => {
+        setInputUserMessage(event.target.value);
+    };
+
+    
+
+    // 
+
+    function roomConnect() {
+        console.log('Start')
+        const socket = new WebSocket(`ws://localhost:8000/ws/1/`);
+
+        socket.onopen = function (e) {
+            console.log("[open] Соединение установлено");
+        };
+
+        socket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            console.log(data);
+            // if(data.message){
+            //     let html = '<div class="p-4 bg-gray-200 rounded-xl">';
+            //         html+=  '<p class="font-semibold">' + data.username + '</p>';
+            //         html +=  '<p>' + data.message + '</p></div>';
+            //     document.querySelector('#chat-messages').innerHTML += html;
+            //     scrollToBottom();
+            // } else{
+            // }
+        };
+
+        socket.onclose = function (event) {
+            if (event.wasClean) {
+                alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+            } else {
+                // например, сервер убил процесс или сеть недоступна
+                // обычно в этом случае event.code 1006
+                alert('[close] Соединение прервано');
+            }
+        };
+
+        const sendMessage = (e:any, socket) => {
+            e.preventDefault();
+            const message = inputUserMessage;
+            socket.send(
+                JSON.stringify({
+                    message: message,
+                    username: localStorage.getItem('username'),
+                    room: chat,
+                })
+            );
+            return false;
+        };
+
+        const handleKeyPress = (event: any) => {
+            if (event.key === 'Enter') {
+                sendMessage(event)
+            }
+        };
+
+        socket.onerror = function (error) {
+            console.log(`[error]`);
+        };
+
+        return () => {
+            socket.close();
+        };
+
+        
+    }
+    
+    
 
     return (
         <div className="Messenger text-white">
@@ -31,8 +107,9 @@ function Messenger() {
                                 <div className='w-100 py-2 ps-2 border-3 border-bottom height-y-55-px d-flex align-items-center '>
                                     <input type="text" className="form-control" />
                                 </div>
-                                <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='1' onClick={switchChatF}/>
-                                <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='2' onClick={switchChatF}/>
+                                {chat}
+                                <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='1' onClick={()=>{switchChatF('1')}}/>
+                                <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='2' onClick={()=>{switchChatF('2')}}/>
                             </div>
                             <div className="col h-100 p-0 m-0">
                                 {chat == '' || chat == '0' ? (
@@ -60,10 +137,11 @@ function Messenger() {
                                                     <Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>
                                                 </div>
                                             </div>
-                                            <div className="row p-0 m-0">
-                                                <div className="col bg-white py-2">
-                                                    <input type="text" className="form-control" />
-                                                </div>
+                                            <div className="row p-0 m-0 pt-4">
+                                                <form onSubmit={sendMessage} className="col bg-white py-2 d-flex justify-content-between align-content-between">
+                                                    <input type="text" className="form-control" value={inputUserMessage} onChange={handleChangeUserMessage} />
+                                                    <button className='btn btn-primary ms-2 bg-primary' type='submit'>Отправить</button>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
