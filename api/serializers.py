@@ -111,3 +111,9 @@ class CommunityRolesSereilizer(serializers.ModelSerializer):
     class Meta:
         model = models.CommunityRole
         fields = '__all__'
+
+
+class RequestCommunityParticipantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.RequestCommunityParticipant
+        fields = '__all__'

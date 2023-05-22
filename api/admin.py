@@ -15,7 +15,7 @@ admin.site.register(models.UserAdditionalInformation)
 admin.site.register(models.RequestUserSubscriptions)
 admin.site.register(models.Chat)
 admin.site.register(models.ChatMessage)
-# admin.site.register(models.UserRating)
+admin.site.register(models.CommunityRole)
 # admin.site.register(models.UserRating)
 # admin.site.register(models.UserRating)
 

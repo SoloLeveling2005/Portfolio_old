@@ -51,6 +51,42 @@ function Community(props: any) {
     }
 
 
+    // Slecet inputs
+
+    const [SelectManageParticipants, setSelectManageParticipants] = useState('false');
+    const handleChangeSelectManageParticipants = (event:any) => {
+        setSelectManageParticipants(event.target.value);
+    };
+
+    const [SelectEditCommunityInformation, setSelectEditCommunityInformation] = useState('false');
+    const handleChangeSelectEditCommunityInformation = (event:any) => {
+        setSelectEditCommunityInformation(event.target.value);
+    };
+
+    const [SelectPublishAds, setSelectPublishAds] = useState('false');
+    const handleChangeSelectPublishAds = (event:any) => {
+        setSelectPublishAds(event.target.value);
+    };
+
+    const [SelectPublishArticles, setSelectPublishArticles] = useState('true');
+    const handleChangeSelectPublishArticles = (event:any) => {
+        setSelectPublishArticles(event.target.value);
+    };
+
+    const [SelectPublishNews, setSelectPublishNews] = useState('false');
+    const handleChangeSelectPublishNews = (event:any) => {
+        setSelectPublishNews(event.target.value);
+    };
+
+
+    // Input название роли
+
+    const [InputRoleName, setInputRoleName] = useState('');
+    const handleChangeInputRoleName = (event:any) => {
+        setInputRoleName(event.target.value);
+    };
+    
+
     // Данные сообщества
     const [admin, create_admin] = useState(null);
     const [signed, create_signed] = useState(null);
@@ -78,7 +114,17 @@ function Community(props: any) {
         community_avatar: {
             img: ''
         },
-        roles: [],
+        roles: [
+            {
+                id: 0,
+                edit_community_information:null,
+                manage_participants:null,
+                publish_ads:null,
+                publish_articles:null,
+                publish_news:null,
+                title:''
+            }
+        ],
         admin_data: {
             id: 1,
             username:''
@@ -133,6 +179,7 @@ function Community(props: any) {
         }
         countAboutCommunity += 1
 
+        
 
         axios.defaults.baseURL = API_BASE_URL
         axios.get(`community/get_about_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
@@ -166,6 +213,11 @@ function Community(props: any) {
 
     let countCreateRole = 0
     function FCreateRole() {
+        if (InputRoleName == '') {
+            alert('Название роли не определено')
+            return
+        }
+
         if (countCreateRole == 3) {
             alert('Ошибка создания')
             countCreateRole = 0
@@ -175,11 +227,20 @@ function Community(props: any) {
 
 
         axios.defaults.baseURL = API_BASE_URL
-        axios.get(`community/get_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        axios.post(`community/create_community_role`, {
+            'community_id':id,
+            'title': InputRoleName,
+            'edit_community_information':SelectEditCommunityInformation == 'true' ? true : false,
+            'manage_participants':SelectManageParticipants == 'true' ? true : false,
+            'publish_articles':SelectPublishArticles == 'true' ? true : false,
+            'publish_news':SelectPublishNews == 'true' ? true : false,
+            'publish_ads':SelectPublishAds == 'true' ? true : false,
+        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
         .then(response => {
             console.log(response.data)
             alert('Роль успешно создана')
             countCreateRole = 0
+            getCommunity()
         })
         .catch(error => {
             if (error.request.status === 401) {
@@ -194,6 +255,43 @@ function Community(props: any) {
             }
         });
     }
+
+    let countDeleteRole = 0
+    function FDeleteRole(role_title: string) {
+
+
+        if (countDeleteRole == 3) {
+            alert('Ошибка создания')
+            countDeleteRole = 0
+            return
+        }
+        countDeleteRole += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.delete(`community/delete_community_role/${id}/${role_title}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        .then(response => {
+            console.log(response.data)
+            alert('Роль успешно удалена')
+            countDeleteRole = 0
+            getCommunity()
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Пробуем еще раз 
+                    FDeleteRole(role_title)
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+
+
+
     
     useEffect(() => {
         getCommunity()
@@ -450,6 +548,7 @@ function Community(props: any) {
                                                                 <th className='col'>Создание статей</th>
                                                                 <th className='col'>Создание новостей</th>
                                                                 <th className='col'>Создание рекламы</th>
+                                                                <th className='col'>Действие</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -460,40 +559,52 @@ function Community(props: any) {
                                                                 <td>Да</td>
                                                                 <td>Да</td>
                                                                 <td>Да</td>
+                                                                <td>Нет</td>
                                                             </tr>
+                                                            {data.roles.map((item, index) => (
+                                                                <tr key={index}>
+                                                                    <td className='fw-bold'>{ item.title }</td>
+                                                                    <td>{ item.manage_participants == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                    <td>{ item.edit_community_information == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                    <td>{ item.publish_articles == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                    <td>{ item.publish_news == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                    <td>{ item.publish_ads == true ? (<span>Да</span>):(<span>Нет</span>) }</td>
+                                                                    <td><button className='btn btn-warning text-white' onClick={()=>{FDeleteRole(item.title.toString())}}>Удалить</button></td>
+                                                                </tr>  
+                                                            ))}        
                                                         </tbody>
                                                     </table>
                                                     <h5 className='mt-3'>Создание роли (Основные параметры)</h5>
                                                     <h6>Название роли:</h6>
-                                                    <input type="text" placeholder='name' className='form-control w-100 mb-2'/>
+                                                    <input type="text" placeholder='name' className='form-control w-100 mb-2' value={InputRoleName} onChange={handleChangeInputRoleName}/>
                                                     <h5>Разрешения</h5>
                                                     <h6 title='Может редактировать информацию о сообществе (название, роли, описание и т.д.)' className='cursor-help'>Модератор <small>(Наведите чтобы узнать больше)</small></h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectManageParticipants} onChange={handleChangeSelectManageParticipants}>
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
                                                     </select>
                                                     <h6 title='Может управление пользователями (добавление, удаление, бан и т.д.).' className='cursor-help'>Управляющий <small>(Наведите чтобы узнать больше)</small></h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectEditCommunityInformation} onChange={handleChangeSelectEditCommunityInformation}>
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
                                                     </select>
                                                     <h6>Создание статей</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishArticles} onChange={handleChangeSelectPublishArticles}>
                                                         <option value="true" selected>Да</option>
                                                         <option value="false">Нет</option>
                                                     </select>
                                                     <h6>Создание новостей</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishNews} onChange={handleChangeSelectPublishNews}>
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
                                                     </select>
                                                     <h6>Создание рекламы</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
+                                                    <select className="form-select mb-2" aria-label="Default select example" value={SelectPublishAds} onChange={handleChangeSelectPublishAds}>
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
                                                     </select>
 
-                                                    <button className='btn btn-primary w-100' onClick={createRoleF}>Добавить роль</button>
+                                                    <button className='btn btn-primary w-100' onClick={FCreateRole}>Добавить роль</button>
                                                 </div>
                                             )}
                                             

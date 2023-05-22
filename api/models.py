@@ -220,7 +220,7 @@ class CommunityRole(models.Model):
      - publish_news - публиковать новости.
      - publish_ads - публиковать рекламу.
     """
-    title = models.CharField(max_length=100, unique=True)
+    title = models.CharField(max_length=100, unique=False)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='community_role')
     edit_community_information = models.BooleanField(default=False)
     manage_participants = models.BooleanField(default=False)

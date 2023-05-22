@@ -22,7 +22,7 @@ from .serializers import UserRegistrationSerializer, UserAuthenticationSerialize
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
     UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
-    CommunityAvatarSereilizer
+    CommunityAvatarSereilizer, RequestCommunityParticipantSerializer
 
 
 # todo Удаление старых фото при загрузке новых.
@@ -688,11 +688,14 @@ def get_about_community(request, community_id: int):
     subscribers = CommunityParticipant.objects.filter(community=community)
     subscribers_count = len(subscribers) + 1
 
+    participant_requests = RequestCommunityParticipant.objects.filter(community=community)
+    participant_requests = RequestCommunityParticipantSerializer(participant_requests, many=True).data
+
     return Response(data={'signed': signed, 'admin': admin, 'request_to_sign': request_to_sign,
                           'subscribers_count': subscribers_count,
                           'edit_community_information': edit_community_information,
                           'manage_participants': manage_participants, 'publish_articles': publish_articles,
-                          'publish_news': publish_news, 'publish_ads': publish_ads,
+                          'publish_news': publish_news, 'publish_ads': publish_ads, 'participant_requests':participant_requests
                           },
                     status=status.HTTP_200_OK)
 
@@ -757,7 +760,7 @@ def create_community_role(request) -> Response:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     # Проверяем на существование роли.
-    if Community.objects.filter(Q(community=community) and Q(title=community.title)).exists():
+    if Community.objects.filter(Q(community=community) and Q(title=request.data['title'])).exists():
         return Response(data={'message': 'Role already exists'}, status=status.HTTP_409_CONFLICT)
 
     # Сериализуем данные и в случае успеха создаем роль.
@@ -766,6 +769,7 @@ def create_community_role(request) -> Response:
         # Создаем роль.
         community_role = CommunityRole()
         community_role.title = request.data['title']
+        community_role.community = community
         community_role.edit_community_information = request.data['edit_community_information']
         community_role.manage_participants = request.data['manage_participants']
         community_role.publish_articles = request.data['publish_articles']
@@ -808,10 +812,11 @@ def delete_community_role(request, community_id: int, role_title: str) -> Respon
     if edit_community_information is False:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
+    print(role_title)
     # Проверяем на существование роли.
     role = CommunityRole.objects.filter(Q(community=community) and Q(title=role_title))
     if not role:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     # Удаляем роль.
     role.delete()
