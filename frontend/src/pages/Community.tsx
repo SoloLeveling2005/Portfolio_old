@@ -52,11 +52,18 @@ function Community(props: any) {
 
 
     // Данные сообщества
+    const [admin, create_admin] = useState(null);
+    const [signed, create_signed] = useState(null);
+    const [edit_community_information, create_edit_community_information] = useState(null);
+    const [manage_participants, create_manage_participants] = useState(null);
+    const [publish_ads, create_publish_ads] = useState(null);
+    const [publish_articles, create_publish_articles] = useState(null);
+    const [publish_news, create_publish_news] = useState(null);
+    const [request_to_sign, create_request_to_sign] = useState(null);
+    const [subscribers_count, create_subscribers_count] = useState(0);
+    
 
     const [data, setData] = useState({
-        admin: Boolean,
-        signed: Boolean,
-        subscribers_count: 1,
         articles: [],
         articles_comments:[],
         community: {
@@ -73,8 +80,15 @@ function Community(props: any) {
         },
         roles: [],
         admin_data: {
+            id: 1,
             username:''
-        }
+        },
+        subscribers: [
+            {
+                id: 1,
+                username: ''
+            }
+        ]
     });
     
 
@@ -109,6 +123,47 @@ function Community(props: any) {
         });
     }
 
+
+    let countAboutCommunity = 0
+    function aboutCommunity() {
+        if (countAboutCommunity == 2) {
+            alert('Ошибка поиска')
+            countAboutCommunity = 0
+            return
+        }
+        countAboutCommunity += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`community/get_about_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+            .then(response => {
+            countAboutCommunity = 0
+            console.log(response.data)
+            create_admin(response.data.admin)
+            create_signed(response.data.signed)
+            create_edit_community_information(response.data.edit_community_information)
+            create_manage_participants(response.data.manage_participants)
+            create_publish_ads(response.data.publish_ads)
+            create_publish_articles(response.data.publish_articles)
+            create_publish_news(response.data.publish_news)
+            create_request_to_sign(response.data.request_to_sign)
+            create_subscribers_count(response.data.subscribers_count)
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+            axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Запрашиваем данные снова
+                    aboutCommunity()
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+
+
     let countCreateRole = 0
     function FCreateRole() {
         if (countCreateRole == 3) {
@@ -142,6 +197,7 @@ function Community(props: any) {
     
     useEffect(() => {
         getCommunity()
+        aboutCommunity()
     }, []);
 
 
@@ -253,14 +309,6 @@ function Community(props: any) {
                                                             ): (
                                                                 <span className='p-0 m-0'>{data.community.created_at.substring(0,10)}</span>
                                                             )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="row my-1">
-                                                        <div className="col">
-                                                            Дата основания
-                                                        </div>
-                                                        <div className="col">
-                                                            15 октября 1998
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -397,30 +445,16 @@ function Community(props: any) {
                                                         <thead>
                                                             <tr>
                                                                 <th className='col'>Роль</th>
-                                                                <th className='col'>Администратор</th>
                                                                 <th className='col'>Модератор</th>
+                                                                <th className='col'>Управляющий</th>
                                                                 <th className='col'>Создание статей</th>
                                                                 <th className='col'>Создание новостей</th>
                                                                 <th className='col'>Создание рекламы</th>
-                                                                <th className='col'>Создание чатов</th>
-                                                                <th className='col'>Принимать заявки</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <tr>
-                                                                <td className='fw-bold'>user</td>
-                                                                <td>Нет</td>
-                                                                <td>Нет</td>
-                                                                <td>Да</td>
-                                                                <td>Нет</td>
-                                                                <td>Нет</td>
-                                                                <td>Нет</td>
-                                                                <td>Нет</td>
-                                                            </tr>
-                                                            <tr>
                                                                 <td className='fw-bold'>admin</td>
-                                                                <td>Да</td>
-                                                                <td>Да</td>
                                                                 <td>Да</td>
                                                                 <td>Да</td>
                                                                 <td>Да</td>
@@ -433,12 +467,12 @@ function Community(props: any) {
                                                     <h6>Название роли:</h6>
                                                     <input type="text" placeholder='name' className='form-control w-100 mb-2'/>
                                                     <h5>Разрешения</h5>
-                                                    <h6 title='Может все, от создания постов до удаления сообщества' className='cursor-help'>Администратор (Назначайте с осторожностью) <small>(Наведите чтобы узнать больше)</small></h6>
+                                                    <h6 title='Может редактировать информацию о сообществе (название, роли, описание и т.д.)' className='cursor-help'>Модератор <small>(Наведите чтобы узнать больше)</small></h6>
                                                     <select className="form-select mb-2" aria-label="Default select example">
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
                                                     </select>
-                                                    <h6 title='Имеет права на редактирование постов, новостей, рекламы и т.д.' className='cursor-help'>Модератор (Назначайте с осторожностью) <small>(Наведите чтобы узнать больше)</small></h6>
+                                                    <h6 title='Может управление пользователями (добавление, удаление, бан и т.д.).' className='cursor-help'>Управляющий <small>(Наведите чтобы узнать больше)</small></h6>
                                                     <select className="form-select mb-2" aria-label="Default select example">
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
@@ -454,16 +488,6 @@ function Community(props: any) {
                                                         <option value="false" selected>Нет</option>
                                                     </select>
                                                     <h6>Создание рекламы</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
-                                                        <option value="true">Да</option>
-                                                        <option value="false" selected>Нет</option>
-                                                    </select>
-                                                    <h6>Создание чатов</h6>
-                                                    <select className="form-select mb-2" aria-label="Default select example">
-                                                        <option value="true">Да</option>
-                                                        <option value="false" selected>Нет</option>
-                                                    </select>
-                                                    <h6>Принимать заявки пользователей на вступление в сообщество</h6>
                                                     <select className="form-select mb-2" aria-label="Default select example">
                                                         <option value="true">Да</option>
                                                         <option value="false" selected>Нет</option>
@@ -487,56 +511,53 @@ function Community(props: any) {
                                                         <th className='col-2'>
                                                             Роль
                                                         </th>
-                                                        <th className='col-2'>
-                                                            Рейтинг
-                                                        </th>
-                                                        <th className='col-2'>
-                                                            Действия
-                                                        </th>
+                                                        {manage_participants == true &&
+                                                            <th className='col-2'>
+                                                                Действия
+                                                            </th>
+                                                        }
                                                     </tr>
                                                 </thead> 
                                                 <tbody>
                                                     <tr>
                                                         <td>
-                                                            <Link to={`/user/1`}>Username</Link>
+                                                            <Link to={`/user/${data.admin_data.id}`}>{ data.admin_data.username }</Link>
                                                         </td>
                                                         <td>
-                                                            <select className="form-select" aria-label="Default select example">
-                                                                <option value="admin">admin</option>
-                                                                <option value="user" selected>user</option>
-                                                            </select>
+                                                            <p>Админ</p>
                                                         </td>
                                                         <td>
-                                                            122
-                                                        </td>
-                                                        <td>
-                                                            <select className="form-select" aria-label="Default select example">
-                                                                <option value="nobody" selected>Ничего</option>
-                                                                <option value="ban" className='bg-danger text-white'>Забанить</option>
-                                                                <option value="unban" className='bg-success text-white'>Разбанить</option>
-                                                            </select>
+                                                            Нет действий
                                                         </td>
                                                     </tr> 
-                                                    <tr>
-                                                        <td>
-                                                            <Link to={`/user/1`}>Username</Link>
-                                                        </td>
-                                                        <td>
-                                                            <select className="form-select" aria-label="Default select example">
-                                                                <option value="admin" selected>admin</option>
-                                                                <option value="user">user</option>
-                                                            </select>
-                                                        </td>
-                                                        <td>
-                                                            122
-                                                        </td>
-                                                        <td>
-                                                            <select className="form-select" aria-label="Default select example">
-                                                                <option value="admin" selected>Ничего</option>
-                                                                <option value="user" className='bg-danger text-white'>Забанить</option>
-                                                            </select>
-                                                        </td>
-                                                    </tr>    
+                                                    {data.subscribers.map((item, index) => (
+                                                        <tr>
+                                                            <td>
+                                                                <Link to={`/user/${item.id}`}>{ item.username }</Link>
+                                                            </td>
+                                                            <td>
+                                                                {manage_participants == true ? (
+                                                                    <select className="form-select" aria-label="Default select example">
+                                                                        <option value="admin">admin</option>
+                                                                        <option value="user" selected>user</option>
+                                                                    </select>
+                                                                ): (
+                                                                    <p>Роль</p>      
+                                                                )}
+                                                            </td>
+                                                            <td>
+                                                                {manage_participants == true &&
+                                                                    <select className="form-select" aria-label="Default select example">
+                                                                        <option value="nobody" selected>Ничего</option>
+                                                                        <option value="ban" className='bg-danger text-white'>Забанить</option>
+                                                                        <option value="unban" className='bg-success text-white'>Разбанить</option>
+                                                                    </select>
+                                                                }
+                                                            </td>
+                                                        </tr> 
+                                                    ))}
+                                                    
+                                                     
                                                 </tbody>   
                                             </table>               
                                         </div>
@@ -670,14 +691,6 @@ function Community(props: any) {
                                                             </div>
                                                             <div className="row my-1">
                                                                 <div className="col">
-                                                                    Дата основания
-                                                                </div>
-                                                                <div className="col">
-                                                                    15 октября 1998
-                                                                </div>
-                                                            </div>
-                                                            <div className="row my-1">
-                                                                <div className="col">
                                                                     Местоположение
                                                                 </div>
                                                                 <div className="col">
@@ -723,12 +736,16 @@ function Community(props: any) {
                                                 <div className="card-body">
                                                     <h6 className='mb-0'>Информация</h6>
                                                     <div className='table pt-1'>
-                                                        <div className="row my-1">
+                                                            <div className="row my-1">
                                                             <div className="col">
                                                                 Сайт
                                                             </div>
                                                             <div className="col">
-                                                                vk.com
+                                                                {data.community.website == null || data.community.website == '' ? (
+                                                                    <span className='p-0 m-0'>Не указан</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.community.website}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="row my-1">
@@ -736,23 +753,24 @@ function Community(props: any) {
                                                                 Дата регистрации
                                                             </div>
                                                             <div className="col">
-                                                                9 августа 2008
+                                                                {data.community.created_at == null || data.community.created_at == '' ? (
+                                                                    <span className='p-0 m-0'>Не указан</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.community.created_at.substring(0,10)}</span>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="row my-1">
-                                                            <div className="col">
-                                                                Дата основания
-                                                            </div>
-                                                            <div className="col">
-                                                                15 октября 1998
-                                                            </div>
-                                                        </div>
+
                                                         <div className="row my-1">
                                                             <div className="col">
                                                                 Местоположение
                                                             </div>
                                                             <div className="col">
-                                                                Россия
+                                                                {data.community.location == null || data.community.location == '' ? (
+                                                                    <span className='p-0 m-0'>Не указано</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.community.location}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="row my-1">
@@ -760,7 +778,11 @@ function Community(props: any) {
                                                                 Представитель
                                                             </div>
                                                             <div className="col">
-                                                                Анастасия Гутор
+                                                                {data.admin_data.username == null || data.admin_data.username == '' ? (
+                                                                    <span className='p-0 m-0'>Не указан</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.admin_data.username}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -776,12 +798,16 @@ function Community(props: any) {
                                                 <div className="card-body">
                                                     <h6 className='mb-0'>Информация</h6>
                                                     <div className='table pt-1'>
-                                                        <div className="row my-1">
+                                                            <div className="row my-1">
                                                             <div className="col">
                                                                 Сайт
                                                             </div>
                                                             <div className="col">
-                                                                vk.com
+                                                                {data.community.website == null || data.community.website == '' ? (
+                                                                    <span className='p-0 m-0'>Не указан</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.community.website}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="row my-1">
@@ -789,15 +815,11 @@ function Community(props: any) {
                                                                 Дата регистрации
                                                             </div>
                                                             <div className="col">
-                                                                9 августа 2008
-                                                            </div>
-                                                        </div>
-                                                        <div className="row my-1">
-                                                            <div className="col">
-                                                                Дата основания
-                                                            </div>
-                                                            <div className="col">
-                                                                15 октября 1998
+                                                                {data.community.created_at == null || data.community.created_at == '' ? (
+                                                                    <span className='p-0 m-0'>Не указан</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.community.created_at.substring(0,10)}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="row my-1">
@@ -805,7 +827,11 @@ function Community(props: any) {
                                                                 Местоположение
                                                             </div>
                                                             <div className="col">
-                                                                Россия
+                                                                {data.community.location == null || data.community.location == '' ? (
+                                                                    <span className='p-0 m-0'>Не указано</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.community.location}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="row my-1">
@@ -813,7 +839,11 @@ function Community(props: any) {
                                                                 Представитель
                                                             </div>
                                                             <div className="col">
-                                                                Анастасия Гутор
+                                                                {data.admin_data.username == null || data.admin_data.username == '' ? (
+                                                                    <span className='p-0 m-0'>Не указан</span>
+                                                                ): (
+                                                                    <span className='p-0 m-0'>{data.admin_data.username}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -837,12 +867,16 @@ function Community(props: any) {
                                             <div className="card-body">
                                                 <h6 className='mb-0'>Информация</h6>
                                                 <div className='table pt-1'>
-                                                    <div className="row my-1">
+                                                        <div className="row my-1">
                                                         <div className="col">
                                                             Сайт
                                                         </div>
                                                         <div className="col">
-                                                            vk.com
+                                                            {data.community.website == null || data.community.website == '' ? (
+                                                                <span className='p-0 m-0'>Не указан</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.community.website}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -850,15 +884,11 @@ function Community(props: any) {
                                                             Дата регистрации
                                                         </div>
                                                         <div className="col">
-                                                            9 августа 2008
-                                                        </div>
-                                                    </div>
-                                                    <div className="row my-1">
-                                                        <div className="col">
-                                                            Дата основания
-                                                        </div>
-                                                        <div className="col">
-                                                            15 октября 1998
+                                                            {data.community.created_at == null || data.community.created_at == '' ? (
+                                                                <span className='p-0 m-0'>Не указан</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.community.created_at.substring(0,10)}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -866,7 +896,11 @@ function Community(props: any) {
                                                             Местоположение
                                                         </div>
                                                         <div className="col">
-                                                            Россия
+                                                            {data.community.location == null || data.community.location == '' ? (
+                                                                <span className='p-0 m-0'>Не указано</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.community.location}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="row my-1">
@@ -874,7 +908,11 @@ function Community(props: any) {
                                                             Представитель
                                                         </div>
                                                         <div className="col">
-                                                            Анастасия Гутор
+                                                            {data.admin_data.username == null || data.admin_data.username == '' ? (
+                                                                <span className='p-0 m-0'>Не указан</span>
+                                                            ): (
+                                                                <span className='p-0 m-0'>{data.admin_data.username}</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

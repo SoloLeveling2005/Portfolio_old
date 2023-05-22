@@ -10,13 +10,81 @@ import ActivityUser from '../components/ActivityUser';
 import Dialogue from '../components/Messenger/Dialogue';
 import Message from '../components/Messenger/Message';
 import MyMessage from '../components/Messenger/MyMessage';
+import { io, Socket } from 'socket.io-client';
 function Messenger() {
+    
+
+    
+
+    //
+
+    // function roomConnect() {
+    //     console.log('Start')
+    //     const socket = new WebSocket(`ws://localhost:8000/ws/1/`);
+
+    //     socket.onopen = function (e) {
+    //         console.log("[open] Соединение установлено");
+    //     };
+
+    //     socket.onmessage = function (e) {
+    //         const data = JSON.parse(e.data);
+    //         console.log(data);
+    //         // if(data.message){
+    //         //     let html = '<div class="p-4 bg-gray-200 rounded-xl">';
+    //         //         html+=  '<p class="font-semibold">' + data.username + '</p>';
+    //         //         html +=  '<p>' + data.message + '</p></div>';
+    //         //     document.querySelector('#chat-messages').innerHTML += html;
+    //         //     scrollToBottom();
+    //         // } else{
+    //         // }
+    //     };
+
+    //     socket.onclose = function (event) {
+    //         if (event.wasClean) {
+    //             alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+    //         } else {
+    //             // например, сервер убил процесс или сеть недоступна
+    //             // обычно в этом случае event.code 1006
+    //             alert('[close] Соединение прервано');
+    //         }
+    //     };
+
+    //     const sendMessage = (e:any, socket) => {
+    //         e.preventDefault();
+    //         const message = inputUserMessage;
+    //         socket.send(
+    //             JSON.stringify({
+    //                 message: message,
+    //                 username: localStorage.getItem('username'),
+    //                 room: chat,
+    //             })
+    //         );
+    //         return false;
+    //     };
+
+    //     const handleKeyPress = (event: any) => {
+    //         if (event.key === 'Enter') {
+    //             sendMessage(event)
+    //         }
+    //     };
+
+    //     socket.onerror = function (error) {
+    //         console.log(`[error]`);
+    //     };
+
+    //     return () => {
+    //         socket.close();
+    //     };
+
+        
+    // }
+
     var {messenger_id} = useParams();
     const [chat, switchChat] = useState(`${messenger_id}`);
     
     function switchChatF(id = '0') {
         switchChat(id)
-        roomConnect()
+        // roomConnect()
     }
 
 
@@ -27,32 +95,48 @@ function Messenger() {
         setInputUserMessage(event.target.value);
     };
 
-    
 
-    // 
+    const [rooms, setRooms] = useState<string[]>(['room1', 'room2', 'room3']); // Состояние списка комнат
+    const [currentRoom, setCurrentRoom] = useState<string>('room1'); // Состояние текущей комнаты
+    const [messages, setMessages] = useState<string[]>([]); // Состояние сообщений
+    const [socket, setSocket] = useState<WebSocket | null>(null);
 
-    function roomConnect() {
-        console.log('Start')
-        const socket = new WebSocket(`ws://localhost:8000/ws/1/`);
 
-        socket.onopen = function (e) {
+    // Отправка сообщения
+    const sendMessage = (event: any) => {
+        event.preventDefault();
+        if (socket) {
+            socket.send(
+                JSON.stringify({
+                    message: inputUserMessage,
+                    username: localStorage.getItem('username'),
+                    room: chat,
+                })
+            );
+        } else {
+            console.log("Соединение не было найдено")
+        }
+    };
+
+    // Подключение к сокету при монтировании компонента
+    useEffect(() => {
+        if (chat == '0') return;
+        const newSocket = new WebSocket(`ws://localhost:8000/ws/${chat}/`);
+        setSocket(newSocket)
+        
+        
+        newSocket.onopen = function (e) {
             console.log("[open] Соединение установлено");
         };
 
-        socket.onmessage = function (e) {
+        // Подписка на новые сообщения
+        newSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
             console.log(data);
-            // if(data.message){
-            //     let html = '<div class="p-4 bg-gray-200 rounded-xl">';
-            //         html+=  '<p class="font-semibold">' + data.username + '</p>';
-            //         html +=  '<p>' + data.message + '</p></div>';
-            //     document.querySelector('#chat-messages').innerHTML += html;
-            //     scrollToBottom();
-            // } else{
-            // }
         };
 
-        socket.onclose = function (event) {
+        // Отключение сокета при размонтировании компонента
+        newSocket.onclose = function (event) {
             if (event.wasClean) {
                 alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
             } else {
@@ -61,38 +145,8 @@ function Messenger() {
                 alert('[close] Соединение прервано');
             }
         };
-
-        const sendMessage = (e:any, socket) => {
-            e.preventDefault();
-            const message = inputUserMessage;
-            socket.send(
-                JSON.stringify({
-                    message: message,
-                    username: localStorage.getItem('username'),
-                    room: chat,
-                })
-            );
-            return false;
-        };
-
-        const handleKeyPress = (event: any) => {
-            if (event.key === 'Enter') {
-                sendMessage(event)
-            }
-        };
-
-        socket.onerror = function (error) {
-            console.log(`[error]`);
-        };
-
-        return () => {
-            socket.close();
-        };
-
+    }, [chat]);
         
-    }
-    
-    
 
     return (
         <div className="Messenger text-white">

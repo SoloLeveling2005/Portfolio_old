@@ -94,7 +94,7 @@ function NewCommunity() {
             // Удачное создание.
             
             // Переходим в сообщество.
-            navigate(`community/${response.data.community_id}`)
+            navigate(`/community/${response.data.community_id}`)
         })
         .catch(error => {
             // Ошибка создания

@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'drf_yasg',
+
     'chat_lm',
     'api',
     # 'web',
@@ -161,6 +163,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
 
     ],
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
 }
 
 # Настройки JWT

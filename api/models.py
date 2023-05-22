@@ -214,7 +214,7 @@ class CommunityRecommendation(models.Model):
 class CommunityRole(models.Model):
     """
     Модель роли в сообществе и его разрешения.
-     - edit_community_information - редактировать информацию о сообществе (название, теги, описание и т.д.).
+     - edit_community_information - редактировать информацию о сообществе (название, роли, описание и т.д.).
      - manage_participants - управление пользователями (добавление, удаление, бан и т.д.).
      - publish_articles - публиковать статьи.
      - publish_news - публиковать новости.

@@ -25,6 +25,8 @@ from .serializers import UserRegistrationSerializer, UserAuthenticationSerialize
     CommunityAvatarSereilizer
 
 
+# todo Удаление старых фото при загрузке новых.
+
 # Helpers
 # Exists хелперы. Основная идея. Если данные есть, то возвращает их, иначе возвращает None.
 
@@ -258,7 +260,6 @@ def get_room(request, room_id: int):
     return Response(data={'rooms': rooms, 'room': room, 'messages': messages}, status=status.HTTP_200_OK)
 
 
-# todo Получить пользователя по id.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user(request, user_id: int):
@@ -309,7 +310,6 @@ def get_user(request, user_id: int):
               'articles': articles, 'communities': communities}, status=status.HTTP_200_OK)
 
 
-# todo Получить информацию о пользователе по отношению к нам по id.
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_about(request, user_id: int):
@@ -331,7 +331,6 @@ def user_about(request, user_id: int):
     )
 
 
-# todo Обновить аватарку пользователя.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_avatar(request):
@@ -354,7 +353,6 @@ def update_user_avatar(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-# todo обновить профиль пользователя.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
@@ -387,7 +385,6 @@ def update_user_profile(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# todo обновить дополнительную информацию о пользователе.
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_additional_information(request):
@@ -609,9 +606,10 @@ def get_community(request, community_id: int):
     roles = CommunityRolesSereilizer(roles, many=True).data
     admin_data = UserSerializer(community.user).data
     community = CommunitySerializer(community).data
+    subscribers = UserSubscriptionsSerializer(subscribers, many=True).data
 
-    return Response(data={'admin_data': admin_data, 'community': community, 'signed': signed, 'admin': admin,
-                          'request_to_sign': request_to_sign,
+    return Response(data={'admin_data': admin_data, 'community': community,
+                          'request_to_sign': request_to_sign, 'subscribers': subscribers,
                           'subscribers_count': subscribers_count, 'community_avatar': community_avatar,
                           'articles': articles, 'articles_comments': articles_comments, 'roles': roles})
 
@@ -657,24 +655,169 @@ def get_about_community(request, community_id: int):
 
     signed = True
     admin = False
+    edit_community_information = False
+    manage_participants = False
+    publish_articles = False
+    publish_news = False
+    publish_ads = False
     request_to_sign = True
 
-    if check_participant_exists(community=community, participant=user) is None:
+    participant = check_participant_exists(community=community, participant=user)
+    if participant is None:
         signed = False
+    else:
+        edit_community_information = participant.role.edit_community_information
+        manage_participants = participant.role.manage_participants
+        publish_articles = participant.role.publish_articles
+        publish_news = participant.role.publish_news
+        publish_ads = participant.role.publish_ads
 
     if check_participant_request_exists(community=community, participant=user) is None:
         request_to_sign = False
 
+    # Если пользователь админ, то делаем все True
     if community.user == user:
         signed = True
         admin = True
+        edit_community_information = True
+        manage_participants = True
+        publish_articles = True
+        publish_news = True
+        publish_ads = True
 
     subscribers = CommunityParticipant.objects.filter(community=community)
     subscribers_count = len(subscribers) + 1
 
     return Response(data={'signed': signed, 'admin': admin, 'request_to_sign': request_to_sign,
-                          'subscribers_count': subscribers_count},
+                          'subscribers_count': subscribers_count,
+                          'edit_community_information': edit_community_information,
+                          'manage_participants': manage_participants, 'publish_articles': publish_articles,
+                          'publish_news': publish_news, 'publish_ads': publish_ads,
+                          },
                     status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_community(request) -> Response:
+    """Создает новое сообщество."""
+
+    user = request.user
+    title = request.POST.get('title')
+    short_info = request.POST.get('short_info')
+    image_file = request.FILES.get('image')
+    tag1 = request.POST.get('tagFirst')
+    tag2 = request.POST.get('tagSecond')
+    tag3 = request.POST.get('tagThird')
+
+    print(title)
+    community = Community.objects.create(user=user, title=title, short_info=short_info)
+    print('Сообщество создано')
+    CommunityTag.objects.create(community=community, tag=tag1)
+    CommunityTag.objects.create(community=community, tag=tag2)
+    CommunityTag.objects.create(community=community, tag=tag3)
+    print('Теги созданы')
+
+    # Создание экземпляра CommunityAvatar и сохранение изображения
+    community_avatar = CommunityAvatar()
+    community_avatar.community = community
+    community_avatar.img.save(image_file.name, image_file)
+    community_avatar.save()
+
+    return Response(data={'status': 'success', 'community_id': community.id}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_community_role(request) -> Response:
+    """Создает роль в сообществе."""
+
+    # Получаем данные.
+    user = request.user
+    community_id = request.data['community_id']
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if community is None:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # Проверка на разрешение edit_community_information
+    community_user = CommunityParticipant.objects.filter(community=community, user=user)
+    edit_community_information = False
+    if community.user == user:
+        # Пользователь админ
+        edit_community_information = True
+    if community_user.exists():
+        if community_user.role.edit_community_information is True:
+            # Пользователь имеет разрешение на создание роли
+            edit_community_information = True
+
+    # Проверяем, если его роль не имеет разрешение edit_community_information то запрещаем.
+    if edit_community_information is False:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Проверяем на существование роли.
+    if Community.objects.filter(Q(community=community) and Q(title=community.title)).exists():
+        return Response(data={'message': 'Role already exists'}, status=status.HTTP_409_CONFLICT)
+
+    # Сериализуем данные и в случае успеха создаем роль.
+    serializer = SerializerCreateCommunityRole(data=request.data)
+    if serializer.is_valid():
+        # Создаем роль.
+        community_role = CommunityRole()
+        community_role.title = request.data['title']
+        community_role.edit_community_information = request.data['edit_community_information']
+        community_role.manage_participants = request.data['manage_participants']
+        community_role.publish_articles = request.data['publish_articles']
+        community_role.publish_news = request.data['publish_news']
+        community_role.publish_ads = request.data['publish_ads']
+        community_role.save()
+
+        # Возвращаем успешный ответ.
+        return Response(status=status.HTTP_201_CREATED)
+    else:
+        # Обнаружены ошибки валидации, можно вернуть ошибку.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_community_role(request, community_id: int, role_title: str) -> Response:
+    """Удаляет роль."""
+
+    # Получаем данные.
+    user = request.user
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if community is None:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # Проверка на разрешение edit_community_information
+    community_user = CommunityParticipant.objects.filter(community=community, user=user)
+    edit_community_information = False
+    if community.user == user:
+        # Пользователь админ
+        edit_community_information = True
+    if community_user.exists():
+        if community_user.role.edit_community_information is True:
+            # Пользователь имеет разрешение на создание роли
+            edit_community_information = True
+
+    # Проверяем, если его роль не имеет разрешение edit_community_information то запрещаем.
+    if edit_community_information is False:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    # Проверяем на существование роли.
+    role = CommunityRole.objects.filter(Q(community=community) and Q(title=role_title))
+    if not role:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # Удаляем роль.
+    role.delete()
+
+    # Возвращаем успешный ответ.
+    return Response(status=status.HTTP_200_OK)
 
 
 # todo Рабочие методы выше
@@ -790,36 +933,6 @@ class CommunitiesView(APIView):
     #     self.requesting_user = request.user
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_community(request) -> Response:
-    """Создает новое сообщество."""
-
-    user = request.user
-    title = request.POST.get('title')
-    short_info = request.POST.get('short_info')
-    image_file = request.FILES.get('image')
-    tag1 = request.POST.get('tagFirst')
-    tag2 = request.POST.get('tagSecond')
-    tag3 = request.POST.get('tagThird')
-
-    print(title)
-    community = Community.objects.create(user=user, title=title, short_info=short_info)
-    print('Сообщество создано')
-    CommunityTag.objects.create(community=community, tag=tag1)
-    CommunityTag.objects.create(community=community, tag=tag2)
-    CommunityTag.objects.create(community=community, tag=tag3)
-    print('Теги созданы')
-
-    # Создание экземпляра CommunityAvatar и сохранение изображения
-    community_avatar = CommunityAvatar()
-    community_avatar.community = community
-    community_avatar.img.save(image_file.name, image_file)
-    community_avatar.save()
-
-    return Response(data={'status': 'success', 'community_id': community.id}, status=status.HTTP_201_CREATED)
-
-
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_community(request) -> Response:
@@ -841,79 +954,6 @@ def delete_community(request) -> Response:
     # Удаляем и возвращаем успешный ответ.
     community.delete()
 
-    return Response(data={}, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_community_role(request) -> Response:
-    """Создает роль в сообществе."""
-
-    # Получаем данные.
-    user = request.user
-    community_id = request.POST.get('community_id')
-
-    # Проверяет на существование сообщества.
-    community = check_community_exists(community_id)
-    if isinstance(community, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяем, если пользователь не админ то запрещаем создание ролей.
-    if community.user != user:
-        return Response(data={}, status=status.HTTP_403_FORBIDDEN)
-
-    # Проверяем на существование роли.
-    if Community.objects.filter(Q(community=community) and Q(title=community.title)).exists():
-        return Response(data={'message': 'Role already exists'}, status=status.HTTP_409_CONFLICT)
-
-    # Сериализуем данные и в случае успеха создаем роль.
-    serializer = SerializerCreateCommunityRole(data=request.data)
-    if serializer.is_valid():
-        # Создаем роль.
-        community_role = CommunityRole()
-        community_role.title = request.POST.get('title')
-        community_role.edit_community_information = request.POST.get('edit_community_information')
-        community_role.manage_participants = request.POST.get('manage_participants')
-        community_role.publish_articles = request.POST.get('publish_articles')
-        community_role.publish_news = request.POST.get('publish_news')
-        community_role.publish_ads = request.POST.get('publish_ads')
-        community_role.save()
-
-        # Возвращаем успешный ответ.
-        return Response(data={}, status=status.HTTP_201_CREATED)
-    else:
-        # Обнаружены ошибки валидации, можно вернуть ошибку.
-        return Response(serializer.errors, status=400)
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_community_role(request) -> Response:
-    """Удаляет роль."""
-
-    # Получаем данные.
-    user = request.user
-    role_title = request.POST.get('role_title')
-    community_id = request.POST.get('community_id')
-
-    # Проверяет на существование сообщества.
-    community = check_community_exists(community_id)
-    if isinstance(community, Response):
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Проверяем, если пользователь не админ то запрещаем удаление ролей.
-    if community.user != user:
-        return Response(data={}, status=status.HTTP_403_FORBIDDEN)
-
-    # Проверяем на существование роли.
-    role = CommunityRole.objects.filter(Q(community=community) and Q(title=role_title))
-    if not role:
-        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
-
-    # Удаляем роль.
-    role.delete()
-
-    # Возвращаем успешный ответ.
     return Response(data={}, status=status.HTTP_200_OK)
 
 
