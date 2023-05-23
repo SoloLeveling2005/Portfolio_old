@@ -614,7 +614,8 @@ def get_community(request, community_id: int):
             print(request_subscriber)
             serialized_request = {
                 'user': UserSerializer(request_subscriber.user).data,
-                'role': CommunityRolesSereilizer(CommunityParticipant.objects.get(user=request_subscriber.user).role).data
+                'role': CommunityRolesSereilizer(
+                    CommunityParticipant.objects.get(user=request_subscriber.user).role).data
             }
             serialized_data.append(serialized_request)
         subscribers = serialized_data
@@ -985,6 +986,56 @@ def kick_out_community_participant(request, participant_id: int, community_id: i
     CommunityParticipant.objects.get(community=community, user=participant).delete()
 
     return Response(status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_article(request):
+    """Создает статью"""
+
+    user = request.user
+    img = request.FILES.get('img', None)
+    community_id = request.data['community_id']
+    title = request.data['title', None]
+    description = request.data['description', None]
+    content = request.data['content', None]
+    field_of_view = request.data['field_of_view', 1]
+
+    if title is None or description is None or content is None or img is None:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    # Проверяет на существование сообщества.
+    community = check_community_exists(community_id)
+    if community is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # Проверяет на присутствие участника в сообществе.
+    check_participant = check_participant_exists(community=community, participant=user)
+    if check_participant is None:
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    # Получаем информацию об участнике принимающий пользователя.
+    community_participant = CommunityParticipant.objects.filter(user=user)
+    community_participant_role = None
+    if community_participant.exists():
+        community_participant_role = community_participant.first().role
+
+    # Проверяем, если пользователь(который создает статью) не имеет прав то отклоняем.
+    if community_participant.exists() and community_participant_role is not None and community.user != user:
+        if community_participant_role.publish_articles is False:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+    Article.objects.create(
+        author=user,
+        img=img,
+        community=community,
+        title=title,
+        description=description,
+        content=content,
+        status=field_of_view
+    )
+
+    return Response(status=status.HTTP_201_CREATED)
 
 
 # todo Рабочие методы выше
