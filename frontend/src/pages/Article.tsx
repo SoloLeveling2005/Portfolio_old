@@ -3,19 +3,128 @@ import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
-import { Link, ScrollRestoration, useParams } from "react-router-dom";
+import { Link, ScrollRestoration, useNavigate, useParams } from "react-router-dom";
 import SmartSearch from '../components/SmartSearch';
 import RelatedArticles from '../components/RelatedArticles';
 import Comment from '../components/Comment';
 import CommunityComment from '../components/Communities/CommunityComment';
+import axios from 'axios';
+import API_BASE_URL from '../config';
 
-function Home (props: any) {
+function Home(props: any) {
+    const navigate = useNavigate();
+
+    // Проверку на авторизацию 
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        console.log(user)
+        navigate('/auth')
+    }
+    
     let { id } = useParams(); 
     let user_id = 1;
     const h2ref = useRef();
 
-    // устанавливаем прокрутку после рендеринга компонента
+    const [InputParentCommentId, setInputParentCommentId] = useState('');
+    const handleChangeInputParentCommentId = (event:any) => {
+        setInputParentCommentId(event.target.value);
+    };
+
+    const [InputCommentContent, setInputCommentContent] = useState('');
+    const handleChangeInputCommentContent = (event:any) => {
+        setInputCommentContent(event.target.value);
+    };
+
+    // Динамические данные с сервера
+    const [allComments, setAllComments] = useState([{ comment: { child_comments: {}, info:{id:0,content:''},user:{id:0,username:''}}}]);
+    const [article, setArticle] = useState({title:'', content:'',description:'', img:''});
+    const [author, setAuthor] = useState({id:0, username:''});
+
     
+    let countGetArticle = 0
+    function getArticle() {
+        if (countGetArticle == 3) {
+            alert('Ошибка поиска')
+            countGetArticle = 0
+            return
+        }
+        countGetArticle += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`article/get_article/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        .then(response => {
+            console.log(response.data)
+            console.log(response.data.all_comments)
+            setAllComments(Object.values(response.data.all_comments))
+            setArticle(response.data.article)
+            setAuthor(response.data.author)
+            countGetArticle = 0
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Запрашиваем данные снова
+                    getArticle()
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+
+
+
+    let countCreateComment = 0
+    function CreateComment() {
+        if (countCreateComment == 3) {
+            alert('Ошибка создания')
+            countCreateComment = 0
+            return
+        }
+        countCreateComment += 1
+
+        if (InputCommentContent == '') {
+            alert("Комментарий не введен")
+            countCreateComment =  0
+            return
+        }
+
+        let body = {
+            'article_id': id,
+            'comment_content': InputCommentContent
+        }
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.post(`comment/create_comment`, body, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'),'Content-Type': 'multipart/form-data'} })
+        .then(response => {
+            console.log(response.data)
+            // alert("Комментарий успешно создан")
+            getArticle()
+            setInputCommentContent('')
+            countCreateComment = 0
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                .then(response => {
+                    localStorage.setItem('access_token', response.data.access)
+
+                    // Пробуем еще раз 
+                    CreateComment()
+                })
+                .catch(error => { console.log(error); navigate('/auth'); });
+            }
+        });
+    }
+
+
+
+    useEffect(() => {
+        getArticle()
+    }, []);
 
     
     return (
@@ -29,48 +138,19 @@ function Home (props: any) {
                         <div className='col py-3'>
                             <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
                                 <div className="card-title">
-                                    <Link to={`/user/${user_id}`} className='text-dark fw-bold'>Author</Link>
-                                    <h5>Как использовать промты в ChatGPT для генерации кода на Python</h5>
+                                    <Link to={`/user/${author.id}`} className='text-dark fw-bold'>{author.username}</Link>
+                                    <h5>{ article.title }</h5>
                                 </div>
                                 <div className="card-body ps-0 pt-1">
                                     <div className="card-text">
                                         <div className='pre_'>
-                                            <p>Привет, друзья! Сегодня я хочу рассказать вам о том, как использовать промты в ChatGPT для создания программного кода на Python. Если вы работаете с Python или интересуетесь программированием, то вы, наверняка, знаете, насколько важно уметь быстро и эффективно создавать код.</p>
-                                            <p>Для тех, кто не знаком с термином "промт", это специальные подсказки, обычно они выводятся в виде текста, который указывает правила для ответа ИИ.</p>
-                                            <p>Чатбот ChatGPT основан на искусственном интеллекте и способен генерировать текст на основе предыдущих входных данных, так же основан на copilot. Таким образом, мы можем использовать его для генерации промтов для создания кода на Python.</p>
-                                            <p>После множества экспериментов и ошибок, я нашел наиболее оптимальный промт для работы с ChatGPT, который позволяет мне полностью автоматизировать процесс разработки программы в соответствии с моим ТЗ. Сейчас я готов поделиться с вами своим опытом.</p>
-                                            <p>Промт:</p>
-                                            <p>Тебе нужно принять роль Python программиста. Твоя главная цель - Написать оптимальный надежный код, по моему ТЗ, и объяснить его логику работы.</p>
-                                            <p>Для достижения этой цели ты можешь:</p>
-                                            <p>- Задавать мне уточняющие вопросы по моему ТЗ;</p>
-                                            <p>- Предлагать различные варианты решения для выполнения ТЗ; </p>
-                                            <p>- Писать оптимальный надежный код, который решает задачи из ТЗ;</p>
-                                            <p>Используй технологии:</p>
-                                            <p>- Python=3.10 версии;</p>
-                                            <p>Целевая операционная система:</p>
-                                            <p>- Linux;</p>
-                                            <p>Требования к твоему ответу:</p>
-                                            <p>- Пиши свой ответ по частям, и всегда указывай номер части;</p>
-                                            <p>- В первой части напиши краткую устную реализацию задачи, план, и какие технологии ты будешь использовать для решения этой задачи, обосную почему именно их ты выбираешь, и какие есть еще возможные аналоги, на этом закончи свой первый ответ, и ожидай когда я одобрю твой план;</p>
-                                            <p>- Во второй части напиши структуру проекта, продумай чтобы эта структура проекта была масштабируемая;</p>
-                                            <p>- Во третей части напиши как установить зависимости, и если нужно, то какие программы нужно установить на целевую операционную систему.</p>
-                                            <p>- В следующих главах напиши реализацию кода. Если это часть будет очень большой, то ты можешь разделить реализацию когда на сколько угодно глав;</p>
-                                            <p>- В предпоследней части покажи пример использования; </p>
-                                            <p>- В последней части напиши вывод;</p>
-                                            <p>Требования к коду:  </p>
-                                            <p>- Пиши комментарии в коде на русском языке, чтобы помочь другим людям понимать твой код. </p>
-                                            <p>- Старайся использовать встроенные библиотеки, если это возможно, иначе укажи какие сторонние библиотеки нужно использовать для решения поставленной задачи, и напиши как их установить, если есть несколько сторонних библиотек для решения этой задачи, то нужно совместно со мной выбрать наиболее подходящею библиотеку. </p>
-                                            <p>- Убедитесь, что код соответствует принципу разработки DRY (Don't Repeat Yourself) KISS(Keep it simple, stupid).</p>
-                                            <p>- Используй аннотации типов.</p>
-                                            <p>- Код должен быть разделен на функции, чтобы каждая функция решала определенную часть задачи. Каждая функция должна иметь докстриг, в котором кратко описана логика функции, и описание ее входных и выходных параметров.</p>
-                                            <p>Пример:</p>
-                                            <img src="https://hsto.org/r/w1560/getpro/habr/upload_files/a35/c93/4fb/a35c934fb02dcef6687214136bc7f2cc.png" className="w-100 my-2" alt="..."></img>
+                                            {article.content}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
+                            {/* <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black">
                                 <h5 className="card-title">Похожие запросы</h5>
                                 <div className="card-body ps-0">
                                     <div className="card-text">
@@ -82,16 +162,20 @@ function Home (props: any) {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                             <div className="card bg-white p-0 m-0 w-100">
                                 <div className="card-body">
-                                    <CommunityComment user_id='1' username='username' text='comment'/>
-                                    <CommunityComment user_id='2' username='username' text='comment'/>
-                                    <CommunityComment user_id='3' username='username' text='comment'/>
+                                    <h5 className="card-title">Комментарии</h5>
+                                    {Array.isArray(allComments) && allComments.map((item, index) => (
+                                        <CommunityComment indent={0} user_id={item.comment.info.id.toString()} username={item.comment.user.username} text={item.comment.info.content} articleId={id?.toString()} childComments={Object.values(item.comment.child_comments)} parentCommentId={item.comment.info.id.toString()} parentGetArticle={getArticle} />
+                                    ))}
+                                    {/* <CommunityComment user_id='1' username='username' text='comment' /> */}
+                                    {/* <CommunityComment user_id='2' username='username' text='comment'/> */}
+                                    {/* <CommunityComment user_id='3' username='username' text='comment'/> */}
                                     <hr />
                                     <div className='d-flex align-items-center justify-content-between'>
-                                        <input type="text" className="form-control me-2" />
-                                        <button className='btn btn-success'>Отправить</button>
+                                        <input type="text" className="form-control me-2" value={InputCommentContent} onChange={handleChangeInputCommentContent} />
+                                        <button className='btn btn-success' onClick={CreateComment}>Отправить</button>
                                     </div>
                                 </div>
                             </div>

@@ -13,13 +13,18 @@ admin.site.register(models.UserBlacklist)
 admin.site.register(models.UserSubscriptions)
 admin.site.register(models.UserAdditionalInformation)
 admin.site.register(models.RequestUserSubscriptions)
-admin.site.register(models.Chat)
-admin.site.register(models.ChatMessage)
-admin.site.register(models.CommunityRole)
-admin.site.register(models.CommunityParticipant)
+
+
 admin.site.register(models.RequestCommunityParticipant)
+admin.site.register(models.Article)
+admin.site.register(models.ArticleComment)
 
 
 
 admin.site.register(models.Community)
 admin.site.register(models.CommunityAvatar)
+admin.site.register(models.CommunityRole)
+admin.site.register(models.CommunityParticipant)
+
+admin.site.register(models.Chat)
+admin.site.register(models.ChatMessage)

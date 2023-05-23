@@ -408,7 +408,6 @@ function Settings() {
                                                             <option value="true">Мужской</option>
                                                             <option value="false">Женский</option>
                                                         </select>
-                                                        {selectedGender}
                                                     </div>
                                                     {/* <div className="col d-flex flex-column justify-content-end">
                                                         <label htmlFor="exampleInputPassword1" className="form-label mb-0">Дата рождения</label>

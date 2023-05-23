@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from functools import wraps
 
@@ -26,6 +27,7 @@ from .serializers import UserRegistrationSerializer, UserAuthenticationSerialize
 
 
 # todo Удаление старых фото при загрузке новых.
+# todo При удалении роли нужно проверять, есть ли пользователи с такой ролью.
 
 # Helpers
 # Exists хелперы. Основная идея. Если данные есть, то возвращает их, иначе возвращает None.
@@ -44,6 +46,14 @@ def check_user_exists(user_id: int):
     if not user.exists():
         return None
     return user.first()
+
+
+def check_article_exists(article_id: int):
+    """Проверяем на существование статьи."""
+    article = Article.objects.filter(id=article_id)
+    if not article.exists():
+        return None
+    return article.first()
 
 
 def check_user_rating_exists(user):
@@ -278,9 +288,9 @@ def get_user(request, user_id: int):
     profile = ProfileSerializer(UserProfile.objects.get(user=requesting_user)).data
     additional_information = AdditionalInformationSerializer(
         UserAdditionalInformation.objects.get(user=requesting_user)).data
-    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=requesting_user)).data \
+    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=requesting_user), many=True).data \
         if ArticleComment.objects.filter(user=requesting_user).exists() else []
-    articles = ArticleSerializer(Article.objects.filter(author=requesting_user)).data \
+    articles = ArticleSerializer(Article.objects.filter(author=requesting_user), many=True).data \
         if Article.objects.filter(author=requesting_user).exists() else []
 
     # Получаем сообщества пользователя
@@ -996,10 +1006,10 @@ def create_article(request):
     user = request.user
     img = request.FILES.get('img', None)
     community_id = request.data['community_id']
-    title = request.data['title', None]
-    description = request.data['description', None]
-    content = request.data['content', None]
-    field_of_view = request.data['field_of_view', 1]
+    title = request.data['title']
+    description = request.data['description']
+    content = request.data['content']
+    field_of_view = request.data['field_of_view']
 
     if title is None or description is None or content is None or img is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -1011,7 +1021,7 @@ def create_article(request):
 
     # Проверяет на присутствие участника в сообществе.
     check_participant = check_participant_exists(community=community, participant=user)
-    if check_participant is None:
+    if check_participant is None and community.user != user:
         return Response(status=status.HTTP_409_CONFLICT)
 
     # Получаем информацию об участнике принимающий пользователя.
@@ -1025,15 +1035,90 @@ def create_article(request):
         if community_participant_role.publish_articles is False:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-    Article.objects.create(
+    article = Article.objects.create(
         author=user,
         img=img,
         community=community,
         title=title,
         description=description,
         content=content,
-        status=field_of_view
+        status=field_of_view,
+        updated_at=time.time()
     )
+    article = ArticleSerializer(article).data
+    return Response(data=article, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_article(request, article_id: int):
+    """Возвращает статью"""
+
+    user = request.user
+
+    article = check_article_exists(article_id=article_id)
+    if article is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    author = User.objects.get(id=article.author.id)
+
+    comments = ArticleComment.objects.filter(article=article, parent_comment__isnull=True)
+
+    all_comments = {}
+
+    def check_child_comments(parent_comment, parent_array):
+        child_comments = ArticleComment.objects.filter(article=article, parent_comment=parent_comment)
+        if child_comments.exists():
+            for comment_index, child_comment in enumerate(child_comments):
+                parent_array['comment']['child_comments'][comment_index] = {
+                    'comment': {
+                        'info': ArticleCommentSerializer(child_comment).data,
+                        'user': UserSerializer(child_comment.user).data,
+                        'child_comments': {}
+                    }
+                }
+                check_child_comments(parent_comment=child_comment,
+                                     parent_array=parent_array['comment']['child_comments'][comment_index])
+
+    for index, comment in enumerate(comments):
+        all_comments[index] = {
+            'comment': {
+                'info': ArticleCommentSerializer(comment).data,
+                'user': UserSerializer(comment.user).data,
+                'child_comments': {}
+            }
+        }
+        check_child_comments(parent_comment=comment, parent_array=all_comments[index])
+
+    return Response(data={
+        'article': ArticleSerializer(article).data,
+        'author': UserSerializer(author).data,
+        'all_comments': all_comments,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_comment(request):
+    """Создает статью"""
+
+    user = request.user
+    article_id = request.data['article_id']
+    comment_content = request.data['comment_content']
+    parent_comment = request.POST.get('parent_comment', None)
+
+    article = check_article_exists(article_id=article_id)
+    if article is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if parent_comment is not None:
+        parent_comment = ArticleComment.objects.filter(id=parent_comment)
+        if not parent_comment.exists():
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        parent_comment = parent_comment.first()
+
+    ArticleComment.objects.create(article=article, parent_comment=parent_comment, user=user,
+                                  content=comment_content)
 
     return Response(status=status.HTTP_201_CREATED)
 

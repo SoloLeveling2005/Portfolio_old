@@ -107,7 +107,6 @@ class CommunityParticipantSerializer(serializers.ModelSerializer):
 
 
 
-
 class CommunityAvatarSereilizer(serializers.ModelSerializer):
     class Meta:
         model = models.CommunityAvatar

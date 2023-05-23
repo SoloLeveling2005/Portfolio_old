@@ -84,7 +84,7 @@ class UserSettings(models.Model):
 class UserProfile(models.Model):
     """Модель профиля пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_profile')
-    short_info = models.CharField(max_length=255,null=True)
+    short_info = models.CharField(max_length=255, null=True)
     location = models.CharField(max_length=100, null=True)
     gender = models.BooleanField(null=True)  # man true, woman false
     birthday = models.DateTimeField(null=True)
@@ -278,22 +278,19 @@ class CommunityChatParticipant(models.Model):
 # todo START ARTICLES   ---------------------------------------------------------------------
 
 
-
 class Article(models.Model):
     """
     Модель статьи.
     """
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_by_author')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='article_community')
     img = models.ImageField(null=False)
-    user = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_title_img')
     title = models.CharField(max_length=155, null=False)
     description = models.CharField(max_length=355, null=False)
     content = models.TextField(null=False)
     status = models.SmallIntegerField(null=False, default=1)  # global = 1 / local = 2
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField()
-
-
+    updated_at = models.DateTimeField(auto_now_add=True)
 
 
 class ArticleTags(models.Model):

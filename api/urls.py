@@ -106,6 +106,14 @@ urlpatterns = [
     path('community/kick_out_community_participant/<int:participant_id>/<int:community_id>', views.kick_out_community_participant, name="kick_out_community_participant"),
 
 
+    # Работа со статьями
+    path('article/create_article', views.create_article, name="create_article"),
+    path('article/get_article/<int:article_id>', views.get_article, name="get_article"),
+
+
+    path('comment/create_comment', views.create_comment, name="create_comment"),
+
+
 
 
 
