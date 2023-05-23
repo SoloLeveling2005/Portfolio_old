@@ -55,6 +55,30 @@ function Home() {
     //     user:{}
     // };
     const [data, setData] = useState({
+        articles: [
+            {
+                id: 0,
+                img: '',
+                title: '',
+                description: '',
+                content: ''
+            }
+        ],
+        comments: [
+            {
+                article: {
+                    id: 0,
+                    img: '',
+                    title: '',
+                    description: '',
+                    content: ''
+                },
+                info: {
+                    id: '',
+                    content: ''
+                }
+            }
+        ],
         additional_information: {
             id: '',
             instagram_page: '',
@@ -64,8 +88,6 @@ function Home() {
             vk_page: '',
             website: ''
         },
-        articles: [],
-        comments: [],
         communities: [{
             id:0,
             title: '',
@@ -334,7 +356,7 @@ function Home() {
                             }   
                             {nav === 'articles' && 
                                 <div className="p-0 m-0">
-                                    {data.articles.length === 0 ? (
+                                    {data.articles.length == 0 ? (
                                         <div className="card m-0 p-0 bg-white mb-3 w-100 ">
                                             <div className="card-body">
                                                 <h6 className='p-0 m-0 fs-6'>Пользователь не создавал статей</h6>
@@ -343,8 +365,8 @@ function Home() {
                                         
                                     ): (
                                         <div className='d-flex w-100 flex-wrap'>
-                                            {data.communities.map((item, index) => (
-                                                <Card title='1' img_url='' description='' articale_id='1' who='Company' count_likes="12" bookmark_active={false} />                                                           
+                                            {data.articles.map((item, index) => (
+                                                <Card title={item.title} img_url={API_BASE_URL+item.img} description={item.description} articale_id={item.id.toString()} who='None' count_likes="12" bookmark_active={false} />                                                           
                                             ))}
 
                                         </div>  
@@ -364,26 +386,27 @@ function Home() {
                             {nav === 'comments' && 
                                 <div className="p-0 m-0">
                                     {data.comments.length === 0 ? (
-                                        <div className="card m-0 p-0 bg-white mb-3 w-100 ">
-                                            <div className="card-body">
-                                                <h6 className='p-0 m-0 fs-6'>Пользователь не оставлял комментриев</h6>
+                                        <div>
+                                            <div className="card m-0 p-0 bg-white mb-3 w-100 ">
+                                                <div className="card-body">
+                                                    <h6 className='p-0 m-0 fs-6'>Пользователь не оставлял комментриев</h6>
+                                                </div>
                                             </div>
                                         </div>
-                                    ): (
+                                    ) : (
                                         <div className='d-flex w-100 flex-wrap'>
-                                            {data.communities.map((item, index) => (
-                                                <Comment id='1' title='1' comment='1'/>                                                          
+                                            {data.comments.map((item, index) => (
+                                                <Comment id={item.info.id.toString()} title={item.article.title} comment={ item.info.content }  />                                                          
                                             ))}
-
                                         </div>  
                                     )}
 
+                                        
+                                        {/* <Comment id='1' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                        <Comment id='2' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
+                                        <Comment id='3' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/> */}
                                     
-                                    {/* <Comment id='1' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
-                                    <Comment id='2' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/>
-                                    <Comment id='3' title='Как использовать промты в ChatGPT для генерации кода на Python' comment='Комментарии'/> */}
-                                
-                                    
+                                        
                                     
                                 </div>
                             }           

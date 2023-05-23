@@ -93,7 +93,7 @@ function Community(props: any) {
     const [signed, create_signed] = useState(null);
     const [edit_community_information, create_edit_community_information] = useState(null);
     const [manage_participants, create_manage_participants] = useState(Boolean||null);
-    const [publish_ads, create_publish_ads] = useState(null);
+    const [publish_ads, create_publish_ads] = useState(Boolean||null);
     const [publish_articles, create_publish_articles] = useState(null);
     const [publish_news, create_publish_news] = useState(null);
     const [request_to_sign, create_request_to_sign] = useState(null);
@@ -102,8 +102,30 @@ function Community(props: any) {
     
 
     const [data, setData] = useState({
-        articles: [],
-        articles_comments:[],
+        articles: [
+            {
+                id: 0,
+                img: '',
+                title: '',
+                description: '',
+                content: ''
+            }
+        ],
+        articles_comments: [
+            {
+                article: {
+                    id: 0,
+                    img: '',
+                    title: '',
+                    description: '',
+                    content: ''
+                },
+                info: {
+                    id: '',
+                    content: ''
+                }
+            }
+        ],
         community: {
             id: 0,
             location: '',
@@ -205,6 +227,7 @@ function Community(props: any) {
             create_request_to_sign(response.data.request_to_sign)
             create_subscribers_count(response.data.subscribers_count)
             changeParticipantRequests(response.data.participant_requests)    
+
         })
         .catch(error => {
             if (error.request.status === 401) {
@@ -489,59 +512,40 @@ function Community(props: any) {
                                 }   
                                 {nav == 'articles' && 
                                     <div className="p-0 m-0">
-                                        <div className="card bg-white mb-2">
-                                            <div className="card-body">
-                                                <Link to={`/community/${id}/createArticle`} className="btn btn-primary w-100">Создать статью</Link>
+                                        {publish_articles == true &&
+                                            <div className="card bg-white mb-2">
+                                                <div className="card-body">
+                                                    <Link to={`/community/${id}/createArticle`} className="btn btn-primary w-100">Создать статью</Link>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <Card 
-                                            title='LAION и энтузиасты по всему миру разрабатывают Open Assistant — открытый аналог ChatGPT' 
-                                            who='Company'
-                                            description='Некоммерческая организация LAION и энтузиасты по всему миру занимаются разработкой Open Assistant — это проект, цель которого в предоставлении всем желающим доступа к продвинутой большой языковой модели, основанной на принципах чат-бота, с конечной целью революции в инновациях в области обработки естественного языка...'
-                                            img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/829/a55/1fa/829a551facb757c2c2c827c243d561a2.png'
-                                            articale_id='2'
-                                            count_likes="15" 
-                                            bookmark_active={true} 
-                                        />
-                                        <Card 
-                                            title='Менеджмент зависимостей в Javascript' 
-                                            who='Company'
-                                            description='Для многих разработчиков процесс установки зависимостей представляет собой некую "магию", которая происходит при выполнении npm install. Понимание принципов работы этой "магии" может сильно помочь при возникновении ошибки во время установки очередной библиотеки. Нынешний NPM — результат многих лет проб и ошибок, поэтому для его детального понимания я предлагаю начать с самого начала.'
-                                            img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/b35/be9/fd4/b35be9fd4106e6e52b741b2f353ff605.png'
-                                            articale_id='3'
-                                            count_likes="152" 
-                                            bookmark_active={true} 
-                                        />
+                                        }
+                                        {data.articles.map((item, index) => (
+                                            <Card 
+                                                key={index}
+                                                title={item.title}
+                                                who={data.community.title}
+                                                description={item.description}
+                                                img_url={API_BASE_URL+item.img}
+                                                articale_id={item.id.toString()}
+                                                count_likes="15" 
+                                                bookmark_active={true} 
+                                            />
+                                        ))}
+                                        
                                     </div>
                                 }     
                                 {nav == 'comments' && 
                                     <div className="p-0 m-0">
-                                        <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
-                                            <Link to={`/article/1`} className=""><h5 className="card-title mb-1 pb-1">Как использовать промты в ChatGPT для генерации кода на Python</h5></Link>
-                                            <div className="card-body ps-0 py-1">
-                                                <p className="card-text">
-                                                    Комментарий
-                                                </p>
-                                                
+                                        {data.articles_comments.map((item, index) => (
+                                            <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
+                                                <Link to={`/article/${item.article.id}`} className=""><h5 className="card-title mb-1 pb-1">{item.article.title}</h5></Link>
+                                                <div className="card-body ps-0 py-1">
+                                                    <p className="card-text">
+                                                        {item.info.content}
+                                                    </p>         
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
-                                            <Link to={`/article/1`} className=""><h5 className="card-title mb-1 pb-1">Как использовать промты в ChatGPT для генерации кода на Python</h5></Link>
-                                            <div className="card-body ps-0 py-1">
-                                                <p className="card-text">
-                                                    Комментарий
-                                                </p>
-                                                
-                                            </div>
-                                        </div>
-                                        <div className="card m-0 p-3 bg-white text-decoration-none text-black mb-2">
-                                            <Link to={`/article/1`} className=""><h5 className="card-title mb-1 pb-1">Как использовать промты в ChatGPT для генерации кода на Python</h5></Link>
-                                            <div className="card-body ps-0 py-1">
-                                                <p className="card-text">
-                                                    Комментарий
-                                                </p>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 }    
                                 {nav == 'news' && 

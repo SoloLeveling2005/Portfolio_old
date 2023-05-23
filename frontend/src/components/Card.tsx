@@ -23,9 +23,9 @@ function Card(props:{
 
 
     return (
-        <div className="card m-0 p-3 bg-white mb-3">
+        <div className="card m-0 p-3 bg-white mb-3 w-100">
             <Link to={`/article/${articale_id}`} className="card-title mb-2 fs-5">{title}</Link>
-            <span className='card-title-company mb-3 cursor-pointer'>Cтатья компании {who}</span>
+            <span className='card-title-company mb-3 cursor-pointer'>Cтатья сообщества {who}</span>
             <div className='card-img-top'>
                 <img src={img_url} className="w-100" alt="..."></img>
             </div>

@@ -288,9 +288,17 @@ def get_user(request, user_id: int):
     profile = ProfileSerializer(UserProfile.objects.get(user=requesting_user)).data
     additional_information = AdditionalInformationSerializer(
         UserAdditionalInformation.objects.get(user=requesting_user)).data
-    comments = ArticleCommentSerializer(ArticleComment.objects.filter(user=requesting_user), many=True).data \
-        if ArticleComment.objects.filter(user=requesting_user).exists() else []
-    articles = ArticleSerializer(Article.objects.filter(author=requesting_user), many=True).data \
+
+    comments = ArticleComment.objects.filter(user=requesting_user) if ArticleComment.objects.filter(
+        user=requesting_user).exists() else []
+
+    if comments:
+        comments = [{
+            'info': ArticleCommentSerializer(comment).data,
+            'article': ArticleSerializer(comment.article).data
+        } for comment in comments]
+
+    articles = ArticleSerializer(Article.objects.filter(author=requesting_user).order_by('-id'), many=True).data \
         if Article.objects.filter(author=requesting_user).exists() else []
 
     # Получаем сообщества пользователя
@@ -602,7 +610,7 @@ def get_community(request, community_id: int):
 
     community_avatar = CommunityAvatar.objects.get(community=community)
 
-    articles = Article.objects.filter(community=community)
+    articles = Article.objects.filter(community=community).order_by('-id')
     articles_comments = []
     for article in articles:
         comments = ArticleComment.objects.filter(article=article)
@@ -612,25 +620,22 @@ def get_community(request, community_id: int):
 
     community_avatar = CommunityAvatarSereilizer(community_avatar).data
     articles = ArticleSerializer(articles, many=True).data
-    articles_comments = ArticleCommentSerializer(articles_comments, many=True).data
+    # articles_comments = ArticleCommentSerializer(articles_comments, many=True).data
     roles = CommunityRolesSereilizer(roles, many=True).data
     admin_data = UserSerializer(community.user).data
     community = CommunitySerializer(community).data
 
-    print(subscribers)
-    if subscribers:
-        serialized_data = []
-        for request_subscriber in subscribers:
-            print(request_subscriber)
-            serialized_request = {
-                'user': UserSerializer(request_subscriber.user).data,
-                'role': CommunityRolesSereilizer(
-                    CommunityParticipant.objects.get(user=request_subscriber.user).role).data
-            }
-            serialized_data.append(serialized_request)
-        subscribers = serialized_data
-    else:
-        subscribers = []
+    subscribers = [{
+        'user': UserSerializer(request_subscriber.user).data,
+        'role': CommunityRolesSereilizer(
+            CommunityParticipant.objects.get(user=request_subscriber.user).role
+        ).data
+    } for request_subscriber in subscribers]
+
+    articles_comments = [{
+        'info': ArticleCommentSerializer(articles_comment).data,
+        'article': ArticleSerializer(articles_comment.article).data
+    } for articles_comment in articles_comments]
 
     return Response(data={'admin_data': admin_data, 'community': community,
                           'request_to_sign': request_to_sign, 'subscribers': subscribers,
