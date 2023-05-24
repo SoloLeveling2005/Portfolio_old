@@ -366,7 +366,7 @@ function Home() {
                                     ): (
                                         <div className='d-flex w-100 flex-wrap'>
                                             {data.articles.map((item, index) => (
-                                                <Card title={item.title} img_url={API_BASE_URL+item.img} description={item.description} articale_id={item.id.toString()} who='None' count_likes="12" bookmark_active={false} />                                                           
+                                                <Card title={item.title} img_url={API_BASE_URL+item.img} description={item.description} article_id={item.id.toString()} who='None' count_likes="12" bookmark_active={false} />
                                             ))}
 
                                         </div>  

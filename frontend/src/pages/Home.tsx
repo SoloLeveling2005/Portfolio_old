@@ -7,19 +7,40 @@ import Card from '../components/Card';
 import News from '../components/News';
 import { Link, useNavigate } from 'react-router-dom';
 import SmartSearch from '../components/SmartSearch';
+import axios from 'axios';
+import API_BASE_URL from "../config";
 
 function Home() {
     const navigate = useNavigate();
     // Проверка на авторизацию 
     let user = localStorage.getItem('username')
     if (user === null) {
-        console.log(user)
         navigate('/auth')
     }
 
+    const [data, setData] = useState({
+        page_articles: [{
+            author: {
+                id: 0,
+                username: '',
+            },
+            community: {
+                id: 0,
+                title: '',
+                short_info: '',
+            },
+            info: {
+                img: '',
+                title: '',
+                content: '',
+                description: '',
+                id: 0,
+            },
+            count_likes:0
+        }]
+
+    });
     
-
-
     const [articles, setArticle] = useState([{}]);
     const [scrollPosition, setScrollPosition] = useState(0);
 
@@ -36,6 +57,51 @@ function Home() {
         switchNav(sw => (value))
     }
 
+
+    let countGetArticleFeed = 0
+    function getArticleFeed() {
+        if (countGetArticleFeed == 2) {
+            alert('Ошибка поиска')
+            countGetArticleFeed = 0
+            return
+        }
+        countGetArticleFeed += 1
+
+
+        // Получаем информацию о пользователе
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`article/article_feed/1`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+            .then(response => {
+                console.log(response.data)
+                countGetArticleFeed = 0
+                setData(response.data)
+
+            })
+            .catch(error => {
+                if (error.request.status === 401) {
+                    // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                    axios.post('refresh_token', {
+                        'refresh': localStorage.getItem('refresh_token'),
+                    })
+                        .then(response => {
+                            // 
+                            localStorage.setItem('access_token', response.data.access)
+
+                            // Запрашиваем данные снова
+                            getArticleFeed()
+                        })
+                        .catch(error => {
+                            console.log(error)
+                            navigate('/auth');
+                        });
+                }
+            });
+    }
+
+    // Вызываем один раз.
+    useEffect(() => {
+        getArticleFeed()
+    }, []);
     return (
         <div className="Home text-white">
             <div className=''>
@@ -52,39 +118,38 @@ function Home() {
                             </div>
                             <div className="tab-content m-0 p-0 mt-3" id="pills-tabContent">
                                 <section className=''>
-                                    <Card 
-                                        title='Как использовать промты в ChatGPT для генерации кода на Python' 
-                                        who='Company'
-                                        description='Привет, друзья! Сегодня я хочу рассказать вам о том, как использовать промты в ChatGPT для создания программного кода на Python. Если вы работаете с Python или интересуетесь программированием, то вы, наверняка, знаете, насколько важно уметь быстро и эффективно создавать код.
+                                    {data.page_articles.map((item, index)=>(
+                                        <Card
+                                            key={index}
+                                            title={item.info.title}
+                                            who={item.community.title}
+                                            description={item.info.description}
+                                            img_url={API_BASE_URL+item.info.img}
+                                            article_id={item.info.id.toString()}
+                                            count_likes={item.count_likes.toString()}
+                                            bookmark_active={false}
+                                        />
 
-                                        Для тех, кто не знаком с термином "промт", это специальные подсказки, которые выводятся в интерактивной среде Python и позволяют пользователю быстро и легко вводить команды. Обычно они выводятся в виде текста, который предлагает пользователю варианты продолжения его команды.
+                                    ))}
 
-                                        Чатбот ChatGPT основан на искусственном интеллекте и способен генерировать текст на основе предыдущих входных данных. Таким образом, мы можем использовать его для генерации промтов для создания кода на Python.
-
-                                        После множества экспериментов и ошибок, я нашел наиболее оптимальный промт для работы с ChatGPT, который позволяет мне полностью автоматизировать процесс разработки программы в соответствии с моим ТЗ. Сейчас я готов поделиться с вами своим опытом.'
-                                        img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/a35/c93/4fb/a35c934fb02dcef6687214136bc7f2cc.png'
-                                        articale_id='1'
-                                         count_likes="12" 
-                                         bookmark_active={false} 
-                                    />
-                                    <Card 
-                                        title='LAION и энтузиасты по всему миру разрабатывают Open Assistant — открытый аналог ChatGPT' 
-                                        who='Company'
-                                        description='Некоммерческая организация LAION и энтузиасты по всему миру занимаются разработкой Open Assistant — это проект, цель которого в предоставлении всем желающим доступа к продвинутой большой языковой модели, основанной на принципах чат-бота, с конечной целью революции в инновациях в области обработки естественного языка...'
-                                        img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/829/a55/1fa/829a551facb757c2c2c827c243d561a2.png'
-                                        articale_id='2'
-                                         count_likes="15" 
-                                         bookmark_active={true} 
-                                    />
-                                    <Card 
-                                        title='Менеджмент зависимостей в Javascript' 
-                                        who='Company'
-                                        description='Для многих разработчиков процесс установки зависимостей представляет собой некую "магию", которая происходит при выполнении npm install. Понимание принципов работы этой "магии" может сильно помочь при возникновении ошибки во время установки очередной библиотеки. Нынешний NPM — результат многих лет проб и ошибок, поэтому для его детального понимания я предлагаю начать с самого начала.'
-                                        img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/b35/be9/fd4/b35be9fd4106e6e52b741b2f353ff605.png'
-                                        articale_id='3'
-                                         count_likes="152" 
-                                         bookmark_active={true} 
-                                    />
+                                    {/*<Card */}
+                                    {/*    title='LAION и энтузиасты по всему миру разрабатывают Open Assistant — открытый аналог ChatGPT' */}
+                                    {/*    who='Company'*/}
+                                    {/*    description='Некоммерческая организация LAION и энтузиасты по всему миру занимаются разработкой Open Assistant — это проект, цель которого в предоставлении всем желающим доступа к продвинутой большой языковой модели, основанной на принципах чат-бота, с конечной целью революции в инновациях в области обработки естественного языка...'*/}
+                                    {/*    img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/829/a55/1fa/829a551facb757c2c2c827c243d561a2.png'*/}
+                                    {/*    articale_id='2'*/}
+                                    {/*     count_likes="15" */}
+                                    {/*     bookmark_active={true} */}
+                                    {/*/>*/}
+                                    {/*<Card */}
+                                    {/*    title='Менеджмент зависимостей в Javascript' */}
+                                    {/*    who='Company'*/}
+                                    {/*    description='Для многих разработчиков процесс установки зависимостей представляет собой некую "магию", которая происходит при выполнении npm install. Понимание принципов работы этой "магии" может сильно помочь при возникновении ошибки во время установки очередной библиотеки. Нынешний NPM — результат многих лет проб и ошибок, поэтому для его детального понимания я предлагаю начать с самого начала.'*/}
+                                    {/*    img_url='https://hsto.org/r/w1560/getpro/habr/upload_files/b35/be9/fd4/b35be9fd4106e6e52b741b2f353ff605.png'*/}
+                                    {/*    articale_id='3'*/}
+                                    {/*     count_likes="152" */}
+                                    {/*     bookmark_active={true} */}
+                                    {/*/>*/}
                                 </section>
                             </div>
 

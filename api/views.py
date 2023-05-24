@@ -3,7 +3,9 @@ from datetime import datetime
 from functools import wraps
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.cache import cache
 from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
 from django.db.models import Q
 from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -18,12 +20,13 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks, CommunityAvatar, UserAvatar, Chat, ChatMessage
+    ArticleBookmarks, CommunityAvatar, UserAvatar, Chat, ChatMessage, ChatParticipant
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
     UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
-    CommunityAvatarSereilizer, RequestCommunityParticipantSerializer, CommunityParticipantSerializer
+    CommunityAvatarSereilizer, RequestCommunityParticipantSerializer, CommunityParticipantSerializer, \
+    ArticleAssessmentSerializer, ChatSerializer, ChatParticipantSerializer, ChatMessageSerializer
 
 
 # todo Удаление старых фото при загрузке новых.
@@ -262,12 +265,56 @@ class UserView:
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_room(request, room_id: int):
-    rooms = Chat.objects.all()
-    if not Chat.objects.filter(slug=room_id).exists():
+    user = request.user
+
+    if not Chat.objects.filter(id=room_id).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    room = Chat.objects.get(slug=room_id)
-    messages = ChatMessage.objects.filter(room=room)
-    return Response(data={'rooms': rooms, 'room': room, 'messages': messages}, status=status.HTTP_200_OK)
+    room = Chat.objects.get(id=room_id)
+    messages = ChatMessage.objects.filter(chat=room)
+    messages_data = [{
+            'info': ChatMessageSerializer(message).data,
+            'user': UserSerializer(message.user).data,
+            'my': user == message.user
+        } for message in messages]
+
+    return Response(data={'messages': messages_data}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_rooms(request):
+    user = request.user
+
+    rooms = ChatParticipant.objects.filter(user=user)
+
+    rooms_data = []
+    for room in rooms:
+        chat_participant = ChatParticipant.objects.filter(Q(chat=room) and ~Q(user=user))
+        rooms_data.append({
+            'info': ChatSerializer(room.chat).data,
+            'interlocutor': UserSerializer(chat_participant.first().user).data,
+        })
+
+    return Response(data={'rooms_data': rooms_data}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_room(request):
+    user = request.user
+    # Собеседник
+    interlocutor_id = request.data['interlocutor_id']
+
+    interlocutor = check_user_exists(user_id=interlocutor_id)
+    if interlocutor is None:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    room = Chat.objects.create(name=time.time(), slug=time.time())
+
+    ChatParticipant.objects.create(chat=room, user=user)
+    ChatParticipant.objects.create(chat=room, user=interlocutor)
+
+    return Response(status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
@@ -1052,6 +1099,34 @@ def create_article(request):
     )
     article = ArticleSerializer(article).data
     return Response(data=article, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def article_feed(request, page: int):
+    """Лента приложения"""
+
+    user = request.user
+
+    # paginate_articles = cache.get('paginate_articles', None)
+    # if paginate_articles is None:
+    articles = Article.objects.filter(status=1).order_by('-id')
+    articles = [{
+        'info': ArticleSerializer(article).data,
+        'community': CommunitySerializer(article.community).data,
+        'author': UserSerializer(article.author).data,
+        'count_likes': ArticleAssessment.objects.filter(article=article).count()
+    } for article in articles]
+    paginate_articles = Paginator(articles, 5)
+
+    # cache.set('paginate_articles', paginate_articles)
+
+    page_articles = paginate_articles.get_page(page).object_list
+
+    # else:
+    #     page_articles = paginate_articles.get_page(page)
+
+    return Response(data={'page_articles': page_articles})
 
 
 @api_view(['GET'])

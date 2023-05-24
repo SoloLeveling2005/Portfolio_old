@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 
-function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string, parentgetRequestsToFriend: any }) {
+function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string, parentgetRequestsToFriend: any, parentGetUserFriends: any }) {
     const navigate = useNavigate();
 
     
@@ -14,6 +14,7 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
     const id = props.id
     const username = props.username
     const getRequestsToFriend = props.parentgetRequestsToFriend
+    const parentGetUserFriends = props.parentGetUserFriends
 
 
     let countCreateFriend = 0
@@ -38,6 +39,7 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
 
                             // Запрашиваем данные снова
                             createFriend()
+                            parentGetUserFriends()
                         })
                         .catch(error => { console.log(error); navigate('/auth'); });
                 }

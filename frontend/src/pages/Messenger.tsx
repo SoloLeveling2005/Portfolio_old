@@ -1,19 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
 import Header from '../components/Header';
 import Smart_search from '../components/SmartSearch';
-import { Link, useParams } from 'react-router-dom';
+import {Link, useNavigate, useParams} from 'react-router-dom';
 import UserInfo from '../components/UserInfo';
 import ActivityUser from '../components/ActivityUser';
 import Dialogue from '../components/Messenger/Dialogue';
 import Message from '../components/Messenger/Message';
 import MyMessage from '../components/Messenger/MyMessage';
 import { io, Socket } from 'socket.io-client';
+import axios from "axios";
+import API_BASE_URL from "../config";
+import message from "../components/Messenger/Message";
 function Messenger() {
-    
 
+    const navigate = useNavigate();
+
+    // Проверку на авторизацию
+    let user = localStorage.getItem('username')
+    if (user === null) {
+        navigate('/auth')
+    }
     
 
     //
@@ -79,6 +88,14 @@ function Messenger() {
         
     // }
 
+    const blockRef = useRef(null);
+
+
+
+
+    const [data, setData] = useState([{info:{id:0, name:'', slug:''}, interlocutor:{id:0, username:''}}]);
+    const [messages, setMessages] = useState([{info:{content:''},user:{username:''}, my:false}]);
+
     var {messenger_id} = useParams();
     const [chat, switchChat] = useState(`${messenger_id}`);
     
@@ -96,9 +113,6 @@ function Messenger() {
     };
 
 
-    const [rooms, setRooms] = useState<string[]>(['room1', 'room2', 'room3']); // Состояние списка комнат
-    const [currentRoom, setCurrentRoom] = useState<string>('room1'); // Состояние текущей комнаты
-    const [messages, setMessages] = useState<string[]>([]); // Состояние сообщений
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
 
@@ -116,10 +130,93 @@ function Messenger() {
         } else {
             console.log("Соединение не было найдено")
         }
+        setInputUserMessage('')
     };
+    
+    // Функция получающая список чатов
+    let countGetChats = 0
+    function getChats() {
+        if (countGetChats == 3) {
+            alert("Ошибка поиска запосов в друзья")
+            countGetChats = 0
+            return
+        }
+        countGetChats += 1
 
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`messenger/get_rooms`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        .then(response => {
+            console.log(response.data)
+            setData(response.data.rooms_data)
+            // Обнуляем значение
+            countGetChats = 0
+        })
+        .catch(error => {
+            if (error.request.status === 401) {
+                // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                axios.post('refresh_token', {
+                    'refresh': localStorage.getItem('refresh_token'),
+                })
+                    .then(response => {
+                        //
+                        localStorage.setItem('access_token', response.data.access)
+
+                        // Запрашиваем данные снова
+                        getChats()
+                    })
+                    .catch(error => {
+                        console.log(error)
+                        navigate('/auth');
+                    });
+            }
+        });
+    }
+
+
+    // Функция получающая список прошлых сообщений
+    let counGetMessages = 0
+    function getMessages(room_id: number) {
+        if (counGetMessages == 3) {
+            alert("Ошибка поиска запосов в друзья")
+            counGetMessages = 0
+            return
+        }
+        counGetMessages += 1
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.get(`messenger/get_room/${room_id}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+            .then(response => {
+                console.log(response.data)
+                setMessages(response.data.messages)
+                // Обнуляем значение
+                counGetMessages = 0
+            })
+            .catch(error => {
+                if (error.request.status === 401) {
+                    // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                    axios.post('refresh_token', {
+                        'refresh': localStorage.getItem('refresh_token'),
+                    })
+                        .then(response => {
+                            //
+                            localStorage.setItem('access_token', response.data.access)
+
+                            // Запрашиваем данные снова
+                            getMessages(room_id)
+                        })
+                        .catch(error => {
+                            console.log(error)
+                            navigate('/auth');
+                        });
+                }
+            });
+    }
+    
+    
+    
     // Подключение к сокету при монтировании компонента
     useEffect(() => {
+        getChats()
         if (chat == '0') return;
         const newSocket = new WebSocket(`ws://localhost:8000/ws/${chat}/`);
         setSocket(newSocket)
@@ -131,8 +228,16 @@ function Messenger() {
 
         // Подписка на новые сообщения
         newSocket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
-            console.log(data);
+            let new_message = JSON.parse(e.data);
+            let myUsername = localStorage.getItem('username')
+            let my = new_message.username === myUsername
+            setMessages(prevMessages => [...prevMessages, {info:{content:new_message.message},user:{username:new_message.username}, my:my}]);
+            console.log(new_message);
+            // Функция для прокрутки блока вниз
+            if (blockRef.current) {
+                // @ts-ignore
+                blockRef.current.scrollTop = blockRef.current.scrollHeight;
+            }
         };
 
         // Отключение сокета при размонтировании компонента
@@ -161,9 +266,10 @@ function Messenger() {
                                 <div className='w-100 py-2 ps-2 border-3 border-bottom height-y-55-px d-flex align-items-center '>
                                     <input type="text" className="form-control" />
                                 </div>
-                                {chat}
-                                <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='1' onClick={()=>{switchChatF('1')}}/>
-                                <Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='2' onClick={()=>{switchChatF('2')}}/>
+                                {data.map((item, index)=>(
+                                    <Dialogue parentGetMessages={getMessages} title={item.interlocutor.username} img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id={item.info.id.toString()} onClick={()=>{switchChatF(item.info.id.toString())}}/>
+                                ))}
+                                {/*<Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='2' onClick={()=>{switchChatF('2')}}/>*/}
                             </div>
                             <div className="col h-100 p-0 m-0">
                                 {chat == '' || chat == '0' ? (
@@ -177,18 +283,27 @@ function Messenger() {
                                         </div>
                                         <div className='w-100 my-0 py-0 width-max-100 table' id='messages'>
                                             <div className="row height-90 overflow-y-scroll m-0 p-0 py-2">
-                                                <div className="col px-1">
-                                                    <Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <MyMessage message='This is some text within a card body.' />
-                                                    <Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>
-                                                    <Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>
+                                                <div className="col px-1" ref={blockRef}>
+                                                    {messages.map((item, index)=>(
+                                                        <div className="p-0 m-0">
+                                                            {item.my ? (
+                                                                <MyMessage message={item.info.content} />
+                                                            ):(
+                                                                <Message username={item.user.username} message={item.info.content}/>
+                                                            )}
+                                                        </div>
+                                                    ))}
+
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>*/}
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<MyMessage message='This is some text within a card body.' />*/}
+                                                    {/*<Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>*/}
+                                                    {/*<Message username='Person' message='With supporting text below as a natural lead-in to additional content.'/>*/}
                                                 </div>
                                             </div>
                                             <div className="row p-0 m-0 pt-4">

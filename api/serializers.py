@@ -123,3 +123,27 @@ class RequestCommunityParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.RequestCommunityParticipant
         fields = '__all__'
+
+class ArticleAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ArticleAssessment
+        fields = '__all__'
+
+
+
+class ChatParticipantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ChatParticipant
+        fields = '__all__'
+
+
+class ChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Chat
+        fields = '__all__'
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ChatMessage
+        fields = '__all__'

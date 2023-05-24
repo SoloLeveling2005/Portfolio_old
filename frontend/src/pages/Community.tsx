@@ -526,7 +526,7 @@ function Community(props: any) {
                                                 who={data.community.title}
                                                 description={item.description}
                                                 img_url={API_BASE_URL+item.img}
-                                                articale_id={item.id.toString()}
+                                                article_id={item.id.toString()}
                                                 count_likes="15" 
                                                 bookmark_active={true} 
                                             />

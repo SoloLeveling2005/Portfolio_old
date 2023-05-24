@@ -88,6 +88,13 @@ urlpatterns = [
 
 
 
+    path('messenger/get_room/<int:room_id>', views.get_room, name="get_room"),
+    path('messenger/get_rooms', views.get_rooms, name="get_rooms"),
+    path('messenger/create_room', views.create_room, name="create_room"),
+
+
+
+
 
 
 
@@ -107,6 +114,7 @@ urlpatterns = [
 
 
     # Работа со статьями
+    path('article/article_feed/<int:page>', views.article_feed, name="article_feed"),
     path('article/create_article', views.create_article, name="create_article"),
     path('article/get_article/<int:article_id>', views.get_article, name="get_article"),
 

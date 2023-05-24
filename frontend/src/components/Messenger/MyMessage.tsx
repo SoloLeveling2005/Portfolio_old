@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 function MyMessage(props:{'message':string}) {
     const message = props.message
     return (
-        <div className="w-100 my">
+        <div className="w-100 my mb-2">
             <div className="card message">
                 <div className="card-body">
                     {message}

@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 function Card(props:{
         'title':string, 
         'img_url':string, 
-        'articale_id':string, 
+        'article_id':string,
         'description':string, 
         'who':string,
         'count_likes':string,
@@ -15,7 +15,7 @@ function Card(props:{
     }) {
     const title = props.title
     const img_url = props.img_url
-    const articale_id = props.articale_id
+    const article_id = props.article_id
     const description = props.description
     const who = props.who
     const count_likes = props.count_likes
@@ -24,7 +24,7 @@ function Card(props:{
 
     return (
         <div className="card m-0 p-3 bg-white mb-3 w-100">
-            <Link to={`/article/${articale_id}`} className="card-title mb-2 fs-5">{title}</Link>
+            <Link to={`/article/${article_id}`} className="card-title mb-2 fs-5">{title}</Link>
             <span className='card-title-company mb-3 cursor-pointer'>Cтатья сообщества {who}</span>
             <div className='card-img-top'>
                 <img src={img_url} className="w-100" alt="..."></img>

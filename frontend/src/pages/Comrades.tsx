@@ -257,7 +257,7 @@ function Comrades () {
                                             </div>
                                         }
                                         {dataUsersRequests.map((item, index) => (
-                                            <FriendRequest parentgetRequestsToFriend={getRequestsToFriend} key={index} id={item.user.id.toString()} username={item.user.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
+                                            <FriendRequest parentgetRequestsToFriend={getRequestsToFriend} parentGetUserFriends={getUserFriends} key={index} id={item.user.id.toString()} username={item.user.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
                                         ))}
                                         
     
