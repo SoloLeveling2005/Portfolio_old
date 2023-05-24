@@ -100,11 +100,11 @@ class UserSubscriptionsSerializer(serializers.ModelSerializer):
         model = models.UserSubscriptions
         fields = '__all__'
 
+
 class CommunityParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CommunityParticipant
         fields = '__all__'
-
 
 
 class CommunityAvatarSereilizer(serializers.ModelSerializer):
@@ -124,22 +124,22 @@ class RequestCommunityParticipantSerializer(serializers.ModelSerializer):
         model = models.RequestCommunityParticipant
         fields = '__all__'
 
+
 class ArticleAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ArticleAssessment
         fields = '__all__'
 
 
-
-class ChatParticipantSerializer(serializers.ModelSerializer):
+class RoomParticipantSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.ChatParticipant
+        model = models.RoomParticipant
         fields = '__all__'
 
 
-class ChatSerializer(serializers.ModelSerializer):
+class RoomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Chat
+        model = models.Room
         fields = '__all__'
 
 

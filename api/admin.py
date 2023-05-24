@@ -26,5 +26,6 @@ admin.site.register(models.CommunityAvatar)
 admin.site.register(models.CommunityRole)
 admin.site.register(models.CommunityParticipant)
 
-admin.site.register(models.Chat)
+admin.site.register(models.Room)
+admin.site.register(models.RoomParticipant)
 admin.site.register(models.ChatMessage)

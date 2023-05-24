@@ -123,6 +123,7 @@ function Home() {
                                             key={index}
                                             title={item.info.title}
                                             who={item.community.title}
+                                            communityId={item.community.id.toString()}
                                             description={item.info.description}
                                             img_url={API_BASE_URL+item.info.img}
                                             article_id={item.info.id.toString()}

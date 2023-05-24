@@ -51,8 +51,36 @@ function Community(props: any) {
         createNews == false ? createNewsChange(sw => (true)) : createNewsChange(sw => (false))
     }
 
+    // Setting inputs
 
-    // Slecet inputs
+    const [inputTitle, setInputTitle] = useState('');
+    const handleChangeTitle = (event:any) => {
+        setInputTitle(event.target.value);
+    };
+
+    const [inputShortInfo, setInputShortInfo] = useState('');
+    const handleChangeShortInfo = (event:any) => {
+        setInputShortInfo(event.target.value);
+    };
+
+    const [inputDescription, setInputDescription] = useState('');
+    const handleChangeDescription = (event:any) => {
+        setInputDescription(event.target.value);
+    };
+
+    const [inputWebsite, setInputWebsite] = useState('');
+    const handleChangeWebsite = (event:any) => {
+        setInputWebsite(event.target.value);
+    };
+
+    const [inputLocation, setInputLocation] = useState('');
+    const handleChangeLocation = (event:any) => {
+        setInputLocation(event.target.value);
+    };
+
+
+
+    // Select inputs
 
     const [SelectManageParticipants, setSelectManageParticipants] = useState('false');
     const handleChangeSelectManageParticipants = (event:any) => {
@@ -184,6 +212,11 @@ function Community(props: any) {
         .then(response => {
             console.log(response.data)
             setData(response.data)
+            setInputTitle(response.data.community.title == null ? '' : response.data.community.title)
+            setInputDescription(response.data.community.description == null ? '' : response.data.community.description)
+            setInputShortInfo(response.data.community.short_info == null ? '' : response.data.community.short_info)
+            setInputLocation(response.data.community.location == null ? '' : response.data.community.location)
+            setInputWebsite(response.data.community.website == null ? '' : response.data.community.website)
             countGetCommunity = 0
         })
         .catch(error => {
@@ -361,7 +394,50 @@ function Community(props: any) {
     }
 
 
-    
+    // Update settings
+
+
+
+    let countUpdateSettings = 0
+    function updateSettings() {
+        if (countUpdateSettings == 3) {
+            alert('Ошибка обновления')
+            countUpdateSettings = 0
+            return
+        }
+        countUpdateSettings += 1
+
+
+        axios.defaults.baseURL = API_BASE_URL
+        axios.put(`community/update_community`, {
+            community_id: id,
+            title: inputTitle,
+            short_info: inputShortInfo,
+            description: inputDescription,
+            website: inputWebsite,
+            location: inputLocation,
+        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+            .then(response => {
+                console.log(response.data)
+                alert("Информация обновлена")
+                countUpdateSettings = 0
+
+            })
+            .catch(error => {
+                if (error.request.status === 401) {
+                    axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
+                    .then(response => {
+                        localStorage.setItem('access_token', response.data.access)
+
+                        // Пробуем еще раз
+                        updateSettings()
+                    })
+                    .catch(error => {
+                        console.log(error); navigate('/auth');
+                    });
+                }
+            });
+    }
 
 
     
@@ -524,6 +600,7 @@ function Community(props: any) {
                                                 key={index}
                                                 title={item.title}
                                                 who={data.community.title}
+                                                communityId={data.community.id.toString()}
                                                 description={item.description}
                                                 img_url={API_BASE_URL+item.img}
                                                 article_id={item.id.toString()}
@@ -552,7 +629,7 @@ function Community(props: any) {
                                 <div className="p-0 m-0">
                                     <div className="card bg-white mb-2">
                                         <div className="card-body">
-                                            {createNews == false ? (
+                                            {!createNews ? (
                                                 <button className='btn btn-primary w-100' onClick={createNewsF} >Создание новости</button>
                                             ):(
                                                 <div>
@@ -583,12 +660,12 @@ function Community(props: any) {
                                 }     
                                 {nav == 'participants' && 
                                 <div className='p-0 m-0'>
-                                    {manage_participants == true &&
+                                    {manage_participants &&
                                         <div className='card bg-white mb-2'>
                                             <div className="card-body">
                                                 
                                                 
-                                                {createRole == false ? (
+                                                {!createRole ? (
                                                 
                                                     <button className='btn btn-primary w-100' onClick={createRoleF}>Добавить роль</button>
                                                 ):(
@@ -840,56 +917,64 @@ function Community(props: any) {
                                                 <form>
                                                     <div className="mb-3">
                                                         <label htmlFor="exampleInputPassword1" className="form-label ">Название</label>
-                                                        <input type="password" className="form-control" id="exampleInputPassword1"></input>
+                                                        <input type="text" className="form-control" id="exampleInputPassword1" value={inputTitle} onChange={handleChangeTitle}></input>
                                                         <div id="emailHelp" className="form-text">Наименование сообщества.</div>
                                                     </div>
                                                     <div className="mb-3">
                                                         <label htmlFor="exampleInputPassword1" className="form-label ">Небольшое описание</label>
-                                                        <input type="password" className="form-control" id="exampleInputPassword1"></input>
+                                                        <input type="text" className="form-control" id="exampleInputPassword1" value={inputShortInfo} onChange={handleChangeShortInfo}></input>
                                                         <div id="emailHelp" className="form-text">Дайте небольшое описание, в чем суть сообщества.</div>
                                                     </div>
                                                     <div className="mb-3">
+                                                        <label htmlFor="floatingTextarea2">Описание</label>
+                                                        <textarea className="form-control textarea-height-200 mt-2" placeholder="" id="floatingTextarea2" value={inputDescription} onChange={handleChangeDescription}></textarea>
+                                                        <div id="emailHelp" className="form-text">Остальная информация</div>
+                                                    </div>
+                                                    <div className="mb-3">
                                                         <label htmlFor="exampleInputPassword1" className="form-label ">Сайт</label>
-                                                        <input type="password" className="form-control" id="exampleInputPassword1"></input>
+                                                        <input type="text" className="form-control" id="exampleInputPassword1" value={inputWebsite} onChange={handleChangeWebsite}></input>
                                                         <div id="emailHelp" className="form-text">Если у вас имеется сайт укажите его выше.</div>
                                                     </div>
                                                     <div className="mb-3">
-                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Категории</label>
-                                                        <div className='d-flex'>
-                                                            <select className="form-select mb-2 me-2" aria-label="Default select example">
-                                                                <option selected>Не выбрано</option>
-                                                                <option value="1">Разработка</option>
-                                                                <option value="2">Дизайн</option>
-                                                                <option value="3">Инженерия</option>
-                                                                <option value="3">Строительство</option>
-                                                                <option value="3">Моделирование</option>
-                                                                <option value="3">3Д дизайн</option>
-                                                            </select>
-                                                            <select className="form-select mb-2 me-2" aria-label="Default select example">
-                                                                <option selected>Не выбрано</option>
-                                                                <option value="1">Разработка</option>
-                                                                <option value="2">Дизайн</option>
-                                                                <option value="3">Инженерия</option>
-                                                                <option value="3">Строительство</option>
-                                                                <option value="3">Моделирование</option>
-                                                                <option value="3">3Д дизайн</option>
-                                                            </select>
-                                                            <select className="form-select mb-2" aria-label="Default select example">
-                                                                <option selected>Не выбрано</option>
-                                                                <option value="1">Разработка</option>
-                                                                <option value="2">Дизайн</option>
-                                                                <option value="3">Инженерия</option>
-                                                                <option value="3">Строительство</option>
-                                                                <option value="3">Моделирование</option>
-                                                                <option value="3">3Д дизайн</option>
-                                                            </select>
-                                                        </div>
-                                                        <div id="emailHelp" className="form-text">Выберите под какие категории попадает сообщество.</div>
+                                                        <label htmlFor="exampleInputPassword1" className="form-label ">Расположение</label>
+                                                        <input type="text" className="form-control" id="exampleInputPassword1" value={inputLocation} onChange={handleChangeLocation}></input>
+                                                        <div id="emailHelp" className="form-text">Введите ваш центр. Например, место где расположена ваши организаторы и т.д.</div>
                                                     </div>
-                                                    
-                                                    
-                                                
-                                                    <button type="button" className="btn btn-success mt-3">Создать</button>
+                                                    {/*<div className="mb-3">*/}
+                                                    {/*    <label htmlFor="exampleInputPassword1" className="form-label ">Категории</label>*/}
+                                                    {/*    <div className='d-flex'>*/}
+                                                    {/*        <select className="form-select mb-2 me-2" aria-label="Default select example">*/}
+                                                    {/*            <option selected>Не выбрано</option>*/}
+                                                    {/*            <option value="1">Разработка</option>*/}
+                                                    {/*            <option value="2">Дизайн</option>*/}
+                                                    {/*            <option value="3">Инженерия</option>*/}
+                                                    {/*            <option value="3">Строительство</option>*/}
+                                                    {/*            <option value="3">Моделирование</option>*/}
+                                                    {/*            <option value="3">3Д дизайн</option>*/}
+                                                    {/*        </select>*/}
+                                                    {/*        <select className="form-select mb-2 me-2" aria-label="Default select example">*/}
+                                                    {/*            <option selected>Не выбрано</option>*/}
+                                                    {/*            <option value="1">Разработка</option>*/}
+                                                    {/*            <option value="2">Дизайн</option>*/}
+                                                    {/*            <option value="3">Инженерия</option>*/}
+                                                    {/*            <option value="3">Строительство</option>*/}
+                                                    {/*            <option value="3">Моделирование</option>*/}
+                                                    {/*            <option value="3">3Д дизайн</option>*/}
+                                                    {/*        </select>*/}
+                                                    {/*        <select className="form-select mb-2" aria-label="Default select example">*/}
+                                                    {/*            <option selected>Не выбрано</option>*/}
+                                                    {/*            <option value="1">Разработка</option>*/}
+                                                    {/*            <option value="2">Дизайн</option>*/}
+                                                    {/*            <option value="3">Инженерия</option>*/}
+                                                    {/*            <option value="3">Строительство</option>*/}
+                                                    {/*            <option value="3">Моделирование</option>*/}
+                                                    {/*            <option value="3">3Д дизайн</option>*/}
+                                                    {/*        </select>*/}
+                                                    {/*    </div>*/}
+                                                    {/*    <div id="emailHelp" className="form-text">Выберите под какие категории попадает сообщество.</div>*/}
+                                                    {/*</div>*/}
+
+                                                    <button type="button" className="btn btn-success mt-3" onClick={updateSettings}>Обновить</button>
                                                 </form>
                                                 
                                             </div>

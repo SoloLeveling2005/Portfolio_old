@@ -127,34 +127,45 @@ function Settings() {
 
     // Additional information inputs
 
-    const [inputShortInfo, setInputShortInfo] = useState('');
-    const handleChangeShortInfo = (event:any) => {
-        setInputShortInfo(event.target.value);
+    const [inputWebsite, setInputWebsite] = useState('');
+    const handleChangeWebsite = (event:any) => {
+        setInputWebsite(event.target.value);
     };
 
-    const [inputLocation, setInputLocation] = useState('');
-    const handleChangeLocation = (event:any) => {
-        setInputLocation(event.target.value);
+    const [inputVKPage, setInputVKPage] = useState('');
+    const handleChangeVKPage = (event:any) => {
+        setInputVKPage(event.target.value);
     };
 
-    const [inputBirthday, setInputBirthday] = useState('');
-    const handleChangeBirthday = (event:any) => {
-        setInputBirthday(event.target.value);
+    const [inputInstagramPage, setInputInstagramPage] = useState('');
+    const handleChangeInstagramPage = (event:any) => {
+        setInputInstagramPage(event.target.value);
     };
 
-    const [selectedGender, setSelectedGender] = useState('');
-    const handleSelectChangeselectedGender = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = event.target.value;
-        console.log(value)
-        setSelectedGender(value);
+    const [inputTelegramProfileLink, setInputTelegramProfileLink] = useState('');
+    const handleChangeTelegramProfileLink = (event:any) => {
+        setInputTelegramProfileLink(event.target.value);
     };
 
+    const [inputTelegramProfileId, setInputTelegramProfileId] = useState('');
+    const handleChangeTelegramProfileId = (event:any) => {
+        setInputTelegramProfileId(event.target.value);
+    };
+
+    const [inputOtherInfo, setInputOtherInfo] = useState('');
+    const handleChangeOtherInfo = (event:any) => {
+        setInputOtherInfo(event.target.value);
+    };
+
+
+    // Переключатель меню
     
     const [nav, switchNav] = useState('profile');
     function switchNavF (event:any) {
         const { value } = event.target;
         switchNav(sw => (value))
     }
+
 
     function get_user_data() {
         // Получаем информацию о пользователе
@@ -197,6 +208,7 @@ function Settings() {
                 })
                 .catch(error => {
                     console.log(error)
+                    navigate('/auth')
                 });
             }
         });
@@ -273,21 +285,20 @@ function Settings() {
         countUpdateAdditionalInformation += 1
 
         // Проверяем на существование данных
-        if (inputShortInfo == '' || inputLocation == '' || selectedGender == '' || inputBirthday == '') {
+        if (inputWebsite == '' || inputVKPage == '' || inputInstagramPage == '' || inputTelegramProfileLink == '' || inputTelegramProfileId == ''  || inputOtherInfo == '') {
             alert("Заполните все поля")
             countUpdateAdditionalInformation =  0
             return
         }
 
         axios.patch('users/update_user_additional_information', {
-            website:'',
-            vk_page:'',
-            instagram_page:'',
-            telegram_profile_link:'',
-            telegram_profile_id:'',
-            other_info:'',
+            website:inputWebsite,
+            vk_page:inputVKPage,
+            instagram_page:inputInstagramPage,
+            telegram_profile_link:inputTelegramProfileLink,
+            telegram_profile_id:inputTelegramProfileId,
+            other_info:inputOtherInfo,
         },{ headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')} }).then(response => {
-
             countUpdateAdditionalInformation = 0
             alert('Данные успешно обновлены')
             get_user_data();
@@ -295,7 +306,6 @@ function Settings() {
             .catch(error => {
                 console.log(error)
                 if (error.request.status === 401) {
-                    // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
                     axios.post('refresh_token', {
                         'refresh': localStorage.getItem('refresh_token'),
                     })
@@ -308,9 +318,9 @@ function Settings() {
                         })
                         .catch(error => {
                             console.log(error)
+                            navigate('/auth')
                         });
                 }
-
             });
     }
 
@@ -602,25 +612,33 @@ function Settings() {
                                     <form>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">Сайт</label>
-                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1"></input>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1" value={inputWebsite} onChange={handleChangeWebsite}></input>
                                             <div id="emailHelp" className="form-text">Ссылка на сайт.</div>
                                         </div>
                                         <div className="mb-3">
+                                            <label htmlFor="exampleInputPassword1" className="form-label ">ВК страница</label>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1" value={inputVKPage} onChange={handleChangeVKPage}></input>
+                                            <div id="emailHelp" className="form-text">Ссылка на ВК страницу.</div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="exampleInputPassword1" className="form-label ">Инстаграмм страница</label>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1" value={inputInstagramPage} onChange={handleChangeInstagramPage}></input>
+                                            <div id="emailHelp" className="form-text">Ссылка на инстаграмм страницу.</div>
+                                        </div>
+                                        <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">Телеграмм</label>
-                                            <input autoComplete='off' type="text" className="form-control mb-1" id="exampleInputPassword1" placeholder='Ваша ссылка на профиль (можно получить в настройках телеграмм профиля).'></input>
-                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1" placeholder='Ваш id. (необязательно, дает возможность получать уведомления в телеграмм бот)'></input>
+                                            <input autoComplete='off' type="text" className="form-control mb-1" id="exampleInputPassword1" placeholder='Ваша ссылка на профиль (можно получить в настройках телеграмм профиля).' value={inputTelegramProfileLink} onChange={handleChangeTelegramProfileLink}></input>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1" placeholder='Ваш id. (необязательно, дает возможность получать уведомления в телеграмм бот)' value={inputTelegramProfileId} onChange={handleChangeTelegramProfileId}></input>
                                             <div id="emailHelp" className="form-text">Получить id профиля телеграмм можно через нашего бота <a href="https://t.me/HubAnywhereBot" target="_blank">HubAnywhereBot</a>.</div>
                                         </div>
                                         
                                         <div className="mb-3">
                                             <label htmlFor="floatingTextarea2">Описание</label>
-                                            <textarea className="form-control textarea-height-200 mt-2" placeholder="" id="floatingTextarea2"></textarea>
+                                            <textarea className="form-control textarea-height-200 mt-2" placeholder="" id="floatingTextarea2" value={inputOtherInfo} onChange={handleChangeOtherInfo}></textarea>
                                             <div id="emailHelp" className="form-text">Остальная информация</div>
                                         </div>
-                                        
-                                        
-                                    
-                                        <button type="button" className="btn btn-success mt-3">Сохранить</button>
+
+                                        <button type="button" className="btn btn-success mt-3" onClick={updateAdditionalInformation}>Сохранить</button>
                                     </form>
                                     
                                 </div>
@@ -748,22 +766,22 @@ function Settings() {
                                     <form>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">Сайт</label>
-                                            <input autoComplete='off' type="password" className="form-control" id="exampleInputPassword1"></input>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1"></input>
                                             <div id="emailHelp" className="form-text">Ссылка на сайт.</div>
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">ВК</label>
-                                            <input autoComplete='off' type="password" className="form-control" id="exampleInputPassword1"></input>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1"></input>
                                             <div id="emailHelp" className="form-text">Ссылка на страницу ВКонтакте.</div>
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">Facebook</label>
-                                            <input autoComplete='off' type="password" className="form-control" id="exampleInputPassword1"></input>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1"></input>
                                             <div id="emailHelp" className="form-text">Ссылка на страницу Facebook.</div>
                                         </div>
                                         <div className="mb-3">
                                             <label htmlFor="exampleInputPassword1" className="form-label ">Твиттер</label>
-                                            <input autoComplete='off' type="password" className="form-control" id="exampleInputPassword1"></input>
+                                            <input autoComplete='off' type="text" className="form-control" id="exampleInputPassword1"></input>
                                             <div id="emailHelp" className="form-text">Ссылка на страницу Твиттер.</div>
                                         </div>
                                         <div className="mb-3">

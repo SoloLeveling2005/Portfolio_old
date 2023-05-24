@@ -1,4 +1,6 @@
 import json
+import random
+import string
 import time
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
@@ -56,7 +58,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @sync_to_async
     def save_message(self, username, room, message):
+        room = models.Room.objects.get(slug=room)
+
         user = models.User.objects.get(username=username)
-        room = models.Chat.objects.get(id=room)
 
         models.ChatMessage.objects.create(user=user, chat=room, content=str(message))

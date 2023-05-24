@@ -1,3 +1,5 @@
+import random
+import string
 import time
 from datetime import datetime
 from functools import wraps
@@ -20,17 +22,18 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks, CommunityAvatar, UserAvatar, Chat, ChatMessage, ChatParticipant
+    ArticleBookmarks, CommunityAvatar, UserAvatar, ChatMessage, Room, RoomParticipant
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
     UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
     CommunityAvatarSereilizer, RequestCommunityParticipantSerializer, CommunityParticipantSerializer, \
-    ArticleAssessmentSerializer, ChatSerializer, ChatParticipantSerializer, ChatMessageSerializer
+    ArticleAssessmentSerializer, RoomSerializer, RoomParticipantSerializer, ChatMessageSerializer
 
 
 # todo Удаление старых фото при загрузке новых.
 # todo При удалении роли нужно проверять, есть ли пользователи с такой ролью.
+# todo User. Добавить поля зарегистрирован и активность
 
 # Helpers
 # Exists хелперы. Основная идея. Если данные есть, то возвращает их, иначе возвращает None.
@@ -264,18 +267,33 @@ class UserView:
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_room(request, room_id: int):
+def get_room(request, slug: str, participant_id: int):
     user = request.user
 
-    if not Chat.objects.filter(id=room_id).exists():
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    room = Chat.objects.get(id=room_id)
-    messages = ChatMessage.objects.filter(chat=room)
+    participant = check_user_exists(user_id=participant_id)
+    if participant is None:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    room = Room.objects.filter(slug=slug)
+    if not room.exists():
+        timestamp = str(int(time.time()))  # Получаем текущее время и приводим его к целочисленному типу
+        random_chars = ''.join(
+            random.choices(string.ascii_letters, k=8))  # Генерируем случайную последовательность букв длиной 4
+        slug_array = (timestamp + random_chars).split('')
+        random.shuffle(slug_array)
+        slug = ''.join(slug_array)
+
+        room = Room.objects.create(slug=slug)
+
+        RoomParticipant.objects.create(room=room, user=user)
+        RoomParticipant.objects.create(room=room, user=participant)
+
+    messages = ChatMessage.objects.filter(chat=room.first())
     messages_data = [{
-            'info': ChatMessageSerializer(message).data,
-            'user': UserSerializer(message.user).data,
-            'my': user == message.user
-        } for message in messages]
+        'info': ChatMessageSerializer(message).data,
+        'user': UserSerializer(message.user).data,
+        'my': user == message.user
+    } for message in messages]
 
     return Response(data={'messages': messages_data}, status=status.HTTP_200_OK)
 
@@ -285,13 +303,13 @@ def get_room(request, room_id: int):
 def get_rooms(request):
     user = request.user
 
-    rooms = ChatParticipant.objects.filter(user=user)
+    rooms = RoomParticipant.objects.filter(user=user)
 
     rooms_data = []
     for room in rooms:
-        chat_participant = ChatParticipant.objects.filter(Q(chat=room) and ~Q(user=user))
+        chat_participant = RoomParticipant.objects.filter(Q(chat=room) and ~Q(user=user))
         rooms_data.append({
-            'info': ChatSerializer(room.chat).data,
+            'info': RoomSerializer(room.chat).data,
             'interlocutor': UserSerializer(chat_participant.first().user).data,
         })
 
@@ -307,12 +325,12 @@ def create_room(request):
 
     interlocutor = check_user_exists(user_id=interlocutor_id)
     if interlocutor is None:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    room = Chat.objects.create(name=time.time(), slug=time.time())
+    room = Room.objects.create(name=time.time(), slug=time.time())
 
-    ChatParticipant.objects.create(chat=room, user=user)
-    ChatParticipant.objects.create(chat=room, user=interlocutor)
+    RoomParticipant.objects.create(chat=room, user=user)
+    RoomParticipant.objects.create(chat=room, user=interlocutor)
 
     return Response(status=status.HTTP_201_CREATED)
 
@@ -465,12 +483,12 @@ def update_user_additional_information(request):
             return Response(status=status.HTTP_409_CONFLICT)
 
         # Редактируем (вносим изменения)
-        additional_information.website = data.website
-        additional_information.vk_page = data.vk_page
-        additional_information.instagram_page = data.instagram_page
-        additional_information.telegram_profile_link = data.telegram_profile_link
-        additional_information.telegram_profile_id = data.telegram_profile_id
-        additional_information.other_info = data.other_info
+        additional_information.website = data['website']
+        additional_information.vk_page = data['vk_page']
+        additional_information.instagram_page = data['instagram_page']
+        additional_information.telegram_profile_link = data['telegram_profile_link']
+        additional_information.telegram_profile_id = data['telegram_profile_id']
+        additional_information.other_info = data['other_info']
         additional_information.save()
 
         return Response(status=status.HTTP_200_OK)
@@ -810,6 +828,49 @@ def create_community(request) -> Response:
     community_avatar.save()
 
     return Response(data={'status': 'success', 'community_id': community.id}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_community(request) -> Response:
+    """Обновляет даннные сообщества."""
+
+    user = request.user
+
+    community_id = request.data['community_id']
+    title = request.data['title']
+    short_info = request.data['short_info']
+    description = request.data['description']
+    website = request.data['website']
+    location = request.data['location']
+
+    community = check_community_exists(community_id=community_id)
+    if community is None:
+        return Response(status.HTTP_404_NOT_FOUND)
+
+    # Проверка на разрешение удаления
+    permission = False
+
+    participant = CommunityParticipant.objects.filter(community=community, user=user)
+    if participant.exists():
+        if participant.first().role.edit_community_information is True:
+            permission = True
+
+    # Если это админ, то даем допуск
+    if community.user == user:
+        permission = True
+
+    if title is None or short_info is None or description is None or website is None or location is None:
+        return Response(status.HTTP_400_BAD_REQUEST)
+
+    community.title = title
+    community.short_info = short_info
+    community.description = description
+    community.website = website
+    community.location = location
+    community.save()
+
+    return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

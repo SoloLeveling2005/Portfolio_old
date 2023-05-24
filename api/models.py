@@ -35,6 +35,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_online = models.BooleanField(default=False)
+    last_online = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = 'username'
 
@@ -52,6 +55,13 @@ def create_user_data(sender, instance, created, **kwargs):
         UserProfile.objects.create(user=instance)
         UserAdditionalInformation.objects.create(user=instance)
         UserAvatar.objects.create(user=instance)
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
 
 
 class UserAvatar(models.Model):
@@ -133,41 +143,29 @@ class UserBlacklist(models.Model):
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_blacklist_on_banned_user')
 
 
-class Chat(models.Model):
+class Room(models.Model):
     """
     Модель чата между двумя пользователями.
     """
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.CharField(max_length=100, unique=True)
 
-    class Meta:
-        ordering = ('name',)
+
+class RoomParticipant(models.Model):
+    """
+    Модель участника чата между двумя пользователями.
+    """
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="chat_participant_on_chat")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_participant_on_user")
 
 
 class ChatMessage(models.Model):
     """
     Модель сообщения чата между двумя пользователями.
     """
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="chat_messages")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages")
+    chat = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="chat_messages_on_chat")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages_on_user")
     content = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
-
-
-class ChatParticipant(models.Model):
-    """
-    Модель участника чата между двумя пользователями.
-    """
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="chat_participant")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_participant")
-
-
-class UserBannedChat(models.Model):
-    """
-    Модель заблокированных пользователями чатов.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_banned_chat')
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='user_banned_chat')
 
 
 # todo END USERS   ---------------------------------------------------------------------

@@ -88,7 +88,7 @@ urlpatterns = [
 
 
 
-    path('messenger/get_room/<int:room_id>', views.get_room, name="get_room"),
+    path('messenger/get_room/<str:slug>/<int:participant_id>', views.get_room, name="get_room"),
     path('messenger/get_rooms', views.get_rooms, name="get_rooms"),
     path('messenger/create_room', views.create_room, name="create_room"),
 
@@ -103,6 +103,7 @@ urlpatterns = [
     # Работа с сообществом
     path('community/get_community/<int:community_id>', views.get_community, name="get_community"),
     path('community/create_community', views.create_community, name="create_community"),
+    path('community/update_community', views.update_community, name="update_community"),
     path('community/get_user_communities', views.get_user_communities, name="get_user_communities"),
     path('community/get_find_communities', views.get_find_communities, name="get_find_communities"),
     path('community/get_about_community/<int:community_id>', views.get_about_community, name="get_about_community"),
