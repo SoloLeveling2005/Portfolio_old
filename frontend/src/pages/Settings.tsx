@@ -125,6 +125,30 @@ function Settings() {
         setSelectedGender(value);
     };
 
+    // Additional information inputs
+
+    const [inputShortInfo, setInputShortInfo] = useState('');
+    const handleChangeShortInfo = (event:any) => {
+        setInputShortInfo(event.target.value);
+    };
+
+    const [inputLocation, setInputLocation] = useState('');
+    const handleChangeLocation = (event:any) => {
+        setInputLocation(event.target.value);
+    };
+
+    const [inputBirthday, setInputBirthday] = useState('');
+    const handleChangeBirthday = (event:any) => {
+        setInputBirthday(event.target.value);
+    };
+
+    const [selectedGender, setSelectedGender] = useState('');
+    const handleSelectChangeselectedGender = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        console.log(value)
+        setSelectedGender(value);
+    };
+
     
     const [nav, switchNav] = useState('profile');
     function switchNavF (event:any) {
@@ -234,6 +258,60 @@ function Settings() {
             }
             
         });
+    }
+
+    // Обновление дополнительных данных пользователя
+    let countUpdateAdditionalInformation = 0;
+    function updateAdditionalInformation() {
+        // Если перезапуск был слишком часто
+        if (countUpdateAdditionalInformation == 2) {
+            alert("Ошибка отправки данных")
+            countUpdateAdditionalInformation = 0
+            return
+        }
+        // Обновляем счетчик
+        countUpdateAdditionalInformation += 1
+
+        // Проверяем на существование данных
+        if (inputShortInfo == '' || inputLocation == '' || selectedGender == '' || inputBirthday == '') {
+            alert("Заполните все поля")
+            countUpdateAdditionalInformation =  0
+            return
+        }
+
+        axios.patch('users/update_user_additional_information', {
+            website:'',
+            vk_page:'',
+            instagram_page:'',
+            telegram_profile_link:'',
+            telegram_profile_id:'',
+            other_info:'',
+        },{ headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')} }).then(response => {
+
+            countUpdateAdditionalInformation = 0
+            alert('Данные успешно обновлены')
+            get_user_data();
+        })
+            .catch(error => {
+                console.log(error)
+                if (error.request.status === 401) {
+                    // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+                    axios.post('refresh_token', {
+                        'refresh': localStorage.getItem('refresh_token'),
+                    })
+                        .then(response => {
+                            //
+                            localStorage.setItem('access_token', response.data.access)
+
+                            // Запрашиваем данные снова
+                            updateAdditionalInformation()
+                        })
+                        .catch(error => {
+                            console.log(error)
+                        });
+                }
+
+            });
     }
 
     // Обновление автарки пользователя
