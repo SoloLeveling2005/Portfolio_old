@@ -60,6 +60,7 @@ def create_user_data(sender, instance, created, **kwargs):
 class Notification(models.Model):
     """Модель уведомлений пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
+    notification_type = models.CharField(max_length=150)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)

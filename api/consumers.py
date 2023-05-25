@@ -17,7 +17,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # Проверяем существование комнаты с идентификатором, равным room_id.
         if await sync_to_async(models.Room.objects.filter(id=self.room_id).exists)():
-
             # Если пользователь существует, формируем имя группы комнаты (room_group_name).
             self.room_group_name = f'chat_{self.room_id}'
 
@@ -83,9 +82,20 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
 
 class UserNotification(AsyncJsonWebsocketConsumer):
+    """
+    Класс обрабатывающий сокет, сообщает клиенту тип уведомлений для обновления данных.
+    Какие типы уведомлений могут быть:
+    - admin_notification - уведомление от админа.
+    - notification_new_entries - уведомление о новых записях
+    - notification_comments_under_posts - уведомление о комментариях под публикациями.
+    - notification_assessment_under_posts - уведомление об оценке под публикациями.
+    - notification_new_friend - уведомление о новом друге
+    - notification_confirm_friend - уведомление о подтверждение добавлении в друзья другим пользователем.
+    """
+
     async def connect(self):
         # Извлекаем имя комнаты из URL-маршрута и сохраняем его в self.room_id.
-        self.sender_id = self.scope['url_route']['kwargs']['user_id']
+        self.sender_id = self.scope['url_route']['kwargs']['sender_id']
 
         # Проверяем существование пользователя с идентификатором, равным room_id.
         if await sync_to_async(User.objects.filter(id=self.sender_id).exists)():
@@ -114,64 +124,134 @@ class UserNotification(AsyncJsonWebsocketConsumer):
         notification_type = data["notification_type"]
         receiver_id = data["receiver_id"]
 
+        # Отправляем уведомление тому кому нужно, а не тому кто в данной комнате
         room_group_name = f'notification/user/{receiver_id}'
 
-        # Вызываем метод сохранения сообщения в бд.
-        await self.save_message(username, room_id, message)
+        message = ''
 
-        # Отправляем сообщение группе комнаты.
-        await self.channel_layer.group_send(
-            room_group_name,
-            {
-                "type": "chat_message",
-                "message": notification_type,
-            }
-        )
+        # Проверка на существование пользователя.
+        receiver = User.objects.filter(id=receiver_id)
+        if not receiver.exists():
+            # Отправляем сообщение обратно самому же (ошибку).
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "status": "error",
+                    "type": "error",
+                    "message": "Такого пользователя не существует",
+                }
+            )
 
-    async def notify_admin_notification(self):
-        # Метод для обработки уведомления от администрации.
-        # Вызывается, когда приходит новое оповещение от администрации.
-        # Может содержать информацию о тексте уведомления, дате и т.д.
-        await self.send(text_data=json.dumps({
-            "type": "admin_notification"
-        }))
+        if notification_type == 'admin_notification':
+            message = data["message"]
+            if message is None:
+                # Отправляем сообщение обратно самому же (ошибку).
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "status": "error",
+                        "type": "error",
+                        "message": "Сообщение не было предоставлено",
+                    }
+                )
 
-    async def notify_friend_request(self):
-        # Метод для обработки уведомления о запросе в друзья.
-        # Вызывается, когда приходит новый запрос в друзья.
-        # Может содержать информацию о пользователе, отправившем запрос, дате и т.д.
-        await self.send(text_data=json.dumps({
-            "type": "friend_request"
-        }))
+        elif notification_type == 'notification_new_entries':
+            # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
+            if receiver.notification_new_entries:
+                community_title = data["community_title"]
+                if community_title is None:
+                    # Отправляем сообщение обратно самому же (ошибку).
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "status": "error",
+                            "type": "error",
+                            "message": "Название сообщества не было подано.",
+                        }
+                    )
 
-    async def notify_new_post(self):
-        # Метод для обработки уведомления о новых записях
-        # Вызывается, когда появляется новая запись.
-        # Может содержать информацию о записи, авторе, дате и т.д.
-        await self.send(text_data=json.dumps({
-            "type": "new_post"
-        }))
+                message = f"В сообществе {community_title} опубликовали новую запись"
 
-    async def notify_new_comment(self):
-        # Метод для обработки уведомления о комментариях под публикациями
-        # Вызывается, когда появляется новый комментарий.
-        # Может содержать информацию о комментарии, авторе, публикации, дате и т.д.
-        await self.send(text_data=json.dumps({
-            "type": "new_comment"
-        }))
+        elif notification_type == 'notification_comments_under_posts':
+            # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
+            if receiver.notification_comments_under_posts:
+                article_title = data["article_title"]
+                if article_title is None:
+                    # Отправляем сообщение обратно самому же (ошибку).
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "status": "error",
+                            "type": "error",
+                            "message": "Название сообщества не было подано.",
+                        }
+                    )
 
-    async def notify_new_rating(self):
-        # Метод для обработки уведомления об оценке под публикациями
-        # Вызывается, когда появляется новая оценка.
-        # Может содержать информацию об оценке, авторе, публикации, дате и т.д.
-        await self.send(text_data=json.dumps({
-            "type": "new_rating"
-        }))
+                message = f"Под вашей статьей {article_title} оставили новый комментарий"
 
-    async def notify_new_friend(self):
-        # Метод для обработки уведомления о новом друге.
-        # Вызывается, когда появляется новый друг.
-        # Может содержать информацию о пользователе, добавленном в друзья, дате и т.д.
-        await self.send(text_data=json.dumps({
-            "type": "new_friend"
-        }))
+        elif notification_type == 'notification_assessment_under_posts':
+            # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
+            if receiver.notification_assessment_under_posts:
+                article_title = data["article_title"]
+                if article_title is None:
+                    # Отправляем сообщение обратно самому же (ошибку).
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "status": "error",
+                            "type": "error",
+                            "message": "Название сообщества не было подано.",
+                        }
+                    )
+
+                message = f"Под вашей статьей {article_title} оставили оценку"
+
+        elif notification_type == 'notification_new_friend':
+            # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
+            if receiver.notification_new_friend:
+                message = f"У вас новый друг!"
+
+        elif notification_type == 'notification_confirm_friend':
+            # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
+            if receiver.notification_new_friend:
+                message = f"Ваша заявка в друзья подтверждена"
+
+        if message != '':
+            # Если пользователь онлайн, отправляем ему сообщение.
+            if await self.channel_layer.group_exists(room_group_name):
+
+                # Создаем уведомление
+                sync_to_async(models.Notification.objects.create(
+                    user=receiver,
+                    notification_type=notification_type,
+                    message=message,
+                    is_read=True
+                ))
+
+                # Отправляем сообщение группе комнаты.
+                await self.channel_layer.group_send(
+                    room_group_name,
+                    {
+                        "status": "success",
+                        "type": notification_type,
+                        "message": message,
+                    }
+                )
+            else:
+                # Создаем уведомление без отправки на Frontend, прочитан = False
+                sync_to_async(models.Notification.objects.create(
+                    user=receiver,
+                    notification_type=notification_type,
+                    message=message,
+                    is_read=False
+                ))
+        else:
+            # Отправляем сообщение обратно самому же (warning).
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "status": "warning",
+                    "type": "warning",
+                    "message": "Неопределённая",
+                }
+            )
