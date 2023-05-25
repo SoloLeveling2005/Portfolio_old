@@ -55,7 +55,7 @@ class SerializerUserAdditionalInformation(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = ['id', 'username', 'is_online', 'last_online']
+        fields = ['id', 'username', 'is_online', 'last_online', 'created_at']
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -142,7 +142,7 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ChatMessageSerializer(serializers.ModelSerializer):
+class RoomMessageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.ChatMessage
+        model = models.RoomMessage
         fields = '__all__'

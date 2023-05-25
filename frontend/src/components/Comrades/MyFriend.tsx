@@ -24,36 +24,36 @@ function MyFriend(props:{'logo_url':string,'id':string, 'username':string}) {
         }
         countCreateChat += 1
 
-
-        axios.defaults.baseURL = API_BASE_URL
-        axios.post(`messenger/create_room`,{'interlocutor_id':id}, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
-            .then(response => {
-                console.log(response.data)
-                navigate(`/messenger/${id}`)
-                // Обнуляем значение
-                countCreateChat = 0
-            })
-            .catch(error => {
-                console.log(error)
-                if (error.request.status === 401) {
-                    // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
-                    axios.post('refresh_token', {
-                        'refresh': localStorage.getItem('refresh_token'),
-                    })
-                        .then(response => {
-                            //
-                            localStorage.setItem('access_token', response.data.access)
-
-                            // Запрашиваем данные снова
-                            createChat()
-                        })
-                        .catch(error => {
-                            console.log(error)
-                            navigate('/auth');
-                        });
-                }
-
-            });
+        navigate(`/messenger/${id}`)
+        // axios.defaults.baseURL = API_BASE_URL
+        // axios.post(`messenger/create_room`,{'interlocutor_id':id}, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        //     .then(response => {
+        //         console.log(response.data)
+        //         navigate(`/messenger/${id}`)
+        //         // Обнуляем значение
+        //         countCreateChat = 0
+        //     })
+        //     .catch(error => {
+        //         console.log(error)
+        //         if (error.request.status === 401) {
+        //             // Если сервер ответил что пользователь не авторизован, отправляем запрос на перезапуск access токена. Если это не помогает то выводим ошибку.
+        //             axios.post('refresh_token', {
+        //                 'refresh': localStorage.getItem('refresh_token'),
+        //             })
+        //                 .then(response => {
+        //                     //
+        //                     localStorage.setItem('access_token', response.data.access)
+        //
+        //                     // Запрашиваем данные снова
+        //                     createChat()
+        //                 })
+        //                 .catch(error => {
+        //                     console.log(error)
+        //                     navigate('/auth');
+        //                 });
+        //         }
+        //
+        //     });
 
     }
 

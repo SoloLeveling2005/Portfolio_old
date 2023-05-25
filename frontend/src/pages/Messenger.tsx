@@ -23,18 +23,15 @@ function Messenger() {
     if (user === null) {
         navigate('/auth')
     }
-    
-
-    //
 
     // function roomConnect() {
     //     console.log('Start')
     //     const socket = new WebSocket(`ws://localhost:8000/ws/1/`);
-
+    //
     //     socket.onopen = function (e) {
     //         console.log("[open] Соединение установлено");
     //     };
-
+    //
     //     socket.onmessage = function (e) {
     //         const data = JSON.parse(e.data);
     //         console.log(data);
@@ -47,7 +44,7 @@ function Messenger() {
     //         // } else{
     //         // }
     //     };
-
+    //
     //     socket.onclose = function (event) {
     //         if (event.wasClean) {
     //             alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
@@ -57,7 +54,7 @@ function Messenger() {
     //             alert('[close] Соединение прервано');
     //         }
     //     };
-
+    //
     //     const sendMessage = (e:any, socket) => {
     //         e.preventDefault();
     //         const message = inputUserMessage;
@@ -70,35 +67,34 @@ function Messenger() {
     //         );
     //         return false;
     //     };
-
+    //
     //     const handleKeyPress = (event: any) => {
     //         if (event.key === 'Enter') {
     //             sendMessage(event)
     //         }
     //     };
-
+    //
     //     socket.onerror = function (error) {
     //         console.log(`[error]`);
     //     };
-
+    //
     //     return () => {
     //         socket.close();
     //     };
-
-        
+    //
+    //
     // }
 
     const blockRef = useRef(null);
 
-
-
-
     const [data, setData] = useState([{info:{id:0, name:'', slug:''}, interlocutor:{id:0, username:''}}]);
     const [messages, setMessages] = useState([{info:{content:''},user:{username:''}, my:false}]);
 
-    var {messenger_id} = useParams();
+    // Получаем id комнаты
+    let {messenger_id} = useParams();
     const [chat, switchChat] = useState(`${messenger_id}`);
-    
+    const [room_id, switchRoom] = useState(``);
+
     function switchChatF(id = '0') {
         switchChat(id)
         // roomConnect()
@@ -124,7 +120,7 @@ function Messenger() {
                 JSON.stringify({
                     message: inputUserMessage,
                     username: localStorage.getItem('username'),
-                    room: chat,
+                    room_id: room_id,
                 })
             );
         } else {
@@ -175,7 +171,7 @@ function Messenger() {
 
     // Функция получающая список прошлых сообщений
     let counGetMessages = 0
-    function getMessages(room_id: number) {
+    function getMessages(user_id: number) {
         if (counGetMessages == 3) {
             alert("Ошибка поиска запосов в друзья")
             counGetMessages = 0
@@ -184,10 +180,47 @@ function Messenger() {
         counGetMessages += 1
 
         axios.defaults.baseURL = API_BASE_URL
-        axios.get(`messenger/get_room/${room_id}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
+        axios.get(`messenger/get_room/${user_id}`, { headers:{'Authorization':"Bearer "+localStorage.getItem('access_token')}})
             .then(response => {
                 console.log(response.data)
                 setMessages(response.data.messages)
+
+                console.log(response.data.room.id)
+                switchRoom(response.data.room.id)
+                const newSocket = new WebSocket(`ws://localhost:8000/ws/room/${response.data.room.id}`);
+                setSocket(newSocket)
+
+                newSocket.onopen = function (e) {
+                    console.log("[open] Соединение установлено");
+                    // Вдруг сообщество было создано только сейчас при соединении.
+                    getChats();
+                };
+
+                // Подписка на новые сообщения
+                newSocket.onmessage = function (e) {
+                    let new_message = JSON.parse(e.data);
+                    let myUsername = localStorage.getItem('username')
+                    let my = new_message.username === myUsername
+                    setMessages(prevMessages => [...prevMessages, {info:{content:new_message.message},user:{username:new_message.username}, my:my}]);
+                    console.log(new_message);
+                    // Функция для прокрутки блока вниз
+                    if (blockRef.current) {
+                        // @ts-ignore
+                        blockRef.current.scrollTop = blockRef.current.scrollHeight;
+                    }
+                };
+
+                // Отключение сокета при размонтировании компонента
+                newSocket.onclose = function (event) {
+                    if (event.wasClean) {
+                        alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+                    } else {
+                        // например, сервер убил процесс или сеть недоступна
+                        // обычно в этом случае event.code 1006
+                        alert('[close] Соединение прервано');
+                    }
+                };
+
                 // Обнуляем значение
                 counGetMessages = 0
             })
@@ -202,7 +235,7 @@ function Messenger() {
                             localStorage.setItem('access_token', response.data.access)
 
                             // Запрашиваем данные снова
-                            getMessages(room_id)
+                            getMessages(user_id)
                         })
                         .catch(error => {
                             console.log(error)
@@ -218,38 +251,8 @@ function Messenger() {
     useEffect(() => {
         getChats()
         if (chat == '0') return;
-        const newSocket = new WebSocket(`ws://localhost:8000/ws/${chat}/`);
-        setSocket(newSocket)
-        
-        
-        newSocket.onopen = function (e) {
-            console.log("[open] Соединение установлено");
-        };
+        getMessages(Number(chat))
 
-        // Подписка на новые сообщения
-        newSocket.onmessage = function (e) {
-            let new_message = JSON.parse(e.data);
-            let myUsername = localStorage.getItem('username')
-            let my = new_message.username === myUsername
-            setMessages(prevMessages => [...prevMessages, {info:{content:new_message.message},user:{username:new_message.username}, my:my}]);
-            console.log(new_message);
-            // Функция для прокрутки блока вниз
-            if (blockRef.current) {
-                // @ts-ignore
-                blockRef.current.scrollTop = blockRef.current.scrollHeight;
-            }
-        };
-
-        // Отключение сокета при размонтировании компонента
-        newSocket.onclose = function (event) {
-            if (event.wasClean) {
-                alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
-            } else {
-                // например, сервер убил процесс или сеть недоступна
-                // обычно в этом случае event.code 1006
-                alert('[close] Соединение прервано');
-            }
-        };
     }, [chat]);
         
 

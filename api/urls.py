@@ -88,7 +88,7 @@ urlpatterns = [
 
 
 
-    path('messenger/get_room/<int:room_id>/<int:participant_id>', views.get_room, name="get_room"),
+    path('messenger/get_room/<int:participant_id>', views.get_room, name="get_room"),
     path('messenger/get_rooms', views.get_rooms, name="get_rooms"),
     path('messenger/create_room', views.create_room, name="create_room"),
 

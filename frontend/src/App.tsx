@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   BrowserRouter,
@@ -85,9 +85,37 @@ const router = createBrowserRouter([
   }
 ]);
 function App() {
-  
+  const [messages, setMessages] = useState<string[]>([]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (messages.length > 0) {
+        setMessages(prevMessages => prevMessages.slice(1));
+      }
+    }, 3000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [messages]);
+
+  const handleNewMessage = () => {
+    const newMessage = `Message ${messages.length + 1}`;
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+  };
+
   return (
-    <RouterProvider router={router} />
+      <div>
+        <section className={"notification-section"} id={"notification-section"}>
+          {messages.map((item, index) => (
+              <div key={index} className="alert alert-primary" role="alert">
+                  {item}
+              </div>
+          ))}
+          {/*<button onClick={handleNewMessage}>New</button>*/}
+        </section>
+        <RouterProvider router={router} />
+      </div>
   );
 }
 

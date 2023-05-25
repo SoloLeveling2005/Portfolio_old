@@ -197,3 +197,12 @@ a {
 .cursor-help {
     cursor: help;
 }
+
+
+.notification-section {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 20vw;
+    height: auto;
+}

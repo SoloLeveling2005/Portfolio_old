@@ -28,4 +28,4 @@ admin.site.register(models.CommunityParticipant)
 
 admin.site.register(models.Room)
 admin.site.register(models.RoomParticipant)
-admin.site.register(models.ChatMessage)
+admin.site.register(models.RoomMessage)

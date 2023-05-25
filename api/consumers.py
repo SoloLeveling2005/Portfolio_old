@@ -15,19 +15,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Извлекаем имя комнаты из URL-маршрута и сохраняем его в self.room_id.
         self.room_id = self.scope['url_route']['kwargs']['room_id']
 
-        # Проверяем существование комнаты с идентификатором, равным room_id.
-        if await sync_to_async(models.Room.objects.filter(id=self.room_id).exists)():
-            # Если пользователь существует, формируем имя группы комнаты (room_group_name).
-            self.room_group_name = f'chat_{self.room_id}'
 
-            # Добавляем текущий канал (channel_name) в эту группу.
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
 
-            # Принимаем соединение с клиентом
-            await self.accept()
+        self.room_group_name = f'chat_{self.room_id}'
+
+        # Добавляем текущий канал (channel_name) в эту группу.
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        # Принимаем соединение с клиентом
+        await self.accept()
+
 
     async def disconnect(self, code):
         # Удаляем текущий канал из группы комнаты (self.room_group_name), когда клиент отключается.
@@ -67,7 +67,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Отправляем данные о сообщении, имени пользователя и комнате обратно клиенту с помощью send().
         await self.send(text_data=json.dumps({
             "message": message,
-            "user_id": username,
+            "username": username,
             "room_id": room_id
         }))
 

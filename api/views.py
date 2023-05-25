@@ -22,13 +22,13 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks, CommunityAvatar, UserAvatar, ChatMessage, Room, RoomParticipant
+    ArticleBookmarks, CommunityAvatar, UserAvatar, RoomMessage, Room, RoomParticipant
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
     UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
     CommunityAvatarSereilizer, RequestCommunityParticipantSerializer, CommunityParticipantSerializer, \
-    ArticleAssessmentSerializer, RoomSerializer, RoomParticipantSerializer, ChatMessageSerializer
+    ArticleAssessmentSerializer, RoomSerializer, RoomParticipantSerializer, RoomMessageSerializer
 
 
 # todo Удаление старых фото при загрузке новых.
@@ -267,7 +267,7 @@ class UserView:
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_room(request, room_id: int, participant_id: int):
+def get_room(request, participant_id: int):
     """
     Метод возвращает данные комнаты. Если комнаты не существует, он ее создает.
     :param request: Данные запроса.
@@ -282,9 +282,17 @@ def get_room(request, room_id: int, participant_id: int):
     if participant is None:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # Получаем данные комнаты и делаем проверку на ее существование.
-    room = Room.objects.filter(id=room_id)
-    if not room.exists():
+    common_room = None
+
+    # Находим комнаты, в которых находятся оба пользователя
+    user_rooms = RoomParticipant.objects.filter(user=user)
+    participant_rooms = RoomParticipant.objects.filter(user=participant)
+    for user_room in user_rooms:
+        for participant_room in participant_rooms:
+            if user_room.room.id == participant_room.room.id:
+                common_room = user_room.room
+
+    if common_room is None:
         # Если комната не найдена, создаем ее.
         room = Room.objects.create()
 
@@ -292,18 +300,21 @@ def get_room(request, room_id: int, participant_id: int):
         RoomParticipant.objects.create(room=room, user=user)
         RoomParticipant.objects.create(room=room, user=participant)
 
-    # Комната есть. Получаем все прошлые сообщения.
-    messages = ChatMessage.objects.filter(chat=room.first())
+        # Комната есть. Получаем все прошлые сообщения.
+        messages = RoomMessage.objects.filter(room=room)
+    else:
+        room = common_room
+        messages = RoomMessage.objects.filter(room=common_room)
 
     # Формируем ответ.
     messages_data = [{
-        'info': ChatMessageSerializer(message).data,
+        'info': RoomMessageSerializer(message).data,
         'user': UserSerializer(message.user).data,
         'my': user == message.user
     } for message in messages]
 
     # Возвращаем данные
-    return Response(data={'messages': messages_data}, status=status.HTTP_200_OK)
+    return Response(data={'messages': messages_data, 'room': RoomSerializer(room).data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
