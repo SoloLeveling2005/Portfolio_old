@@ -58,6 +58,7 @@ def create_user_data(sender, instance, created, **kwargs):
 
 
 class Notification(models.Model):
+    """Модель уведомлений пользователя."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_notification')
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -147,7 +148,7 @@ class Room(models.Model):
     """
     Модель чата между двумя пользователями.
     """
-    slug = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class RoomParticipant(models.Model):
@@ -158,14 +159,14 @@ class RoomParticipant(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_participant_on_user")
 
 
-class ChatMessage(models.Model):
+class RoomMessage(models.Model):
     """
     Модель сообщения чата между двумя пользователями.
     """
-    chat = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="chat_messages_on_chat")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="chat_messages_on_chat")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chat_messages_on_user")
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 # todo END USERS   ---------------------------------------------------------------------

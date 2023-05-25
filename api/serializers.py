@@ -15,7 +15,6 @@ UserAuthenticationSerializer = UserAuth.UserAuthenticationSerializer
 
 
 class UserSerializerModel(serializers.ModelSerializer):
-    # Добавьте это поле, чтобы получить объект пользователя вместо строки "username"
     id = serializers.IntegerField()
     username = serializers.CharField()
     password = serializers.CharField()
@@ -23,7 +22,7 @@ class UserSerializerModel(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'password', 'is_active',
-                  'is_staff']  # Укажите нужные поля вашей модели пользователя
+                  'is_staff', 'is_online', 'last_online']
 
 
 class SerializerCreateCommunityRole(serializers.Serializer):
@@ -56,7 +55,7 @@ class SerializerUserAdditionalInformation(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
-        fields = '__all__'
+        fields = ['id', 'username', 'is_online', 'last_online']
 
 
 class ProfileSerializer(serializers.ModelSerializer):

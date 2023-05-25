@@ -267,52 +267,69 @@ class UserView:
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_room(request, slug: str, participant_id: int):
+def get_room(request, room_id: int, participant_id: int):
+    """
+    Метод возвращает данные комнаты. Если комнаты не существует, он ее создает.
+    :param request: Данные запроса.
+    :param room_id: ID комнаты.
+    :param participant_id: ID собеседника.
+    :return: Возвращает все прошлые сообщения с комнаты.
+    """
     user = request.user
 
+    # Делаем проверку на существование собеседника.
     participant = check_user_exists(user_id=participant_id)
     if participant is None:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    room = Room.objects.filter(slug=slug)
+    # Получаем данные комнаты и делаем проверку на ее существование.
+    room = Room.objects.filter(id=room_id)
     if not room.exists():
-        timestamp = str(int(time.time()))  # Получаем текущее время и приводим его к целочисленному типу
-        random_chars = ''.join(
-            random.choices(string.ascii_letters, k=8))  # Генерируем случайную последовательность букв длиной 4
-        slug_array = (timestamp + random_chars).split('')
-        random.shuffle(slug_array)
-        slug = ''.join(slug_array)
+        # Если комната не найдена, создаем ее.
+        room = Room.objects.create()
 
-        room = Room.objects.create(slug=slug)
-
+        # Добавляем участников.
         RoomParticipant.objects.create(room=room, user=user)
         RoomParticipant.objects.create(room=room, user=participant)
 
+    # Комната есть. Получаем все прошлые сообщения.
     messages = ChatMessage.objects.filter(chat=room.first())
+
+    # Формируем ответ.
     messages_data = [{
         'info': ChatMessageSerializer(message).data,
         'user': UserSerializer(message.user).data,
         'my': user == message.user
     } for message in messages]
 
+    # Возвращаем данные
     return Response(data={'messages': messages_data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_rooms(request):
+    """
+    :param request: Данные запроса.
+    :return: Возвращает все комнаты, в которых состоит пользователь.
+    """
     user = request.user
 
-    rooms = RoomParticipant.objects.filter(user=user)
+    # Получаем комнаты пользователя.
+    user_rooms = RoomParticipant.objects.filter(user=user)
 
+    # Перебираем комнаты.
     rooms_data = []
-    for room in rooms:
-        chat_participant = RoomParticipant.objects.filter(Q(chat=room) and ~Q(user=user))
+    for room in user_rooms:
+        # Получаем другого участника той же комнаты.
+        chat_participant = RoomParticipant.objects.filter(Q(room=room) and ~Q(user=user))
+        # Формируем ответ.
         rooms_data.append({
-            'info': RoomSerializer(room.chat).data,
+            'info': RoomSerializer(room.room).data,
             'interlocutor': UserSerializer(chat_participant.first().user).data,
         })
 
+    # Возвращаем данные.
     return Response(data={'rooms_data': rooms_data}, status=status.HTTP_200_OK)
 
 
@@ -320,18 +337,22 @@ def get_rooms(request):
 @permission_classes([IsAuthenticated])
 def create_room(request):
     user = request.user
-    # Собеседник
+    # Получаем id собеседника
     interlocutor_id = request.data['interlocutor_id']
 
+    # Получаем его модель и проверяем на его существование.
     interlocutor = check_user_exists(user_id=interlocutor_id)
     if interlocutor is None:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    room = Room.objects.create(name=time.time(), slug=time.time())
+    # Создаем комнату.
+    room = Room.objects.create()
 
-    RoomParticipant.objects.create(chat=room, user=user)
-    RoomParticipant.objects.create(chat=room, user=interlocutor)
+    # Создаем участников комнаты.
+    RoomParticipant.objects.create(room=room, user=user)
+    RoomParticipant.objects.create(room=room, user=interlocutor)
 
+    # Возвращаем ответ.
     return Response(status=status.HTTP_201_CREATED)
 
 
