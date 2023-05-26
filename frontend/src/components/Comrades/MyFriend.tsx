@@ -6,12 +6,13 @@ import {Link, useNavigate} from 'react-router-dom';
 import axios from "axios";
 import API_BASE_URL from "../../config";
 
-function MyFriend(props:{'logo_url':string,'id':string, 'username':string}) {
+function MyFriend(props:{'logo_url':string,'id':string, 'username':string, 'parentUpdateData':any}) {
     const navigate = useNavigate();
 
     const logo_url = props.logo_url
     const id = props.id
     const username = props.username
+    const parentUpdateData = props.parentUpdateData
 
     // rooms_data
     // Функция поиска друга

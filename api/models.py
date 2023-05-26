@@ -123,6 +123,49 @@ class RequestUserSubscriptions(models.Model):
                                    related_name='request_user_subscriptions_on_subscriber')
 
 
+@receiver(post_save, sender=RequestUserSubscriptions)
+def notification_new_friend(sender, instance, created, **kwargs):
+    if created:
+        user = instance.user
+        subscriber = instance.subscriber
+
+        message = f"У вас новый друг! Вам отправили запрос в друзья!"
+
+        notification_data = {
+            'status': 'success',
+            'type': 'notification_new_friend',
+            'message': message,
+        }
+
+        # Получите каналы участников комнаты
+        channel_layer = get_channel_layer()
+        room_name = f'notification_user_{subscriber.id}'
+        user_settings = UserSettings.objects.get(user=subscriber)
+
+        notification_type = notification_data['type']
+        message = notification_data['message']
+        is_read = False
+
+        # Оповещаем автора статьи.
+        if user_settings.notification_new_friend:
+
+            if channel_layer.group_exists(room_name):
+                # Если пользователь онлайн значит отмечаем, что он посмотрел.
+                is_read = True
+
+                # Отправьте уведомление пользователю
+                async_to_sync(channel_layer.group_send)(
+                    room_name, notification_data
+                )
+
+            Notification.objects.create(
+                user=subscriber,
+                notification_type=notification_type,
+                message=message,
+                is_read=is_read,
+            )
+
+
 class UserSubscriptions(models.Model):
     """
     Модель подписок на пользователей.
@@ -130,6 +173,54 @@ class UserSubscriptions(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_user')
     subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
 
+
+@receiver(post_save, sender=RequestUserSubscriptions)
+def notification_confirm_friend(sender, instance, created, **kwargs):
+    if created:
+        user = instance.user
+        subscriber = instance.subscriber
+
+        message = f"Ваша заявка в друзья подтверждена"
+
+        notification_data = {
+            'status': 'success',
+            'type': 'notification_confirm_friend',
+            'message': message,
+        }
+
+        # Определяем кто оставил запрос в друзья
+        users_subscription = RequestUserSubscriptions.objects.filter(user=user)
+
+        if not users_subscription.exists():
+            return
+
+        # Получите каналы участников комнаты
+        channel_layer = get_channel_layer()
+        room_name = f'notification_user_{user.id}'
+        user_settings = UserSettings.objects.get(user=user)
+
+        notification_type = notification_data['type']
+        message = notification_data['message']
+        is_read = False
+
+        # Оповещаем автора статьи.
+        if user_settings.notification_new_friend:
+
+            if channel_layer.group_exists(room_name):
+                # Если пользователь онлайн значит отмечаем, что он посмотрел.
+                is_read = True
+
+                # Отправьте уведомление пользователю
+                async_to_sync(channel_layer.group_send)(
+                    room_name, notification_data
+                )
+
+            Notification.objects.create(
+                user=user,
+                notification_type=notification_type,
+                message=message,
+                is_read=is_read,
+            )
 
 class UserRating(models.Model):
     """
@@ -299,8 +390,10 @@ class Article(models.Model):
 def send_notification_new_entries(sender, instance, created, **kwargs):
     if created:
         community = instance.community
+        author = instance.author
 
-        community_participants = CommunityParticipant.objects.get(id=community.id)
+        # Исключаем самого пользователя который создал статью
+        community_participants = CommunityParticipant.objects.get(Q(id=community.id) and ~Q(user=author))
 
         message = f"В сообществе {community.title} опубликовали новую запись"
 
@@ -361,6 +454,50 @@ class ArticleComment(models.Model):
     content = models.CharField(max_length=300)
 
 
+@receiver(post_save, sender=ArticleComment)
+def notification_comments_under_posts(sender, instance, created, **kwargs):
+    if created:
+        article = instance.article
+        article_author = article.author
+        comment_author = instance.user
+        message = f"Под вашей статьей {article.title} оставили новый комментарий"
+
+        notification_data = {
+            'status': 'success',
+            'type': 'notification_comments_under_posts',
+            'message': message,
+        }
+
+        # Если комментарий оставил автор, то это не считается
+        if article_author == comment_author:
+            return
+
+        # Получите каналы участников комнаты
+        channel_layer = get_channel_layer()
+        room_name = f'notification_user_{article_author.id}'
+        user_settings = UserSettings.objects.get(user=article_author)
+        notification_type = notification_data['type']
+        message = notification_data['message']
+        is_read = False
+
+        # Оповещаем автора статьи.
+        if user_settings.notification_comments_under_posts:
+
+            if channel_layer.group_exists(room_name):
+                # Если пользователь онлайн значит отмечаем, что он посмотрел.
+                is_read = True
+
+                # Отправьте уведомление пользователю
+                async_to_sync(channel_layer.group_send)(
+                    room_name, notification_data
+                )
+
+            Notification.objects.create(
+                user=article_author,
+                notification_type=notification_type,
+                message=message,
+                is_read=is_read,
+            )
 
 
 class ArticleAssessment(models.Model):
@@ -370,6 +507,53 @@ class ArticleAssessment(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='article_assessment')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_assessment')
     status = models.BooleanField(null=False)
+
+
+@receiver(post_save, sender=ArticleAssessment)
+def notification_assessment_under_posts(sender, instance, created, **kwargs):
+    if created:
+        article = instance.article
+        article_author = article.author
+        assessment_author = instance.author
+
+        message = f"Под вашей статьей {article.title} оставили оценку"
+
+        notification_data = {
+            'status': 'success',
+            'type': 'notification_assessment_under_posts',
+            'message': message,
+        }
+
+        # Если оценку оставил автор, то это не считается
+        if article_author == assessment_author:
+            return
+
+        # Получите каналы участников комнаты
+        channel_layer = get_channel_layer()
+        room_name = f'notification_user_{article_author.id}'
+        user_settings = UserSettings.objects.get(user=article_author)
+        notification_type = notification_data['type']
+        message = notification_data['message']
+        is_read = False
+
+        # Оповещаем автора статьи.
+        if user_settings.notification_assessment_under_posts:
+
+            if channel_layer.group_exists(room_name):
+                # Если пользователь онлайн значит отмечаем, что он посмотрел.
+                is_read = True
+
+                # Отправьте уведомление пользователю
+                async_to_sync(channel_layer.group_send)(
+                    room_name, notification_data
+                )
+
+            Notification.objects.create(
+                user=article_author,
+                notification_type=notification_type,
+                message=message,
+                is_read=is_read,
+            )
 
 
 class ArticleBookmarks(models.Model):

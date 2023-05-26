@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 
-function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string, parentFindFriends: any }) {
+function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string, parentFindFriends: any, 'parentUpdateData':any }) {
     const navigate = useNavigate();
 
 
@@ -14,7 +14,7 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
     const id = props.id
     const username = props.username
     const findFriends = props.parentFindFriends
-
+    const parentUpdateData = props.parentUpdateData
     
 
 
@@ -79,6 +79,7 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
             .then(response => {
                 findFriends();
                 about();
+                parentUpdateData();
             })
             .catch(error => {
                 if (error.request.status === 401) {
@@ -110,6 +111,7 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
         .then(response => {
             findFriends();
             about();
+            parentUpdateData();
         })
         .catch(error => {
             if (error.request.status === 401) {
@@ -141,6 +143,7 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
         .then(response => {
             findFriends();
             about();
+            parentUpdateData();
         })
         .catch(error => {
             if (error.request.status === 401) {
@@ -174,18 +177,18 @@ function MyFriend(props: { 'logo_url': string, 'id': string, 'username': string,
                     <div className="card-body my-0 py-2 d-flex flex-wrap flex-column w-100">
                         <Link to={`/user/${id}`} className="card-title fs-5 fw-bold d-flex align-items-center justify-content-between w-100">
                             {username}
-                            {request_to_friend == true && 
+                            {request_to_friend &&
                                 <span className='fs-6 fw-light text-success'>Запрос отправлен</span>
                             }
-                            {friend == true && 
+                            {friend &&
                                 <span className='fs-6 fw-light text-success'>Друг</span>
                             }
                         </Link>
                         <div className='d-flex align-items-center'>
-                            {request_to_friend == true && friend == false && 
+                            {request_to_friend && !friend &&
                                 <button onClick={deleteriendRequest} className="btn btn-warning text-white py-1 px-3 me-2"><small>Удалить запрос в друзья</small></button>
                             }
-                            {request_to_friend == false && friend == false && 
+                            {!request_to_friend && !friend &&
                                 <button onClick={createFriendRequest} className="btn btn-success py-1 px-3 me-2"><small>В друзья</small></button> 
                             }
                                 

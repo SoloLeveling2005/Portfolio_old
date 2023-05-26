@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import '../App.css';
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/bootstrap.css';
@@ -158,8 +158,6 @@ function Comrades () {
     }
 
 
-
-
     // Функция поиска друга
     let countFindFriends = 0
     function findFriends() {
@@ -204,11 +202,14 @@ function Comrades () {
 
     }
 
-    useEffect(() => {
-
+    function updateData() {
         getUserFriends()
         findFriends()
         getRequestsToFriend()
+    }
+
+    useEffect(() => {
+        updateData()
     }, []);
 
 
@@ -234,7 +235,7 @@ function Comrades () {
                                             </div>
                                         </div>
                                         {dataUserFriends.map((item, index) => (                                            
-                                            <MyFriend key={index} id={item.subscriber.id.toString()} username={item.subscriber.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
+                                            <MyFriend parentUpdateData={updateData} key={index} id={item.subscriber.id.toString()} username={item.subscriber.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
                                         ))}
                                         
                                         {/* <MyFriend id='1' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' username='Username' /> */}
@@ -257,7 +258,7 @@ function Comrades () {
                                             </div>
                                         }
                                         {dataUsersRequests.map((item, index) => (
-                                            <FriendRequest parentgetRequestsToFriend={getRequestsToFriend} parentGetUserFriends={getUserFriends} key={index} id={item.user.id.toString()} username={item.user.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
+                                            <FriendRequest parentUpdateData={updateData} parentgetRequestsToFriend={getRequestsToFriend} parentGetUserFriends={getUserFriends} key={index} id={item.user.id.toString()} username={item.user.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png' />
                                         ))}
                                         
     
@@ -280,7 +281,7 @@ function Comrades () {
                                         
                                         <div className="d-flex flex-wrap justify-content-between">
                                             {dataFilterFriends.map((item, index) => (
-                                                <FindFriend parentFindFriends={findFriends} key={index} id={item.id.toString()} username={item.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png'/>
+                                                <FindFriend parentUpdateData={updateData} parentFindFriends={findFriends} key={index} id={item.id.toString()} username={item.username} logo_url='https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-PNG-Free-File-Download.png'/>
                                             ))}
                                             {/* <FindFriend id='1' username='Username' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg'/>
                                             <FindFriend id='2' username='Username' logo_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg'/>
