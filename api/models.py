@@ -1,6 +1,8 @@
 import datetime
 import random
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Permission
@@ -293,6 +295,53 @@ class Article(models.Model):
     updated_at = models.DateTimeField(auto_now_add=True)
 
 
+@receiver(post_save, sender=Article)
+def send_notification_new_entries(sender, instance, created, **kwargs):
+    if created:
+        community = instance.community
+
+        community_participants = CommunityParticipant.objects.get(id=community.id)
+
+        message = f"В сообществе {community.title} опубликовали новую запись"
+
+        notification_data = {
+            'status': 'success',
+            'type': 'notification_new_entries',
+            'message': message,
+        }
+
+        # Получите каналы участников комнаты
+        channel_layer = get_channel_layer()
+
+        for participant in community_participants:
+            # Проходимся по всем пользователям которые состоят в сообществе.
+            room_name = f'notification_user_{participant.user.id}'
+
+            user = participant.user
+            user_settings = UserSettings.objects.get(user=user)
+
+            notification_type = notification_data['type']
+            message = notification_data['message']
+            is_read = False
+            if user_settings.notification_new_entries:
+
+                if channel_layer.group_exists(room_name):
+                    # Если пользователь онлайн значит отмечаем, что он посмотрел.
+                    is_read = True
+
+                    # Отправьте уведомление пользователю
+                    async_to_sync(channel_layer.group_send)(
+                        room_name, notification_data
+                    )
+
+                Notification.objects.create(
+                    user=user,
+                    notification_type=notification_type,
+                    message=message,
+                    is_read=is_read,
+                )
+
+
 class ArticleTags(models.Model):
     """
     Модель тегов статьи.
@@ -310,6 +359,8 @@ class ArticleComment(models.Model):
                                        related_name='article_comment_on_parent_comment', null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='article_comment_on_user')
     content = models.CharField(max_length=300)
+
+
 
 
 class ArticleAssessment(models.Model):

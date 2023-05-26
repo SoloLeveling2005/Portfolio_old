@@ -87,7 +87,7 @@ function Messenger() {
 
     const blockRef = useRef(null);
 
-    const [data, setData] = useState([{info:{id:0, name:'', slug:''}, interlocutor:{id:0, username:''}}]);
+    const [data, setData] = useState([{info:{id:0}, interlocutor:{id:0, username:''}}]);
     const [messages, setMessages] = useState([{info:{content:''},user:{username:''}, my:false}]);
 
     // Получаем id комнаты
@@ -210,16 +210,7 @@ function Messenger() {
                     }
                 };
 
-                // Отключение сокета при размонтировании компонента
-                newSocket.onclose = function (event) {
-                    if (event.wasClean) {
-                        alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
-                    } else {
-                        // например, сервер убил процесс или сеть недоступна
-                        // обычно в этом случае event.code 1006
-                        alert('[close] Соединение прервано');
-                    }
-                };
+
 
                 // Обнуляем значение
                 counGetMessages = 0
@@ -244,14 +235,30 @@ function Messenger() {
                 }
             });
     }
-    
-    
-    
+
+
+
     // Подключение к сокету при монтировании компонента
     useEffect(() => {
         getChats()
         if (chat == '0') return;
         getMessages(Number(chat))
+
+
+        return () => {
+            // Закрытие соединения при размонтировании компонента
+            if (socket) {
+                socket.onclose = function (event) {
+                    if (event.wasClean) {
+                        console.log(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+                    } else {
+                        // например, сервер убил процесс или сеть недоступна
+                        // обычно в этом случае event.code 1006
+                        console.log('[close] Соединение прервано');
+                    }
+                };
+            }
+        };
 
     }, [chat]);
         
@@ -270,7 +277,7 @@ function Messenger() {
                                     <input type="text" className="form-control" />
                                 </div>
                                 {data.map((item, index)=>(
-                                    <Dialogue parentGetMessages={getMessages} title={item.interlocutor.username} img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id={item.info.id.toString()} onClick={()=>{switchChatF(item.info.id.toString())}}/>
+                                    <Dialogue parentGetMessages={getMessages} title={item.interlocutor.username} img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id={item.interlocutor.id.toString()} onClick={()=>{switchChatF(item.info.id.toString())}}/>
                                 ))}
                                 {/*<Dialogue title='Title' img_url='http://d4sport.ru/wp-content/uploads/2014/12/Prevyu-Volna2.jpg' id='2' onClick={()=>{switchChatF('2')}}/>*/}
                             </div>
@@ -290,9 +297,9 @@ function Messenger() {
                                                     {messages.map((item, index)=>(
                                                         <div className="p-0 m-0">
                                                             {item.my ? (
-                                                                <MyMessage message={item.info.content} />
+                                                                <MyMessage key={index} message={item.info.content} />
                                                             ):(
-                                                                <Message username={item.user.username} message={item.info.content}/>
+                                                                <Message key={index} username={item.user.username} message={item.info.content}/>
                                                             )}
                                                         </div>
                                                     ))}

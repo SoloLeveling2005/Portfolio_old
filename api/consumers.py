@@ -100,7 +100,7 @@ class UserNotification(AsyncJsonWebsocketConsumer):
         # Проверяем существование пользователя с идентификатором, равным room_id.
         if await sync_to_async(User.objects.filter(id=self.sender_id).exists)():
             # Если пользователь существует, формируем имя группы комнаты (room_group_name).
-            self.room_group_name = f'notification/user/{self.sender_id}'
+            self.room_group_name = f'notification_user_{self.sender_id}'
 
             # Добавляем текущий канал (channel_name) в эту группу.
             await self.channel_layer.group_add(
@@ -125,7 +125,7 @@ class UserNotification(AsyncJsonWebsocketConsumer):
         receiver_id = data["receiver_id"]
 
         # Отправляем уведомление тому кому нужно, а не тому кто в данной комнате
-        room_group_name = f'notification/user/{receiver_id}'
+        room_group_name = f'notification_user_{receiver_id}'
 
         message = ''
 
