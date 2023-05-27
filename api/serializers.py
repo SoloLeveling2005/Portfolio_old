@@ -52,6 +52,11 @@ class SerializerUserAdditionalInformation(serializers.Serializer):
 
 # JSON
 
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Notification
+        fields = '__all__'
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User

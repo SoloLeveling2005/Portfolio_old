@@ -22,13 +22,14 @@ from rest_framework_simplejwt.tokens import RefreshToken, Token
 from .models import User, Community, CommunityRole, CommunityParticipant, CommunityTag, \
     CommunityRecommendation, RequestCommunityParticipant, UserSubscriptions, UserProfile, UserAdditionalInformation, \
     RequestUserSubscriptions, UserBlacklist, UserRating, Article, ArticleTags, ArticleComment, ArticleAssessment, \
-    ArticleBookmarks, CommunityAvatar, UserAvatar, RoomMessage, Room, RoomParticipant
+    ArticleBookmarks, CommunityAvatar, UserAvatar, RoomMessage, Room, RoomParticipant, Notification
 from .serializers import UserRegistrationSerializer, UserAuthenticationSerializer, SerializerCreateCommunityRole, \
     SerializerUserAdditionalInformation, SerializerUserProfile, UserSerializer, ProfileSerializer, \
     AdditionalInformationSerializer, ArticleSerializer, CommunitySerializer, ArticleCommentSerializer, \
     UserSerializerModel, RequestUserSubscriptionsSerializer, UserSubscriptionsSerializer, CommunityRolesSereilizer, \
     CommunityAvatarSereilizer, RequestCommunityParticipantSerializer, CommunityParticipantSerializer, \
-    ArticleAssessmentSerializer, RoomSerializer, RoomParticipantSerializer, RoomMessageSerializer
+    ArticleAssessmentSerializer, RoomSerializer, RoomParticipantSerializer, RoomMessageSerializer, \
+    NotificationSerializer
 
 
 # todo Удаление старых фото при загрузке новых.
@@ -263,6 +264,19 @@ class UserView:
 
         """
         self.requesting_user = request.user
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    user = request.user
+
+    notifications = Notification.objects.filter(Q(user=user) and Q(is_read=False))
+    for notification in notifications:
+        notification.is_read = True
+        notification.save()
+
+    return Response(data=NotificationSerializer(notifications, many=True).data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

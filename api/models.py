@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Permission
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_init
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 
@@ -66,6 +66,7 @@ class Notification(models.Model):
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+
 
 
 class UserAvatar(models.Model):
@@ -126,7 +127,9 @@ class RequestUserSubscriptions(models.Model):
 @receiver(post_save, sender=RequestUserSubscriptions)
 def notification_new_friend(sender, instance, created, **kwargs):
     if created:
+        # Пользователь, который отправил запрос.
         user = instance.user
+        # Пользователь, которому отправили запрос.
         subscriber = instance.subscriber
 
         message = f"У вас новый друг! Вам отправили запрос в друзья!"
@@ -135,6 +138,7 @@ def notification_new_friend(sender, instance, created, **kwargs):
             'status': 'success',
             'type': 'notification_new_friend',
             'message': message,
+            'user_id': subscriber.id
         }
 
         # Получите каналы участников комнаты
@@ -149,7 +153,7 @@ def notification_new_friend(sender, instance, created, **kwargs):
         # Оповещаем автора статьи.
         if user_settings.notification_new_friend:
 
-            if channel_layer.group_exists(room_name):
+            if len(channel_layer.groups.get(room_name, {})):
                 # Если пользователь онлайн значит отмечаем, что он посмотрел.
                 is_read = True
 
@@ -174,7 +178,7 @@ class UserSubscriptions(models.Model):
     subscriber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_subscriptions_on_subscriber')
 
 
-@receiver(post_save, sender=RequestUserSubscriptions)
+@receiver(post_save, sender=UserSubscriptions)
 def notification_confirm_friend(sender, instance, created, **kwargs):
     if created:
         user = instance.user
@@ -206,7 +210,7 @@ def notification_confirm_friend(sender, instance, created, **kwargs):
         # Оповещаем автора статьи.
         if user_settings.notification_new_friend:
 
-            if channel_layer.group_exists(room_name):
+            if len(channel_layer.groups.get(room_name, {})):
                 # Если пользователь онлайн значит отмечаем, что он посмотрел.
                 is_read = True
 
@@ -221,6 +225,7 @@ def notification_confirm_friend(sender, instance, created, **kwargs):
                 message=message,
                 is_read=is_read,
             )
+
 
 class UserRating(models.Model):
     """
@@ -393,7 +398,7 @@ def send_notification_new_entries(sender, instance, created, **kwargs):
         author = instance.author
 
         # Исключаем самого пользователя который создал статью
-        community_participants = CommunityParticipant.objects.get(Q(id=community.id) and ~Q(user=author))
+        community_participants = CommunityParticipant.objects.filter(Q(id=community.id) and ~Q(user=author))
 
         message = f"В сообществе {community.title} опубликовали новую запись"
 
@@ -418,7 +423,7 @@ def send_notification_new_entries(sender, instance, created, **kwargs):
             is_read = False
             if user_settings.notification_new_entries:
 
-                if channel_layer.group_exists(room_name):
+                if len(channel_layer.groups.get(room_name, {})):
                     # Если пользователь онлайн значит отмечаем, что он посмотрел.
                     is_read = True
 
@@ -483,7 +488,7 @@ def notification_comments_under_posts(sender, instance, created, **kwargs):
         # Оповещаем автора статьи.
         if user_settings.notification_comments_under_posts:
 
-            if channel_layer.group_exists(room_name):
+            if len(channel_layer.groups.get(room_name, {})):
                 # Если пользователь онлайн значит отмечаем, что он посмотрел.
                 is_read = True
 
@@ -539,7 +544,7 @@ def notification_assessment_under_posts(sender, instance, created, **kwargs):
         # Оповещаем автора статьи.
         if user_settings.notification_assessment_under_posts:
 
-            if channel_layer.group_exists(room_name):
+            if len(channel_layer.groups.get(room_name, {})):
                 # Если пользователь онлайн значит отмечаем, что он посмотрел.
                 is_read = True
 

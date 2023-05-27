@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('chat_lm/', include('chat_lm.urls')),
-    # path('/', include('web.urls')),
+    path('/', include('web.urls')),
 
     path('api-auth/', include('rest_framework.urls'))
 ]

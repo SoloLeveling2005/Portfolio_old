@@ -15,8 +15,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Извлекаем имя комнаты из URL-маршрута и сохраняем его в self.room_id.
         self.room_id = self.scope['url_route']['kwargs']['room_id']
 
-
-
         self.room_group_name = f'chat_{self.room_id}'
 
         # Добавляем текущий канал (channel_name) в эту группу.
@@ -27,7 +25,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # Принимаем соединение с клиентом
         await self.accept()
-
 
     async def disconnect(self, code):
         # Удаляем текущий канал из группы комнаты (self.room_group_name), когда клиент отключается.
@@ -83,7 +80,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
 class UserNotification(AsyncJsonWebsocketConsumer):
     """
-    Класс обрабатывающий сокет, сообщает клиенту тип уведомлений для обновления данных.
+    Задача данного сокета отправить тип уведомления и текст уведомления на клиент.
     Какие типы уведомлений могут быть:
     - admin_notification - уведомление от админа.
     - notification_new_entries - уведомление о новых записях
@@ -118,6 +115,51 @@ class UserNotification(AsyncJsonWebsocketConsumer):
             self.channel_name,
         )
 
+    async def notification_new_entries(self, event):
+        message = event["message"]
+
+        # Отправляем данные о сообщении, имени пользователя и комнате обратно клиенту с помощью send().
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "type": 'notification_new_entries',
+        }))
+
+    async def notification_comments_under_posts(self, event):
+        message = event["message"]
+
+        # Отправляем данные о сообщении, имени пользователя и комнате обратно клиенту с помощью send().
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "type": 'notification_comments_under_posts',
+        }))
+
+    async def notification_assessment_under_posts(self, event):
+        message = event["message"]
+
+        # Отправляем данные о сообщении, имени пользователя и комнате обратно клиенту с помощью send().
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "type": 'notification_assessment_under_posts',
+        }))
+
+    async def notification_new_friend(self, event):
+        message = event["message"]
+
+        # Отправляем данные о сообщении, имени пользователя и комнате обратно клиенту с помощью send().
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "type": 'notification_new_friend',
+        }))
+
+    async def notification_confirm_friend(self, event):
+        message = event["message"]
+
+        # Отправляем данные о сообщении, имени пользователя и комнате обратно клиенту с помощью send().
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "type": 'notification_confirm_friend',
+        }))
+
     async def receive(self, text_data):
         # Получаем данные с клиента.
         data = json.loads(text_data)
@@ -131,6 +173,7 @@ class UserNotification(AsyncJsonWebsocketConsumer):
 
         # Проверка на существование пользователя.
         receiver = User.objects.filter(id=receiver_id)
+
         if not receiver.exists():
             # Отправляем сообщение обратно самому же (ошибку).
             await self.channel_layer.group_send(
@@ -141,6 +184,9 @@ class UserNotification(AsyncJsonWebsocketConsumer):
                     "message": "Такого пользователя не существует",
                 }
             )
+
+        receiver = receiver.first()
+        receiver_settings = models.UserSettings.objects.get(user=receiver)
 
         if notification_type == 'admin_notification':
             message = data["message"]
@@ -157,7 +203,7 @@ class UserNotification(AsyncJsonWebsocketConsumer):
 
         elif notification_type == 'notification_new_entries':
             # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
-            if receiver.notification_new_entries:
+            if receiver_settings.notification_new_entries:
                 community_title = data["community_title"]
                 if community_title is None:
                     # Отправляем сообщение обратно самому же (ошибку).
@@ -174,7 +220,7 @@ class UserNotification(AsyncJsonWebsocketConsumer):
 
         elif notification_type == 'notification_comments_under_posts':
             # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
-            if receiver.notification_comments_under_posts:
+            if receiver_settings.notification_comments_under_posts:
                 article_title = data["article_title"]
                 if article_title is None:
                     # Отправляем сообщение обратно самому же (ошибку).
@@ -191,7 +237,7 @@ class UserNotification(AsyncJsonWebsocketConsumer):
 
         elif notification_type == 'notification_assessment_under_posts':
             # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
-            if receiver.notification_assessment_under_posts:
+            if receiver_settings.notification_assessment_under_posts:
                 article_title = data["article_title"]
                 if article_title is None:
                     # Отправляем сообщение обратно самому же (ошибку).
@@ -208,12 +254,12 @@ class UserNotification(AsyncJsonWebsocketConsumer):
 
         elif notification_type == 'notification_new_friend':
             # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
-            if receiver.notification_new_friend:
+            if receiver_settings.notification_new_friend:
                 message = f"У вас новый друг!"
 
         elif notification_type == 'notification_confirm_friend':
             # Проверяем настройки пользователя, если уведомление такого типа включено то добавляем
-            if receiver.notification_new_friend:
+            if receiver_settings.notification_new_friend:
                 message = f"Ваша заявка в друзья подтверждена"
 
         if message != '':

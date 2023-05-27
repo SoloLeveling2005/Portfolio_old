@@ -56,7 +56,7 @@ function Notification() {
 
     }, []);
     return (
-        <section className={"notification-section"} id={"notification-section"}>
+        <section className="notification-section" id="notification-section">
             {messages.map((item, index) => (
                 <div key={index} className="alert alert-primary" role="alert">
                     {item}
