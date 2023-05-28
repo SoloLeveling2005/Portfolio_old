@@ -1215,23 +1215,21 @@ def article_feed(request, page: int):
 
     user = request.user
 
-    # paginate_articles = cache.get('paginate_articles', None)
-    # if paginate_articles is None:
-    articles = Article.objects.filter(status=1).order_by('-id')
-    articles = [{
-        'info': ArticleSerializer(article).data,
-        'community': CommunitySerializer(article.community).data,
-        'author': UserSerializer(article.author).data,
-        'count_likes': ArticleAssessment.objects.filter(article=article).count()
-    } for article in articles]
-    paginate_articles = Paginator(articles, 5)
+    page_articles = cache.get('page_articles', None)
+    if page_articles is None:
+        articles = Article.objects.filter(status=1).order_by('-id')
+        articles = [{
+            'info': ArticleSerializer(article).data,
+            'community': CommunitySerializer(article.community).data,
+            'author': UserSerializer(article.author).data,
+            'count_likes': ArticleAssessment.objects.filter(article=article).count()
+        } for article in articles]
+        paginate_articles = Paginator(articles, 5)
 
-    # cache.set('paginate_articles', paginate_articles)
+        page_articles = paginate_articles.get_page(page).object_list
 
-    page_articles = paginate_articles.get_page(page).object_list
+        cache.set('page_articles', page_articles, 40)
 
-    # else:
-    #     page_articles = paginate_articles.get_page(page)
 
     return Response(data={'page_articles': page_articles})
 
