@@ -16,14 +16,13 @@ import { useSelector } from 'react-redux';
 
 import reportWebVitals from './reportWebVitals';
 import Home from './pages/Home';
-import User from './pages/User';
 import Article from './pages/Article';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Search from './pages/Search';
 import Messenger from './pages/Messenger';
 import Comrades from './pages/Comrades'
-import Communities from './pages/Communities' 
+import Communities from './pages/Communities'
 import Community from './pages/Community';
 import Company from './pages/history/Company';
 import NewCommunity from './pages/NewCommunity';

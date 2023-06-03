@@ -34,7 +34,7 @@ INSTALLED_APPS = [
 
     'chat_lm',
     'api',
-    # 'web',
+    'web',
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -64,7 +64,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'frontend'],
-        'APP_DIRS': True,
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -143,11 +143,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    Path(BASE_DIR / 'frontend/src/assets/'),
-    Path(BASE_DIR / 'frontend/build'),
+    # Path(BASE_DIR / 'frontend/src/assets'),
+    Path(BASE_DIR / 'frontend/build/static'),
+    # Path(BASE_DIR / 'frontend'),
 ]
 STATIC_ROOT = 'static/'
 MEDIA_URL = '/img/'
