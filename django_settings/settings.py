@@ -32,7 +32,7 @@ INSTALLED_APPS = [
 
     'drf_yasg',
 
-    'chat_lm',
+    # 'chat_lm',
     'api',
     'web',
     'corsheaders',

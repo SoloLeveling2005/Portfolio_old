@@ -22,7 +22,7 @@ urlpatterns = [
     path('grappelli/', include('grappelli.urls')),  # grappelli URLS
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
-    path('chat_lm/', include('chat_lm.urls')),
+    # path('chat_lm/', include('chat_lm.urls')),
     # path('web/', include('web.urls')),
     path('', TemplateView.as_view(template_name='build/index.html')),
     re_path(r'^(?:.*)/?$', TemplateView.as_view(template_name='build/index.html')),
