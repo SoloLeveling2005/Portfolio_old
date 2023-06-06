@@ -206,9 +206,8 @@ function Community(props: any) {
         }
         countGetCommunity += 1
 
-
         axios.defaults.baseURL = API_BASE_URL
-        axios.get(`community/get_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        axios.get(`community/get_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'), 'Accept': 'application/json' } })
         .then(response => {
             console.log(response.data)
             setData(response.data)
@@ -219,8 +218,9 @@ function Community(props: any) {
             setInputWebsite(response.data.community.website == null ? '' : response.data.community.website)
             countGetCommunity = 0
         })
-        .catch(error => {
-            if (error.request.status === 401) {
+            .catch(error => {
+            console.log(error)
+            if (error.request && error.request.status === 401) {
                 axios.post('refresh_token', { 'refresh': localStorage.getItem('refresh_token') })
                 .then(response => {
                     localStorage.setItem('access_token', response.data.access)
@@ -246,7 +246,7 @@ function Community(props: any) {
         
 
         axios.defaults.baseURL = API_BASE_URL
-        axios.get(`community/get_about_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        axios.get(`community/get_about_community/${id}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'), 'Accept': 'application/json' } })
             .then(response => {
             countAboutCommunity = 0
             console.log(response.data)
@@ -301,7 +301,7 @@ function Community(props: any) {
             'publish_articles':SelectPublishArticles == 'true' ? true : false,
             'publish_news':SelectPublishNews == 'true' ? true : false,
             'publish_ads':SelectPublishAds == 'true' ? true : false,
-        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'), 'Accept': 'application/json' } })
         .then(response => {
             console.log(response.data)
             alert('Роль успешно создана')
@@ -335,7 +335,7 @@ function Community(props: any) {
 
 
         axios.defaults.baseURL = API_BASE_URL
-        axios.delete(`community/delete_community_role/${id}/${role_title}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        axios.delete(`community/delete_community_role/${id}/${role_title}`, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'), 'Accept': 'application/json' } })
         .then(response => {
             console.log(response.data)
             alert('Роль успешно удалена')
@@ -371,7 +371,7 @@ function Community(props: any) {
             'participant_id': userId,
             'community_id': id,
             'role_title':roleTitle
-        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'), 'Accept': 'application/json' } })
         .then(response => {
             console.log(response.data)
             alert(`Вы приняли пользователя на роль ${roleTitle}`)
@@ -416,7 +416,7 @@ function Community(props: any) {
             description: inputDescription,
             website: inputWebsite,
             location: inputLocation,
-        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token') } })
+        }, { headers: { 'Authorization': "Bearer " + localStorage.getItem('access_token'), 'Accept': 'application/json' } })
             .then(response => {
                 console.log(response.data)
                 alert("Информация обновлена")
@@ -464,7 +464,8 @@ function Community(props: any) {
                             <div className='col py-3'>
                                 <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                     <div className="card-title">
-                                        <img src={data.community_avatar.img == '' || data.community_avatar.img == null ? 'https://hsto.org/getpro/habr/company/9ed/c74/6b4/9edc746b484c805ecad1f941b5f7068a.png' : API_BASE_URL+ data.community_avatar.img} alt="" className='img-normal-50' />
+                                        <img  src={data.community_avatar.img == '' || data.community_avatar.img == null ? 'https://hsto.org/getpro/habr/company/9ed/c74/6b4/9edc746b484c805ecad1f941b5f7068a.png' : API_BASE_URL.slice(0, -1)+ data.community_avatar.img} alt="" />
+                                        
                                         <h4 className='pb-1 mb-0 mt-1'>{ data.community.title }</h4>
                                         <p>{ data.community.short_info }</p>
                                         <div className='d-flex flex-wrap'>

@@ -125,7 +125,7 @@ function Home() {
                                             who={item.community.title}
                                             communityId={item.community.id.toString()}
                                             description={item.info.description}
-                                            img_url={API_BASE_URL+item.info.img}
+                                            img_url={API_BASE_URL.slice(0, -1)+item.info.img}
                                             article_id={item.info.id.toString()}
                                             count_likes={item.count_likes.toString()}
                                             bookmark_active={false}
