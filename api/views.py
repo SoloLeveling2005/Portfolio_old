@@ -697,6 +697,7 @@ def delete_friend_subscriptions(request, user_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_community(request, community_id: int):
+    print('get community')
     user = request.user
     community = check_community_exists(community_id=community_id)
     if community is None:

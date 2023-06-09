@@ -464,7 +464,7 @@ function Community(props: any) {
                             <div className='col py-3'>
                                 <div className="card m-0 p-3 bg-white mb-3 text-decoration-none text-black pb-2">
                                     <div className="card-title">
-                                        <img  src={data.community_avatar.img == '' || data.community_avatar.img == null ? 'https://hsto.org/getpro/habr/company/9ed/c74/6b4/9edc746b484c805ecad1f941b5f7068a.png' : API_BASE_URL.slice(0, -1)+ data.community_avatar.img} alt="" />
+                                        <img src={data.community_avatar.img == '' || data.community_avatar.img == null ? 'https://hsto.org/getpro/habr/company/9ed/c74/6b4/9edc746b484c805ecad1f941b5f7068a.png' : API_BASE_URL.slice(0, -1)+ data.community_avatar.img} alt="" />
                                         
                                         <h4 className='pb-1 mb-0 mt-1'>{ data.community.title }</h4>
                                         <p>{ data.community.short_info }</p>

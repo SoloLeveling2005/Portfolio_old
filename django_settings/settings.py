@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-_kpmon19bu1t)z0=onv@bgra27k*e!)8-x)y^8_q=*!pvuxd#q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['185.4.180.85', 'localhost']
 
 # Application definition
 
@@ -45,6 +45,8 @@ AUTH_USER_MODEL = 'api.User'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'http://localhost:8000',
+    'http://185.4.180.85:8000'
 ]
 
 MIDDLEWARE = [
