@@ -1,12 +1,15 @@
-# serializers.py
+# Настраиваем сериализаторы.
 
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework_jwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+# Импорт моделей
 from . import models
+# Импорт модели User
 from .models import User
+# Импорт сериализатора UserAuth
 from .serializers_classes import UserAuth
 
 # Регистрируем классы сереализаторы
@@ -14,6 +17,7 @@ UserRegistrationSerializer = UserAuth.UserRegistrationSerializer
 UserAuthenticationSerializer = UserAuth.UserAuthenticationSerializer
 
 
+# Сериализатор модели User.
 class UserSerializerModel(serializers.ModelSerializer):
     id = serializers.IntegerField()
     username = serializers.CharField()
@@ -61,7 +65,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = ['id', 'username', 'is_online', 'last_online', 'created_at']
-
 
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
